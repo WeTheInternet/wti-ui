@@ -1,0 +1,29 @@
+import org.gradle.api.tasks.SourceSet;
+
+plugins {
+    id	"java-library"
+}
+// GenStart net.wti.gradle.settings.plugin.XapiSettingsPlugin
+ext.xapiModern = 'true'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+repositories.mavenCentral()
+// setup sourcesets
+
+SourceSet main = sourceSets.maybeCreate('main');
+
+
+SourceSet test = sourceSets.maybeCreate('test');
+
+main.java.setSrcDirs([]);
+main.resources.setSrcDirs([]);
+test.java.setSrcDirs([]);
+test.resources.setSrcDirs([]);
+main.java.srcDir("$rootDir/gdx-themes/src/raeleus-crispySample/java")
+
+dependencies {
+    api project(path: ":gdx-themes-raeleusSample")
+    api project(path: ":gdx-themes-raeleus-crispy")
+}
+// GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
+// Done generating buildfile for :gdx-themes at file://$rootDir/gdx-themes/src/raeleus-crispySample/gdx-themesRaeleus-crispySample.gradle

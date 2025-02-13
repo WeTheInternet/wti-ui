@@ -10,4 +10,5 @@ public interface GdxTheme {
 
     Skin getSkin();
 
+    String getAssetPath();
 }

@@ -1,0 +1,32 @@
+import org.gradle.api.tasks.SourceSet;
+
+plugins {
+    id	"java-library"
+}
+// GenStart net.wti.gradle.settings.plugin.XapiSettingsPlugin
+ext.xapiModern = 'true'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
+repositories.mavenCentral()
+// setup sourcesets
+
+SourceSet main = sourceSets.maybeCreate('main');
+
+
+SourceSet test = sourceSets.maybeCreate('test');
+
+main.java.setSrcDirs([]);
+main.resources.setSrcDirs([]);
+test.java.setSrcDirs([]);
+test.resources.setSrcDirs([]);
+
+dependencies {
+    api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+    api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+    api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+    api project(path: ":gdx-themes-sample")
+    api project(path: ":gdx-themes-raeleus")
+}
+// GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
+// Done generating buildfile for :gdx-themes at file://$rootDir/gdx-themes/src/raeleusSample/gdx-themesRaeleusSample.gradle

@@ -94,7 +94,7 @@ com.badlogic.gdx.scenes.scene2d.ui.ProgressBar$ProgressBarStyle: {
 	}
 	hunger: {
 		background: meat-bg
-		knobAfter: meat
+		knobBefore: meat
 	}
 	health: {
 		background: heart-bg

@@ -8,7 +8,7 @@
                         @transitive
                         external: "com.badlogicgames.gdx:gdx:$gdxVersion"
                     }
-                /main>
+                /main>,
             ]
         /main>,
         // themes from Raeleus (a libgdx theme producer) https://ray3k.wordpress.com/
@@ -16,7 +16,18 @@
         <raeleus replaces = main
             modules = [
                 <skin-composer
-                /skin-composer>
+                /skin-composer>,
+                <sample includes = main
+                    requires = {
+                        @transitive
+                        external : [
+                            "com.badlogicgames.gdx:gdx-box2d:$gdxVersion",
+                            "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop",
+                            "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop",
+                            "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion",
+                        ],
+                    }
+                /sample>
             ]
         /raeleus>,
         <raeleus-sgx replaces = raeleus

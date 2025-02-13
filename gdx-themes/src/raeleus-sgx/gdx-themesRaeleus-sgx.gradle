@@ -21,6 +21,7 @@ main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 main.resources.srcDir("$rootDir/gdx-themes/src/raeleus-sgx/resources")
+main.java.srcDir("$rootDir/gdx-themes/src/raeleus-sgx/java")
 
 dependencies {
     api project(path: ":gdx-themes-raeleus")

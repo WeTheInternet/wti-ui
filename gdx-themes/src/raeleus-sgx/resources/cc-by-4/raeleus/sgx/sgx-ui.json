@@ -517,7 +517,7 @@ com.badlogic.gdx.scenes.scene2d.ui.Window$WindowStyle: {
 		titleFontColor: font-over
 	}
 }
-com.ray3k.skincomposer.MenuList$MenuListStyle: {
+net.wti.gdx.theme.raeleus.sgx.MenuList$MenuListStyle: {
 	default: {
 		background: file-menu-list
 		textButtonStyle: menu-list-button
@@ -525,7 +525,7 @@ com.ray3k.skincomposer.MenuList$MenuListStyle: {
 		disabledLabelStyle: default
 	}
 }
-com.ray3k.skincomposer.MenuButton$MenuButtonStyle: {
+net.wti.gdx.theme.raeleus.sgx.MenuButton$MenuButtonStyle: {
 	default: {
 		menuListStyle: default
 		font: font
@@ -546,7 +546,7 @@ com.ray3k.skincomposer.MenuButton$MenuButtonStyle: {
 		checkedOffsetY: 0
 	}
 }
-com.badlogic.gdx.ai.tests.utils.scene2d.TabbedPane$TabbedPaneStyle: {
+net.wti.gdx.theme.raeleus.sgx.TabbedPane$TabbedPaneStyle: {
 	default: {
 		titleBegin: tab-before
 		titleEnd: tab-after
@@ -560,7 +560,7 @@ com.badlogic.gdx.ai.tests.utils.scene2d.TabbedPane$TabbedPaneStyle: {
 		disabledFontColor: font-over
 	}
 }
-com.ray3k.skincomposer.Spinner$SpinnerStyle: {
+net.wti.gdx.theme.raeleus.sgx.Spinner$SpinnerStyle: {
 	default: {
 		buttonMinusStyle: minus
 		buttonPlusStyle: plus
