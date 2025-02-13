@@ -1,0 +1,19 @@
+<xapi-schema
+    name = "wti-ui"
+    group = "net.wti"
+    version = "0.1.0"
+
+    defaultRepoUrl = mavenCentral()
+    projects = {
+        virtual : [
+            // interfaces and implementations for accessing libgdx resources
+            gdx-api,
+            // media assets and interfaces; each platform is a theme implementing the media interfaces
+            gdx-themes,
+            // cross-platform xapi ui implementations
+            xapi-ui,
+            // some build tools for assembling finalized xapi-ui implementation binaries
+            xapi-ui-tools,
+        ]
+    }
+/xapi-schema>

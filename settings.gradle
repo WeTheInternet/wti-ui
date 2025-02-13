@@ -1,0 +1,46 @@
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        google()
+    }
+    plugins {
+        id "${quarkusPluginId}" version "${quarkusPluginVersion}"
+        id "io.quarkus.extension" version "${quarkusPluginVersion}"
+        id "xapi-settings" version "${xapiVersion}"
+    }
+}
+buildscript {
+    String xapiRepo = "<default>"
+    // so sorry... you have to have WeTheInternet/xapi checked out as a sibling to the wti-ui repo, or set xapiRepo=/path/to/xapi/repo in ~/.gradle/gradle.properties
+    try { xapiRepo = "${xapiRepo}" }
+    catch (ignored) {}
+    if (xapiRepo == "<default>") {
+       xapiRepo = "$rootDir.parent/xapi/repo"
+       logger.quiet "No xapiRepo set in ~/.gradle/gradle.properties, using xapiRepo=$xapiRepo"
+    }
+    repositories {
+        maven {
+            name = 'xapiLocal'
+            url = new URI("file://${xapiRepo}")
+        }
+    }
+    dependencies {
+        classpath 'net.wti.gradle.modern:xapi-gradle-settings-plugin:0.5.1'
+    }
+}
+
+apply plugin: 'xapi-settings'
+
+rootProject.name = 'wti-ui'
+
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            // we define all our version information in .toml file and access as `libs.xapi.whatever` in a typesafe manner
+            from(files('gradle/wti-ui-versions.toml'))
+        }
+    }
+}
+

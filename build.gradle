@@ -1,0 +1,43 @@
+plugins {
+    id 'base'
+}
+
+version = '0.51'
+
+tasks.register('saveVersion').configure {
+    File output = project.layout.buildDirectory.file('VERSION').get().asFile
+    outputs.file(output)
+    inputs.property('version', project.version)
+    doFirst {
+        output.text = project.version
+    }
+}
+
+gradle.beforeProject {
+    p ->
+        p.group = 'net.wti.ui'
+        p.version = '0.51'
+        p.repositories {
+            maven {
+                name = 'xapi-repo'
+                url = file(findProperty('xapiRepo') ?: "$rootDir/../xapi/repo").absoluteFile
+            }
+            mavenCentral()
+            mavenLocal()
+        }
+        p.tasks.withType(JavaCompile).configureEach {
+            dependsOn ':saveVersion'
+        }
+        if (p.path != ':android') {
+            p.plugins.apply 'java-library'
+        }
+}
+
+wrapper {
+    gradleVersion = '8.11.1'
+    if ('false' == findProperty('gradle-sources')) {
+        distributionType = 'BIN'
+    } else {
+        distributionType = 'ALL'
+    }
+}
