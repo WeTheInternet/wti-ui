@@ -1,0 +1,33 @@
+<xapi-schema
+    // in this case, platforms are used to contain different implementation of the default / "main" theme
+    platforms = [
+        <main
+            modules = [
+                <main
+                    requires = {
+                        @transitive
+                        external: "com.badlogicgames.gdx:gdx:$gdxVersion"
+                    }
+                /main>
+            ]
+        /main>,
+        // themes from Raeleus (a libgdx theme producer) https://ray3k.wordpress.com/
+
+        <raeleus replaces = main
+            modules = [
+                <skin-composer
+                /skin-composer>
+            ]
+        /raeleus>,
+        <raeleus-sgx replaces = raeleus
+        /raeleus-sgx>,
+        <raeleus-glassy replaces = raeleus
+        /raeleus-glassy>,
+        <raeleus-crispy replaces = raeleus
+        /raeleus-crispy>,
+        <raeleus-crafty replaces = raeleus
+        /raeleus-crafty>,
+        <raeleus-shade replaces = raeleus
+        /raeleus-shade>,
+    ]
+/xapi-schema>
