@@ -4,6 +4,9 @@
     version = "0.1.0"
 
     defaultRepoUrl = mavenCentral()
+
+    modules = [ main ]
+
     projects = {
         virtual : [
             // interfaces and implementations for accessing libgdx resources
@@ -14,6 +17,8 @@
             xapi-ui,
             // some build tools for assembling finalized xapi-ui implementation binaries
             xapi-ui-tools,
+            // a complete demo of all functionality, showcasing all supported UI elements
+            demo,
         ]
     }
 /xapi-schema>

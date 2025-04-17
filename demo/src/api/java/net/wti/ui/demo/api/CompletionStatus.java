@@ -4,7 +4,7 @@ package net.wti.ui.demo.api;
 ///
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 16/04/2025 @ 21:45 public
-enum CompletionStatus {
+public enum CompletionStatus {
     COMPLETED,
     PENDING_APPROVAL,
     REJECTED

@@ -18,13 +18,19 @@ main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
-main.resources.srcDir("$rootDir/gdx-themes/src/raeleus-sgx/resources")
-main.java.srcDir("$rootDir/gdx-themes/src/raeleus-sgx/java")
+main.java.srcDir("$rootDir/demo/src/jre/java")
 
 dependencies {
-    api project(path: ":gdx-themes-raeleus")
+    implementation project(path: ":demo-api")
+    implementation libs.xapi.model.jre
+    implementation "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+    implementation "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+    implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+    api project(path: ":demo-main")
+    api project(path: ":demo-jreApi")
 }
-// Setup publishing to coordinates: net.wti:gdx-themes-raeleus-sgx
+// Setup publishing to coordinates: net.wti:demo-jre
 project.extensions.add('xapi.mvn.repo', "$rootDir/repo")
 Task xapiPublish = tasks.create('xapiPublish')
 xapiPublish.group = 'Publishing'
@@ -50,8 +56,14 @@ ext.publications.create("xapi", MavenPublication, {
                 pub.from(components.named('java').get())
             }
         }
-        pub.artifactId = "gdx-themes-raeleus-sgx"
+        pub.artifactId = "demo-jre"
         pub.groupId = "net.wti"
 })
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
-// Done generating buildfile for :gdx-themes at file://$rootDir/gdx-themes/src/raeleus-sgx/gdx-themesRaeleus-sgx.gradle
+// GenInclude body.end from file:///opt/wti-ui/demo/src/gradle/jre/body.end
+
+tasks.withType(JavaExec).configureEach {
+    JavaExec exe ->
+        exe.jvmArgs "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED"
+}
+// Done generating buildfile for :demo at file://$rootDir/demo/src/jre/demoJre.gradle

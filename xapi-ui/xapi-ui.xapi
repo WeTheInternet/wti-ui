@@ -1,0 +1,22 @@
+<xapi-schema
+    multiplatform = true
+    modules = [
+        <api
+            force = true
+            requires = {
+                @transitive
+                external : [
+                    ( libs.xapi.model ),
+                ]
+            }
+        /api>,
+        <main
+            includes = api
+            requires = {
+                @transitive
+                project: ":gdx-themes",
+                external : ( libs.xapi.util ),
+            }
+        /main>,
+    ]
+/xapi-schema>

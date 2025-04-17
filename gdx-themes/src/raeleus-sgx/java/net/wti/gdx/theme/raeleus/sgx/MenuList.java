@@ -81,9 +81,6 @@ public class MenuList <T> extends Table {
         if (style == null) {
             throw new NullPointerException("style cannot be null");
         }
-        if (!(style instanceof MenuListStyle)) {
-            throw new IllegalArgumentException("style must be a MenuListStyle.");
-        }
         this.style = style;
     }
 
@@ -147,7 +144,7 @@ public class MenuList <T> extends Table {
         int index = 0;
 
         for (final T item : items) {
-            TextButton textButton = new TextButton(item.toString(), style.textButtonStyle);
+            TextButton textButton = new TextButton(renderItem(item), style.textButtonStyle);
             textButton.getLabel().setAlignment(Align.left);
             if (getCells().size > 0) {
                 row();
@@ -191,6 +188,10 @@ public class MenuList <T> extends Table {
         }
 
         setSize(width, height);
+    }
+
+    protected String renderItem(final T item) {
+        return item.toString();
     }
 
     public T getSelectedItem() {

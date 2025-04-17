@@ -1,0 +1,46 @@
+<xapi-schema
+    modules = [
+        <api />,
+        <main includes = [ api, spi ] /main>,
+        <spi />,
+    ]
+
+    platforms = [
+        <main
+            modules = [
+                <api
+                    requires = {
+                        @transitive
+                        external : ( libs.xapi.model ),
+                        project : ":xapi-ui",
+                    }
+                /api>,
+                <main
+                    requires = {
+                        external : ( libs.xapi.util ),
+                        project : ":xapi-ui",
+                        @transitive(test)
+                        external : ( libs.spock ),
+                        @transitive(test)
+                        external : ( libs.xapi.model.jre ),
+                    }
+                /main>
+            ]
+            requires = {
+                @transitive
+                project: ":gdx-themes-raeleus-sgx"
+            }
+        /main>,
+        <jre replaces=main
+            requires = {
+                external : [
+                    ( libs.xapi.model.jre ),
+                    "com.badlogicgames.gdx:gdx-box2d:$gdxVersion",
+                    "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop",
+                    "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop",
+                    "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion",
+                ],
+            }
+        /jre>
+    ]
+/xapi-schema>

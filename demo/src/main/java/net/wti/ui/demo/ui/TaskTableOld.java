@@ -11,15 +11,15 @@ import net.wti.ui.gdx.theme.GdxTheme;
 ///
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 08/03/2025 @ 21:59
-public class TaskTable extends ScrollPane {
+public class TaskTableOld extends ScrollPane {
 
     private final GdxTheme theme;
     private final Table body;
 
-    public TaskTable(final GdxTheme theme) {
+    public TaskTableOld(final GdxTheme theme) {
         this(theme, new Table());
     }
-    public TaskTable(final GdxTheme theme, final Table body) {
+    public TaskTableOld(final GdxTheme theme, final Table body) {
         super(body, theme.getSkin(), "no-bg");
         this.theme = theme;
         this.body = body;

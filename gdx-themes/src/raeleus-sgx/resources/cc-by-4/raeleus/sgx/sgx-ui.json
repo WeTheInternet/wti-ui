@@ -44,6 +44,30 @@ com.badlogic.gdx.graphics.Color: {
 		b: 1
 		a: 1
 	}
+	font-later: {
+		r: 0.6
+		g: 1.0,
+		b: 0.73333335,
+		a: 1.0,
+	}
+	font-soon: {
+		r: 0.9647059
+		g: 1.0,
+		b: 0.6,
+		a: 1.0,
+	}
+	font-urgent: {
+		r: 1.0
+		g: 0.7882353,
+		b: 0.6,
+		a: 1.0,
+	}
+	font-overdue: {
+		r: 1.0
+		g: 0.6,
+		b: 0.6,
+		a: 1.0,
+	}
 	font-disabled: {
 		r: 0.42745098
 		g: 0.42745098
@@ -303,6 +327,10 @@ com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
 		font: font
 		fontColor: font-over
 	}
+	warn: {
+		font: font
+		fontColor: font-urgent
+	}
 	small: {
 		font: small
 		fontColor: font
@@ -310,6 +338,10 @@ com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
 	small-white: {
 		font: small
 		fontColor: font-over
+	}
+	small-warn: {
+		font: small
+		fontColor: font-urgent
 	}
 	title: {
 		font: title
@@ -319,6 +351,10 @@ com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
 		font: title
 		fontColor: font-over
 	}
+	title-warn: {
+		font: title
+		fontColor: font-urgent
+	}
 	medium: {
 		font: medium
 		fontColor: font
@@ -326,6 +362,10 @@ com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
 	medium-white: {
 		font: medium
 		fontColor: font-over
+	}
+	medium-warn: {
+		font: medium
+		fontColor: font-urgent
 	}
 }
 com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle: {
