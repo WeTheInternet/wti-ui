@@ -793,3 +793,21 @@ window-tool
   orig: 110, 39
   offset: 0, 0
   index: -1
+# extra stuff added by james@wti.net
+default-pane-noborder
+  rotate: false
+  xy: 1, 1
+  size: 1, 1
+  split: 0, 0, 0, 0
+  orig: 1, 1
+  offset: 0, 0
+  index: -1
+taskview-bg
+  rotate: false
+  xy: 850, 850
+  size: 32, 32
+  split: 8, 8, 8, 8
+  pad: 4, 4, 4, 4
+  orig: 32, 32
+  offset: 0, 0
+  index: -1

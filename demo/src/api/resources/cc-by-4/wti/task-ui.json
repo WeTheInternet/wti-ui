@@ -1,72 +1,45 @@
 {
+  com.badlogic.gdx.graphics.Color: {
+    task-name: { r: 0.8, g: 0.85, b: 1.0, a: 1 },
+    task-preview: { r: 0.6, g: 0.745, b: 1.0, a: 1 },
+    task-button: { r: 1.0, g: 1.0, b: 1.0, a: 1 }
+  },
+
   com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
-    task-name-collapsed: {
-      font: title,
-      fontColor: font,
-    },
-    task-desc-preview: {
-      font: small,
-      fontColor: font-disabled-alt,
-    },
-    task-recurrence-label: {
-      font: small,
-      fontColor: font-later,
-    },
-    task-button: {
-      font: title,
-      fontColor: font-over
-    }
-    task-title: {
-      font: medium,
-      fontColor: font
-    },
-    task-desc: {
-      font: small,
-      fontColor: font
-    },
-    task-recur-header: {
-      font: small,
-      fontColor: font-urgent
-    },
-    task-recur-line: {
-      font: small,
-      fontColor: font
-    },
-    task-action: {
-      font: title,
-      fontColor: font-over
-    },
     task-name: {
-      font: title,
-      fontColor: font
+      font: task-title-font,
+      fontColor: task-name
     },
     task-preview: {
-      font: small,
-      fontColor: font-disabled-alt
+      font: task-preview-font,
+      fontColor: task-preview
     },
-    task-recur-label: {
-      font: small,
-      fontColor: font-disabled
+    task-desc: {
+      font: task-preview-font,
+      fontColor: task-preview
     },
-    task-recur-value: {
-      font: small,
-      fontColor: font
+    task-recurrence-label: {
+      font: task-preview-font,
+      fontColor: task-name
     },
+    task-recurrence-value: {
+      font: task-title-font,
+      fontColor: task-name
+    },
+    task-button: {
+      font: task-action-font,
+      fontColor: task-button
+    }
   },
   net.wti.ui.demo.ui.TaskView$TaskViewStyle: {
     taskview: {
+      background: taskview-bg,
       nameStyle: task-name,
       previewStyle: task-preview,
       descStyle: task-desc,
-      recurrenceLabelStyle: task-recur-label,
-      recurrenceValueStyle: task-recur-value,
+      recurrenceLabelStyle: task-recurrence-label,
+      recurrenceValueStyle: task-recurrence-value,
       buttonStyle: task-button
-    }
-  },
-  com.badlogic.gdx.scenes.scene2d.ui.Skin$TintedDrawable: {
-    default-pane-noborder-gray: {
-      name: default-pane-noborder,
-      color: font-disabled
     }
   }
 }

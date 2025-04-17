@@ -13,7 +13,7 @@ public class TaskUiTheme extends CompositeGdxTheme {
     public TaskUiTheme() {
         super(
                 new UiDataBundle("cc-by-4/raeleus/sgx/sgx-ui.json", "cc-by-4/raeleus/sgx/sgx-ui.atlas"),
-                new UiDataBundle("cc-by-4/wti/task-ui.json", "cc-by-4/wti/task-ui.atlas")
+                new UiDataBundle("cc-by-4/wti/task-ui.json")
         );
     }
 }

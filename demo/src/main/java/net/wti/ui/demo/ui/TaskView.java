@@ -1,6 +1,5 @@
 package net.wti.ui.demo.ui;
 
-
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -28,6 +27,7 @@ import xapi.model.api.ModelList;
 /// 『 ✓ 』 Render task name using prominent font
 /// 『 ✓ 』 Display truncated task description preview
 /// 『 ✓ 』 Show deadline view aligned to the right
+/// 『 ✓ 』 Layout title and buttons in left 60%, preview+meta in right 40%
 ///
 /// ## 🔄 Expandable Layout
 /// 『 ✓ 』 Toggle between collapsed/expanded on row click
@@ -107,9 +107,20 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
 
     /// Build compact task layout with name, preview, and deadline.
     private void buildCollapsed() {
+        // Left-side vertical stack: name + action buttons
+        Table left = new Table(skin);
         Label name = new Label(task.getName(), style.nameStyle != null ? style.nameStyle : skin.get(Label.LabelStyle.class));
         name.setWrap(true);
+        left.add(name).left().row();
 
+        Table actions = new Table(skin);
+        actions.add(createButton("✓", () -> controller.markAsDone(task))).padRight(8);
+        actions.add(createButton("→", () -> controller.defer(task))).padRight(8);
+        actions.add(createButton("✕", () -> controller.cancel(task)));
+        left.add(actions).left().padTop(4);
+
+        // Right-side vertical stack: preview + summary
+        Table right = new Table(skin);
         String desc = task.getDescription();
         if (desc == null) desc = "";
         desc = desc.replace("\n", " ").replaceAll(" +", " ").trim();
@@ -119,10 +130,12 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
         }
         Label preview = new Label(desc, style.previewStyle != null ? style.previewStyle : skin.get(Label.LabelStyle.class));
         preview.setWrap(true);
+        right.add(preview).left().growX().padBottom(4).row();
+        right.add(deadlineView).right();
 
-        add(name).left().growX().colspan(2).padBottom(4).row();
-        add(preview).left().growX().padRight(10);
-        add(deadlineView).right().growX().padLeft(20).row();
+        // Lay out left (60%) and right (40%) side by side
+        add(left).width(getWidth() * 0.6f).top().left();
+        add(right).expandX().fillX().top().left();
     }
 
     /// Build expanded layout showing full details and recurrence.
@@ -163,7 +176,7 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
     }
 
     /// Create a styled Label as a button and hook to action.
-    private void addActionButton(String text, Runnable action) {
+    private Label createButton(String text, Runnable action) {
         Label button = new Label(text, style.buttonStyle != null ? style.buttonStyle : skin.get(Label.LabelStyle.class));
         button.setColor(1f, 1f, 1f, 1f);
         button.addListener(new ClickListener() {
@@ -172,7 +185,7 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
                 action.run();
             }
         });
-        add(button).left().padRight(8);
+        return button;
     }
 
     /// markdown

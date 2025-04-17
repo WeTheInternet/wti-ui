@@ -12,6 +12,15 @@ com.badlogic.gdx.graphics.g2d.BitmapFont: {
 	title: {
 		file: font-title-export.fnt
 	}
+	task-title-font: {
+		file: font-medium-export.fnt
+	},
+	task-preview-font: {
+		file: font-small-export.fnt
+	},
+	task-action-font: {
+		file: font-export.fnt
+	}
 }
 com.badlogic.gdx.graphics.Color: {
 	black: {
