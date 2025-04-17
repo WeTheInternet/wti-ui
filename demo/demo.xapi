@@ -13,6 +13,7 @@
                         @transitive
                         external : ( libs.xapi.model ),
                         project : ":xapi-ui",
+                        project : { ":gdx-themes" : main }
                     }
                 /api>,
                 <main

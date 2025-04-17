@@ -10,16 +10,17 @@ import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import net.wti.gdx.theme.raeleus.sgx.GdxThemeSgx;
 import net.wti.gdx.theme.raeleus.sgx.TabbedPane;
 import net.wti.ui.demo.api.CompletionStatus;
 import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.api.ModelTaskCompletion;
+import net.wti.ui.demo.theme.TaskUiTheme;
 import net.wti.ui.demo.ui.SettingsPanel;
 import net.wti.ui.demo.ui.TaskTable;
 import net.wti.ui.demo.ui.controller.TaskController;
 import net.wti.ui.demo.ui.controller.TaskRegistry;
 import net.wti.ui.demo.view.api.IsTaskView;
+import net.wti.ui.gdx.theme.GdxTheme;
 import xapi.model.X_Model;
 
 /// DemoApp
@@ -70,7 +71,7 @@ public class DemoApp extends ApplicationAdapter {
     @Override
     public void create() {
         // Setup theme and skin
-        final GdxThemeSgx theme = new GdxThemeSgx();
+        final GdxTheme theme = new TaskUiTheme();
         skin = theme.getSkin();
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -126,13 +127,13 @@ public class DemoApp extends ApplicationAdapter {
         injectTask("Toggle Expand/Collapse Tasks", "Make ACTIVE items clickable to show full details and description");
         injectTask("Show Recurrence Info", "Display recurrence details like day/time range in expanded view");
         injectTask("Hover Expand Button", "Indicate clickable expand/collapse affordance on hover");
-        injectTask("Style Expanded TaskView", "Improve layout of TaskViewExpandable with clear spacing and labels");
+        injectTask("Style Expanded TaskView", "Improve layout of TaskView with clear spacing and labels");
 
         injectCompletion("Mark Task Done", "move ONCE task to done list");
         injectCompletion("Reschedule Recurring", "reinsert repeating task with updated deadline");
         injectCompletion("Persist New Task", "uses X_Model.persist");
-        injectCompletion("Create Task UI Views", "TaskViewExpandable + DeadlineView setup");
-        injectCompletion("Click Expand TaskView", "Make TaskViewExpandable respond to user click");
+        injectCompletion("Create Task UI Views", "TaskView + DeadlineView setup");
+        injectCompletion("Click Expand TaskView", "Make TaskView respond to user click");
         injectCompletion("Show Expanded Recurrence Info", "Include recurrence data in expanded task view");
         injectCompletion("Style Expanded View", "Spaced layout, visible deadlines, and readable rows");
         injectCompletion("Toggle Completed View", "Click to expand/collapse additional info for completed tasks");

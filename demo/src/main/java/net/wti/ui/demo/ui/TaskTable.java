@@ -55,7 +55,7 @@ public class TaskTable extends ScrollPane {
 
     /// Adds a task item to the table in active mode (TaskViewExpandable)
     public IsTaskView<?> addTask(ModelTask task) {
-        final TaskViewExpandable view = new TaskViewExpandable(task, theme.getSkin(), controller);
+        final TaskView view = new TaskView(task, theme.getSkin(), controller);
         body.add(view).expandX().fillX().pad(5).row();
         return view;
     }

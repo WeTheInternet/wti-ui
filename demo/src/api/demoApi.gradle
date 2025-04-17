@@ -19,9 +19,11 @@ main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 main.java.srcDir("$rootDir/demo/src/api/java")
+main.resources.srcDir("$rootDir/demo/src/api/resources")
 
 dependencies {
     implementation project(path: ":xapi-ui-api")
+    implementation project(path: ":gdx-themes-main")
     api libs.xapi.model
 }
 // Setup publishing to coordinates: net.wti:demo-api

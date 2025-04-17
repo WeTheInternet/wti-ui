@@ -1,0 +1,72 @@
+{
+  com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
+    task-name-collapsed: {
+      font: title,
+      fontColor: font,
+    },
+    task-desc-preview: {
+      font: small,
+      fontColor: font-disabled-alt,
+    },
+    task-recurrence-label: {
+      font: small,
+      fontColor: font-later,
+    },
+    task-button: {
+      font: title,
+      fontColor: font-over
+    }
+    task-title: {
+      font: medium,
+      fontColor: font
+    },
+    task-desc: {
+      font: small,
+      fontColor: font
+    },
+    task-recur-header: {
+      font: small,
+      fontColor: font-urgent
+    },
+    task-recur-line: {
+      font: small,
+      fontColor: font
+    },
+    task-action: {
+      font: title,
+      fontColor: font-over
+    },
+    task-name: {
+      font: title,
+      fontColor: font
+    },
+    task-preview: {
+      font: small,
+      fontColor: font-disabled-alt
+    },
+    task-recur-label: {
+      font: small,
+      fontColor: font-disabled
+    },
+    task-recur-value: {
+      font: small,
+      fontColor: font
+    },
+  },
+  net.wti.ui.demo.ui.TaskView$TaskViewStyle: {
+    taskview: {
+      nameStyle: task-name,
+      previewStyle: task-preview,
+      descStyle: task-desc,
+      recurrenceLabelStyle: task-recur-label,
+      recurrenceValueStyle: task-recur-value,
+      buttonStyle: task-button
+    }
+  },
+  com.badlogic.gdx.scenes.scene2d.ui.Skin$TintedDrawable: {
+    default-pane-noborder-gray: {
+      name: default-pane-noborder,
+      color: font-disabled
+    }
+  }
+}
