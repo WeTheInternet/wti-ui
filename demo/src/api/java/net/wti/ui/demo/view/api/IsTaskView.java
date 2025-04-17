@@ -23,6 +23,10 @@ import net.wti.ui.demo.api.BasicModelTask;
 /// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 2025-04-16 @ 22:52:00 CST
 public interface IsTaskView<Model extends BasicModelTask<Model>> {
 
+    /// Toggle expanded/collapsed and rebuild layout  void toggleExpanded();
+
+    void toggleExpanded();
+
     /// @return The underlying task model being rendered
     Model getTask();
 
@@ -37,6 +41,5 @@ public interface IsTaskView<Model extends BasicModelTask<Model>> {
 
     /// Trigger a full refresh / rerender of the visual layout
     void rerender();
-
 }
 

@@ -17,7 +17,7 @@ import net.wti.ui.demo.api.ModelRecurrence;
 import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.ui.SettingsPanel;
 import net.wti.ui.demo.ui.TaskTableOld;
-import net.wti.ui.demo.ui.TaskView;
+import net.wti.ui.demo.ui.TaskViewOld;
 import net.wti.ui.gdx.theme.GdxTheme;
 import xapi.model.api.ModelList;
 
@@ -60,7 +60,7 @@ public class DemoAppOld  extends ApplicationAdapter {
         done.setHeader("Done");
 
         // dailies
-        final TaskView firstItem;
+        final TaskViewOld firstItem;
         firstItem = todos.addTask(wakeUp());
         todos.addTask(cookBreakfast());
         todos.addTask(brushTeethMorning());

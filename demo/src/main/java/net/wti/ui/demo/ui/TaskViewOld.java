@@ -17,7 +17,7 @@ import xapi.fu.In1;
 ///
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 08/03/2025 @ 21:16
-public class TaskView {
+public class TaskViewOld {
 
     private final ModelTask task;
     private final Label label;
@@ -29,7 +29,7 @@ public class TaskView {
     private Cell<Actor> labelRow;
     private Cell<Actor> buttonRow;
 
-    public TaskView(final ModelTask task, final Skin skin) {
+    public TaskViewOld(final ModelTask task, final Skin skin) {
         this.task = task;
         this.skin = skin;
         label = new Label(task.getName(), skin);

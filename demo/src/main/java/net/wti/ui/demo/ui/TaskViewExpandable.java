@@ -135,7 +135,7 @@ public class TaskViewExpandable extends Table implements IsTaskView<ModelTask> {
         add(cancel).pad(2).left();
     }
 
-    /// Toggle expanded/collapsed and rebuild layout
+    @Override
     public void toggleExpanded() {
         this.expanded = !expanded;
         rebuild();
@@ -171,4 +171,5 @@ public class TaskViewExpandable extends Table implements IsTaskView<ModelTask> {
     public void rerender() {
         rebuild();
     }
+
 }

@@ -30,8 +30,8 @@ public class TaskTableOld extends ScrollPane {
 
     }
 
-    public TaskView addTask(ModelTask task) {
-        final TaskView view = new TaskView(task, theme.getSkin());
+    public TaskViewOld addTask(ModelTask task) {
+        final TaskViewOld view = new TaskViewOld(task, theme.getSkin());
         view.addToTable(body);
         return view;
     }
@@ -43,7 +43,7 @@ public class TaskTableOld extends ScrollPane {
     /**
      * @return The number of columns added for each task.
      * <p>
-     * Update this whenever adding more elements in {@link TaskView#getNumColumns()}}
+     * Update this whenever adding more elements in {@link TaskViewOld#getNumColumns()}}
      */
     int getTaskColumnWidth() {
         return 3;

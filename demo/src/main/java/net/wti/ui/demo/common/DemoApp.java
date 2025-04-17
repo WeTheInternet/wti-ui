@@ -1,6 +1,5 @@
 package net.wti.ui.demo.common;
 
-
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -20,8 +19,8 @@ import net.wti.ui.demo.ui.SettingsPanel;
 import net.wti.ui.demo.ui.TaskTable;
 import net.wti.ui.demo.ui.controller.TaskController;
 import net.wti.ui.demo.ui.controller.TaskRegistry;
+import net.wti.ui.demo.view.api.IsTaskView;
 import xapi.model.X_Model;
-
 
 /// DemoApp
 ///
@@ -39,8 +38,10 @@ import xapi.model.X_Model;
 /// 『 ✓ 』      Reschedule recurring tasks
 /// 『   』      Handle deferrals and cancellations
 /// 『 ✓ 』      Toggle expanded/collapsed TaskView with click
-/// 『   』      Show expand/collapse icon on hover
-/// 『   』      Show more recurrence data in expanded view
+/// 『 ✓ 』      Show expand/collapse icon on hover
+/// 『 ✓ 』      Show more recurrence data in expanded view
+/// 『 ✓ 』      Style expanded view with spacing and labels
+/// 『 ✓ 』      Toggle expanded/collapsed for completed tasks (TaskCompletionView)
 ///
 /// 『 ✓ 』   3. 📦 Persistence
 /// 『 ✓ 』      Persist new tasks
@@ -125,18 +126,22 @@ public class DemoApp extends ApplicationAdapter {
         injectTask("Toggle Expand/Collapse Tasks", "Make ACTIVE items clickable to show full details and description");
         injectTask("Show Recurrence Info", "Display recurrence details like day/time range in expanded view");
         injectTask("Hover Expand Button", "Indicate clickable expand/collapse affordance on hover");
+        injectTask("Style Expanded TaskView", "Improve layout of TaskViewExpandable with clear spacing and labels");
 
         injectCompletion("Mark Task Done", "move ONCE task to done list");
         injectCompletion("Reschedule Recurring", "reinsert repeating task with updated deadline");
         injectCompletion("Persist New Task", "uses X_Model.persist");
         injectCompletion("Create Task UI Views", "TaskViewExpandable + DeadlineView setup");
         injectCompletion("Click Expand TaskView", "Make TaskViewExpandable respond to user click");
+        injectCompletion("Show Expanded Recurrence Info", "Include recurrence data in expanded task view");
+        injectCompletion("Style Expanded View", "Spaced layout, visible deadlines, and readable rows");
+        injectCompletion("Toggle Completed View", "Click to expand/collapse additional info for completed tasks");
     }
 
     private void injectTask(String name, String desc) {
         ModelTask task = TaskFactory.create(name, desc);
         controller.save(task);
-        active.addTask(task);
+        IsTaskView view = active.addTask(task);
     }
 
     private void injectCompletion(String name, String desc) {
@@ -150,7 +155,7 @@ public class DemoApp extends ApplicationAdapter {
     }
 
     private void done(ModelTaskCompletion done) {
-        this.done.addTask(done);
+        IsTaskView view = this.done.addTask(done);
     }
 
     @Override

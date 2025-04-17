@@ -97,5 +97,10 @@ public class TaskCompletionView extends Table implements IsTaskView<ModelTaskCom
         return null;
     }
 
+    @Override
+    public void toggleExpanded() {
+        this.expanded = !this.expanded;
+        rerender();
+    }
 }
 
