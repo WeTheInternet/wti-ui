@@ -12,7 +12,7 @@ package net.wti.ui.api;
 /// 『 ✓ 』 Abstract deadline-aware logic from UI rendering
 ///
 /// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 2025-04-16 @ 22:10:28 CST
-public interface IsDeadlineView <Self> {
+public interface IsDeadlineView {
 
     /// @return true if this view is tracking a non-null deadline
     boolean hasDeadline();
@@ -30,6 +30,4 @@ public interface IsDeadlineView <Self> {
 
     Integer getAlarmMinutes();
 
-    /// Return "this" as a type which your UI library treats as an "element" or "actor"
-    Self uiSpecific();
 }

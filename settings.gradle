@@ -1,9 +1,22 @@
 
 pluginManagement {
+    String xapiRepoDefault = "<default>"
+    String repo = xapiRepoDefault
+    try { repo = "${xapiRepo}" }
+    catch (ignored) {}
+    if (repo == xapiRepoDefault) {
+        repo = "$rootDir.parent/xapi/repo"
+        settings.ext.xapiRepo = repo
+        logger.quiet "No xapiRepo set in ~/.gradle/gradle.properties, using xapiRepo=$repo"
+    }
     repositories {
         gradlePluginPortal()
         mavenCentral()
         google()
+        maven {
+            name = 'xapiLocal'
+            url = new URI("file://${xapiRepo}")
+        }
     }
     plugins {
         id "${quarkusPluginId}" version "${quarkusPluginVersion}"
@@ -12,14 +25,6 @@ pluginManagement {
     }
 }
 buildscript {
-    String xapiRepo = "<default>"
-    // so sorry... you have to have WeTheInternet/xapi checked out as a sibling to the wti-ui repo, or set xapiRepo=/path/to/xapi/repo in ~/.gradle/gradle.properties
-    try { xapiRepo = "${xapiRepo}" }
-    catch (ignored) {}
-    if (xapiRepo == "<default>") {
-       xapiRepo = "$rootDir.parent/xapi/repo"
-       logger.quiet "No xapiRepo set in ~/.gradle/gradle.properties, using xapiRepo=$xapiRepo"
-    }
     repositories {
         maven {
             name = 'xapiLocal'

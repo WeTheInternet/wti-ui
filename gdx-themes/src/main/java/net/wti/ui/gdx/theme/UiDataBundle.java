@@ -34,7 +34,10 @@ public class UiDataBundle {
     }
 
     /// @return FileHandle for the skin JSON
-    public FileHandle getJsonHandle() {
+    public FileHandle getJsonHandleOrNull() {
+        if (jsonPath == null) {
+            return null;
+        }
         return Gdx.files.internal(jsonPath);
     }
 
@@ -47,7 +50,11 @@ public class UiDataBundle {
 
     /// @return Asset path prefix (directory portion of the skin file)
     public String getBasePath() {
-        int idx = jsonPath.lastIndexOf('/');
-        return idx >= 0 ? jsonPath.substring(0, idx) : ".";
+        String path = jsonPath;
+        if (path == null) {
+            path = atlasPath;
+        }
+        int idx = path.lastIndexOf('/');
+        return idx >= 0 ? path.substring(0, idx) : ".";
     }
 }

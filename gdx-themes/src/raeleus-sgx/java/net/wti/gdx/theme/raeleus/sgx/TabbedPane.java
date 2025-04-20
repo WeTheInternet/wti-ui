@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener.ChangeEvent;
@@ -169,7 +170,11 @@ public class TabbedPane extends Table {
             }
         });
         tabTitleTable.add(button); // .uniform().fill(); // uniform gives tabs the same size
-        tabBodyStack.add(actor);
+
+
+        /// create a scrollpane to wrap around the actor. TODO: make configurable (if needed)
+        ScrollPane scrollPane = new ScrollPane(actor, getSkin(), "no-bg");
+        tabBodyStack.add(scrollPane);
 
         // Make sure the 1st tab is selected even after adding the tab
         // TODO
@@ -201,7 +206,12 @@ public class TabbedPane extends Table {
         TabTitleButton tabTitleButton = ((TabTitleButton)tabTitleTable.getCells().get(selectedIndex).getActor());
         tabTitleButton.setDisabled(value); // Can't toggle the selected tab
         tabTitleButton.setChecked(value);
-        tabBodyStack.getChildren().get(selectedIndex).setVisible(value);
+        final Actor child = tabBodyStack.getChildren().get(selectedIndex);
+        child.setVisible(value);
+        final Stage stage = getStage();
+        if (stage != null) {
+            stage.setScrollFocus(child);
+        }
     }
 
     /** Sends a ChangeEvent, with this TabbedPane as the target, to each registered listener. This method is called each time there
@@ -211,6 +221,24 @@ public class TabbedPane extends Table {
         changeEvent.setBubbles(false);
         fire(changeEvent);
         Pools.free(changeEvent);
+    }
+
+    public String getInfo() { // used to debug sizes; should ideally be unused
+        return "My size: " + getWidth() + "x" + getHeight() + "; " +
+                "stack size: " + tabBodyStack.getWidth() + "x" + tabBodyStack.getHeight() + ";\n" +
+                "stack max size: " + tabBodyStack.getMaxWidth() + "x" + tabBodyStack.getMaxHeight() + "; " +
+                "stack min size: " + tabBodyStack.getMinWidth() + "x" + tabBodyStack.getMinHeight() + "; " +
+                "stack pref size: " + tabBodyStack.getPrefWidth() + "x" + tabBodyStack.getPrefHeight() + "; ";
+    }
+
+    /// Called whenever we need to give the layout a kick in the pants and get corrected sizes
+    public void refreshLayout() {
+        tabBodyStack.invalidateHierarchy();
+    }
+
+    /// @return true if the size of the outer pane is smaller than the size that the child wants to be
+    public boolean isSquished() {
+        return getWidth() < tabBodyStack.getPrefWidth();
     }
 
     private static class TabTitleButton extends TextButton {
@@ -293,4 +321,11 @@ public class TabbedPane extends Table {
         }
     }
 
+    @Override
+    public void invalidate() {
+        super.invalidate();
+        if (tabBodyStack != null) {
+            tabBodyStack.invalidate();
+        }
+    }
 }

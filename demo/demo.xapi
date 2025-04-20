@@ -11,14 +11,21 @@
                 <api
                     requires = {
                         @transitive
-                        external : ( libs.xapi.model ),
+                        external : [
+                            ( libs.xapi.model ),
+                            ( libs.xapi.util ),
+                        ],
                         project : ":xapi-ui",
-                        project : { ":gdx-themes" : main }
+                        project : { ":gdx-themes" : main },
+                        @transitive("test")
+                        external : [
+                            ( libs.spock ),
+                            ( libs.xapi.model.jre ),
+                        ],
                     }
                 /api>,
                 <main
                     requires = {
-                        external : ( libs.xapi.util ),
                         project : ":xapi-ui",
                         @transitive(test)
                         external : ( libs.spock ),

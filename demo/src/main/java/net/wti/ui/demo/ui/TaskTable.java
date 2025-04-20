@@ -9,6 +9,7 @@ import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.api.ModelTaskCompletion;
 import net.wti.ui.demo.ui.controller.TaskController;
 import net.wti.ui.demo.ui.view.TaskCompletionView;
+import net.wti.ui.demo.ui.view.TaskView;
 import net.wti.ui.demo.view.api.IsTaskView;
 import net.wti.ui.gdx.theme.GdxTheme;
 

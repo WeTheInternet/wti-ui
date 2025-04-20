@@ -1,0 +1,23 @@
+
+task-ui.png
+size: 1024,1024
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+default-pane-noborder
+  rotate: false
+  xy: 1, 1
+  size: 1, 1
+  split: 0, 0, 0, 0
+  orig: 1, 1
+  offset: 0, 0
+  index: -1
+default-pane-list
+  rotate: false
+  xy: 184, 496
+  size: 41, 60
+  split: 4, 3, 2, 3
+  pad: 1, 1, 2, 2
+  orig: 41, 60
+  offset: 0, 0
+  index: -1

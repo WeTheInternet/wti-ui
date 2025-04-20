@@ -20,7 +20,7 @@ import static xapi.time.X_Time.isPast;
 /// Implements {@link IsDeadlineView<Actor>} to expose deadline state accessors.
 ///
 /// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 2025-04-16 @ 22:10 CST
-public class DeadlineView extends Label implements IsDeadlineView<Actor> {
+public class DeadlineView extends Label implements IsDeadlineView {
 
     private static final long ONE_SECOND = 1_000;
     private static final long ONE_MINUTE = 60_000;
@@ -151,8 +151,4 @@ public class DeadlineView extends Label implements IsDeadlineView<Actor> {
         return alarmMinutes;
     }
 
-    @Override
-    public Actor uiSpecific() {
-        return this;
-    }
 }

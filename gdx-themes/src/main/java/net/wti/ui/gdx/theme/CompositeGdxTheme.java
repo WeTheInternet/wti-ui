@@ -1,5 +1,6 @@
 package net.wti.ui.gdx.theme;
 
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
@@ -22,7 +23,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 /// ```
 ///
 /// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 2025-04-16 @ 22:32 CST
-public class CompositeGdxTheme implements GdxTheme {
+public class CompositeGdxTheme extends AbstractGdxTheme {
 
     private final Skin skin;
     private final String assetPath;
@@ -37,20 +38,27 @@ public class CompositeGdxTheme implements GdxTheme {
         // Use the first skin + atlas as base skin
         UiDataBundle base = bundles[0];
         TextureAtlas baseAtlas = base.getAtlasOrNull();
+
         this.skin = (baseAtlas == null)
                 ? new Skin()
                 : new Skin(baseAtlas);
-        this.skin.load(base.getJsonHandle());
+        final FileHandle json = base.getJsonHandleOrNull();
+        if (json != null) {
+            this.skin.load(json);
+        }
         this.assetPath = base.getBasePath();
 
         // Merge remaining skins into the base skin instance
         for (int i = 1; i < bundles.length; i++) {
             UiDataBundle bundle = bundles[i];
-            TextureAtlas atlas = bundle.getAtlasOrNull();
-            if (atlas != null) {
-                skin.addRegions(atlas);                // Add atlas regions
+            TextureAtlas maybeAtlas = bundle.getAtlasOrNull();
+            if (maybeAtlas != null) {
+                skin.addRegions(maybeAtlas);                // Add atlas regions
             }
-            skin.load(bundle.getJsonHandle());     // Load JSON styles into same Skin instance
+            final FileHandle maybeJson = bundle.getJsonHandleOrNull();
+            if (maybeJson != null) {
+                skin.load(maybeJson);     // Load JSON styles into same Skin instance
+            }
         }
     }
 

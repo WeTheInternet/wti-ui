@@ -1,8 +1,6 @@
 package net.wti.ui.demo.api;
 
-import xapi.annotation.model.IsModel;
-import xapi.annotation.model.PersistenceStrategy;
-import xapi.annotation.model.Persistent;
+import xapi.annotation.model.*;
 import xapi.model.X_Model;
 import xapi.model.api.Model;
 
@@ -26,6 +24,14 @@ public interface ModelRecurrence extends Model {
     long getValue();
     ModelRecurrence setValue(long value);
 
+    // rendered strings may go from server to client, but not from client to server
+    @Serializable(
+            serverToClient = @ServerToClient(enabled = true),
+            clientToServer = @ClientToServer(enabled = false)
+    )
+    String getRendered();
+    ModelRecurrence setRendered(String rendered);
+
     default DayOfWeek dayOfWeek() {
         assert getUnit() != RecurrenceUnit.ONCE : "Do not calculate .dayOfWeek() when unit==ONCE";
         final long value = getValue();
@@ -33,14 +39,14 @@ public interface ModelRecurrence extends Model {
         return DayOfWeek.values()[(int)dayNum % 7];
     }
     default int hour() {
-        assert getUnit() != RecurrenceUnit.ONCE : "Do not calculate .hour() when unit==ONCE";
+//        assert getUnit() != RecurrenceUnit.ONCE : "Do not calculate .hour() when unit==ONCE";
         final long value = getValue();
         long dayMinutes = value % MINUTES_PER_DAY;
         long hours = (dayMinutes - (dayMinutes % 60)) / 60;
         return (int)hours;
     }
     default int minute() {
-        assert getUnit() != RecurrenceUnit.ONCE : "Do not calculate .minute() when unit==ONCE";
+//        assert getUnit() != RecurrenceUnit.ONCE : "Do not calculate .minute() when unit==ONCE";
         final long value = getValue();
         return (int)(value % 60);
     }
@@ -98,21 +104,17 @@ public interface ModelRecurrence extends Model {
         recur.setValue(dayOfWeek * MINUTES_PER_DAY + hour * 60 + minute);
         return recur;
     }
-    static ModelRecurrence yearly(int dayOfYear) {
+    static ModelRecurrence yearly(final int dayOfYear, final int hour, final int minute) {
+        assert dayOfYear >= 0 && dayOfYear <= 365 : "dayOfYear must be in range [0, 365]";
+        assert hour >= 0 && hour < 27 : "Illegal hour: " + hour + " must be 0-26 (24, 25, 26 represent 12am–2am)";
+        assert minute >= 0 && minute < 60 : "Illegal minute: " + minute + " must be 0–59";
+
         final ModelRecurrence recur = X_Model.create(ModelRecurrence.class);
-        recur.setUnit(RecurrenceUnit.MONTHLY);
-        if (dayOfYear > 365) {
-            throw new IllegalArgumentException("dayOfYear must be less than 365");
-        }
-        recur.setValue(dayOfYear);
+        recur.setUnit(RecurrenceUnit.YEARLY);
+        recur.setValue(dayOfYear * MINUTES_PER_DAY + hour * 60 + minute);
         return recur;
     }
-    static ModelRecurrence dayOfWeek(DayOfWeek dayOfWeek) {
-        final ModelRecurrence recur = X_Model.create(ModelRecurrence.class);
-        recur.setUnit(RecurrenceUnit.DAY_OF_WEEK);
-        recur.setValue(dayOfWeek.ordinal());
-        return recur;
-    }
+
     static ModelRecurrence once(int hour, int minute) {
         final ModelRecurrence recur = X_Model.create(ModelRecurrence.class);
         recur.setUnit(RecurrenceUnit.ONCE);

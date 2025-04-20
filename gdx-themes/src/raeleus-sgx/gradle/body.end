@@ -1,0 +1,32 @@
+xapiFonts {
+    outputName = 'sgx-fonts'
+    googleFont 'Questrial', {
+        charFile = file("$rootDir/text-chars.txt")
+        addSizedWeight 72, 72, 'Regular', 8
+        addSizedWeight 96, 96, 'Regular', 12
+        addSizedWeight 132, 132, 'Regular', 18
+        addSizedWeight 160, 160, 'Regular', 24
+    }
+    googleFont 'NotoSansSymbols2', {
+        charFile = file("$rootDir/noto-sans-symbol-2-chars.txt")
+        // with only three symbols, these can take up very little space
+        addSizedWeight 120, 20, 'Regular', 18
+        addSizedWeight 144, 26, 'Regular', 24
+    }
+    googleFont 'PlayfairDisplay', {
+        extraUrl = '[wght]'
+        charFile = file("$rootDir/playfair-display-chars.txt")
+        addSizedWeight 16, 8, '', 18
+        addSizedWeight 22, 10, '', 24
+    }
+}
+def packFonts = tasks.named('packFonts')
+tasks.register('copyFonts', Copy) {
+    from(project.provider({packFonts.get().outputs.files}))
+    into('resources/cc-by-4/raeleus/sgx/')
+    dependsOn packFonts
+    duplicatesStrategy = 'INCLUDE'
+}
+packFonts.configure {
+    finalizedBy 'copyFonts'
+}

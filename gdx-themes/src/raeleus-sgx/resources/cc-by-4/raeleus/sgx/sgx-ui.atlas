@@ -811,3 +811,35 @@ taskview-bg
   orig: 32, 32
   offset: 0, 0
   index: -1
+button-task
+  rotate: false
+  xy: 128, 0
+  size: 32, 32
+  split: 6, 6, 6, 6
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+task-item-bg
+  rotate: false
+  xy: 336, 72
+  size: 64, 64
+  split: 8, 8, 8, 8
+  orig: 64, 64
+  offset: 0, 0
+  index: -1
+task-item-hover
+  rotate: false
+  xy: 272, 72
+  size: 64, 64
+  split: 8, 8, 8, 8
+  orig: 64, 64
+  offset: 0, 0
+  index: -1
+task-button-bg
+  rotate: false
+  xy: 832, 112
+  size: 32, 32
+  split: 6, 6, 6, 6
+  orig: 32, 32
+  offset: 0, 0
+  index: -1

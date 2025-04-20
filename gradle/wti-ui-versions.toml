@@ -1,6 +1,6 @@
 [versions]
 xapi = '0.5.1'
-gdx = '1.13.1'
+gdx = '1.13.1-SNAPSHOT'
 swt = '4.5.1'
 gwt = '2.8.0'
 elemental = '1.1.0'

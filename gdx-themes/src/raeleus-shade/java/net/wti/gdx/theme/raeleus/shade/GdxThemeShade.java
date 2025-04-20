@@ -2,13 +2,13 @@ package net.wti.gdx.theme.raeleus.shade;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import net.wti.ui.gdx.theme.GdxTheme;
+import net.wti.ui.gdx.theme.AbstractGdxTheme;
 
 /// GdxThemeShade:
 ///
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 13/02/2025 @ 03:12
-public class GdxThemeShade implements GdxTheme {
+public class GdxThemeShade extends AbstractGdxTheme {
 
     private final Skin skin;
 

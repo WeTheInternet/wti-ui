@@ -1,45 +1,43 @@
 {
-  com.badlogic.gdx.graphics.Color: {
-    task-name: { r: 0.8, g: 0.85, b: 1.0, a: 1 },
-    task-preview: { r: 0.6, g: 0.745, b: 1.0, a: 1 },
-    task-button: { r: 1.0, g: 1.0, b: 1.0, a: 1 }
-  },
-
-  com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
-    task-name: {
-      font: task-title-font,
-      fontColor: task-name
-    },
-    task-preview: {
-      font: task-preview-font,
-      fontColor: task-preview
-    },
-    task-desc: {
-      font: task-preview-font,
-      fontColor: task-preview
-    },
-    task-recurrence-label: {
-      font: task-preview-font,
-      fontColor: task-name
-    },
-    task-recurrence-value: {
-      font: task-title-font,
-      fontColor: task-name
-    },
-    task-button: {
-      font: task-action-font,
-      fontColor: task-button
+  com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle: {
+    action-button: {
+      font: font-symbol
+      fontColor: font
+      overFontColor: font-over
+      up: file-menu-button
+      down: file-menu-button-pressed
+      over: file-menu-button-over
     }
-  },
-  net.wti.ui.demo.ui.TaskView$TaskViewStyle: {
+    action-edit: {                        /// 🛠
+      font: font-symbol,
+      fontColor: font,
+      overFontColor: font-over,
+      up: file-menu-button,
+      down: file-menu-button-pressed,
+      over: file-menu-button-over
+    },
+    action-toggle: {                      /// ▶ / ▼
+      font: font-symbol,
+      fontColor: font,
+      overFontColor: font-over,
+      up: file-menu-button,
+      down: file-menu-button-pressed,
+      over: file-menu-button-over
+    }
+  }
+  net.wti.ui.demo.ui.view.AbstractTaskView$TaskViewStyle: {
     taskview: {
-      background: taskview-bg,
+      background: task-item-bg,
+      hoveredBackground: task-item-hover,
       nameStyle: task-name,
+      descStyle: default,
       previewStyle: task-preview,
-      descStyle: task-desc,
-      recurrenceLabelStyle: task-recurrence-label,
-      recurrenceValueStyle: task-recurrence-value,
-      buttonStyle: task-button
+      recurrenceLabelStyle: small,
+      recurrenceValueStyle: small-white,
+      buttonStyle: action-button,
+      editButtonStyle: action-edit,
+      toggleButtonStyle: action-toggle
+
     }
   }
 }

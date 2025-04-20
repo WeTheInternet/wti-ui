@@ -19,7 +19,10 @@ com.badlogic.gdx.graphics.g2d.BitmapFont: {
 		file: font-small-export.fnt
 	},
 	task-action-font: {
-		file: font-export.fnt
+		file: font-medium-export.fnt
+	}
+	font-symbol: {
+		file: NotoSansSymbols2-Regular-18.fnt
 	}
 }
 com.badlogic.gdx.graphics.Color: {
@@ -101,6 +104,9 @@ com.badlogic.gdx.graphics.Color: {
 		b: 0.4392157
 		a: 1
 	}
+	task-name: { r: 0.8, g: 0.85, b: 1.0, a: 1 },
+	task-preview: { r: 0.6, g: 0.745, b: 1.0, a: 1 },
+	task-button: { r: 1.0, g: 1.0, b: 1.0, a: 1 }
 }
 com.badlogic.gdx.scenes.scene2d.ui.Skin$TintedDrawable: {
 	checkbox-t: {
@@ -374,6 +380,39 @@ com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
 	}
 	medium-warn: {
 		font: medium
+		fontColor: font-urgent
+	}
+	task-name: {
+		font: task-title-font,
+		fontColor: task-name
+	},
+	task-preview: {
+		font: task-preview-font,
+		fontColor: task-preview
+	},
+	task-desc: {
+		font: task-preview-font,
+		fontColor: task-preview
+	},
+	task-recurrence-label: {
+		font: task-preview-font,
+		fontColor: task-name
+	},
+	task-recurrence-value: {
+		font: task-title-font,
+		fontColor: task-name
+	},
+	task-button: {
+		font: task-action-font,
+		fontColor: task-button,
+		background: button-task
+	}
+	task-summary: {
+		font: small,
+		fontColor: font
+	},
+	task-summary-tag: {
+		font: small,
 		fontColor: font-urgent
 	}
 }

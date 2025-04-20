@@ -1,0 +1,4 @@
+This file is a place to keep all the "candidate characters" for this font:
+https://fonts.google.com/noto/specimen/Noto+Sans+Symbols+2/tester?query=symbol
+✓⌚✕🛠▶▼🗑🖒🖓🖐🗨🗩🗪🗬🗭🪄🏆🪅❝❞❤🫂⮿⭙⭗⭘⮘⮙⮚⮛⯬⯭⯮⯯
+The real characters go in the *-chars.txt file

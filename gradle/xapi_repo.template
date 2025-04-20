@@ -1,0 +1,6 @@
+repositories {
+    maven {
+        name = 'xapi-repo'
+        url = file(findProperty('xapiRepo') ?: "$rootDir/../xapi/repo").absoluteFile
+    }
+}

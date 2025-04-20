@@ -11,4 +11,8 @@ public interface GdxTheme {
     Skin getSkin();
 
     String getAssetPath();
+
+    boolean isLandscape();
+
+    void setLandscape(boolean landscape);
 }

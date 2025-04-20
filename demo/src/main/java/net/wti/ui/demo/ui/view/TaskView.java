@@ -1,10 +1,9 @@
-package net.wti.ui.demo.ui;
+package net.wti.ui.demo.ui.view;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import net.wti.ui.api.IsDeadlineView;
@@ -27,7 +26,8 @@ import xapi.model.api.ModelList;
 /// 『 ✓ 』 Render task name using prominent font
 /// 『 ✓ 』 Display truncated task description preview
 /// 『 ✓ 』 Show deadline view aligned to the right
-/// 『 ✓ 』 Layout title and buttons in left 60%, preview+meta in right 40%
+/// 『 ✓ 』 Layout title and buttons on left column
+/// 『 ✓ 』 TaskSummaryPane + preview right-aligned, no growX
 ///
 /// ## 🔄 Expandable Layout
 /// 『 ✓ 』 Toggle between collapsed/expanded on row click
@@ -45,6 +45,7 @@ import xapi.model.api.ModelList;
 /// 『   』 Animations and transitions (future)
 /// 『   』 Editable recurrence control (future)
 /// 『   』 More elegant empty-state handling (future)
+/// 『   』 Refactor to use TaskActionBar and TaskSummaryPane (in progress)
 ///
 /// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 2025-04-16 @ 22:59 CST
 public class TaskView extends Table implements IsTaskView<ModelTask> {
@@ -53,12 +54,15 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
     /// Allows styles to be assigned via Skin JSON file `task-ui.json`.
     public static class TaskViewStyle {
         public Drawable background;
+        public Drawable hoveredBackground;
         public Label.LabelStyle nameStyle;
         public Label.LabelStyle descStyle;
         public Label.LabelStyle previewStyle;
         public Label.LabelStyle recurrenceLabelStyle;
         public Label.LabelStyle recurrenceValueStyle;
-        public Label.LabelStyle buttonStyle;
+        public TextButton.TextButtonStyle buttonStyle;
+        public TextButton.TextButtonStyle editButtonStyle;
+        public TextButton.TextButtonStyle toggleButtonStyle;
     }
 
     private final ModelTask task;
@@ -66,10 +70,16 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
     private final Skin skin;
     private final DeadlineView deadlineView;
     private boolean expanded = false;
+    private boolean isHovered = false;
     private final TaskViewStyle style;
 
     public TaskView(ModelTask task, Skin skin, TaskController controller) {
-        this(task, skin.has("taskview", TaskViewStyle.class) ? skin.get("taskview", TaskViewStyle.class) : new TaskViewStyle(), skin, controller);
+        this(task,
+             skin.has("taskview", TaskViewStyle.class)
+                     ? skin.get("taskview", TaskViewStyle.class)
+                     : new TaskViewStyle(),
+             skin,
+             controller);
     }
 
     public TaskView(ModelTask task, TaskViewStyle style, Skin skin, TaskController controller) {
@@ -84,10 +94,17 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
             setBackground(style.background);
         }
 
-        addListener(new ClickListener() {
+        addListener(new InputListener() {
             @Override
-            public void clicked(InputEvent event, float x, float y) {
-                toggleExpanded();
+            public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
+                isHovered = true;
+                updateBackground();
+            }
+
+            @Override
+            public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
+                isHovered = false;
+                updateBackground();
             }
         });
 
@@ -105,37 +122,39 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
         }
     }
 
-    /// Build compact task layout with name, preview, and deadline.
+    /// Build compact layout using HorizontalGroup-based split
     private void buildCollapsed() {
-        // Left-side vertical stack: name + action buttons
-        Table left = new Table(skin);
+        HorizontalGroup row = new HorizontalGroup();
+        row.left().top().space(20).fill();
+
+        VerticalGroup left = new VerticalGroup();
+        left.left().top().space(4).fill();
+
         Label name = new Label(task.getName(), style.nameStyle != null ? style.nameStyle : skin.get(Label.LabelStyle.class));
-        name.setWrap(true);
-        left.add(name).left().row();
+        name.setWrap(false);
+        left.addActor(name);
 
-        Table actions = new Table(skin);
-        actions.add(createButton("✓", () -> controller.markAsDone(task))).padRight(8);
-        actions.add(createButton("→", () -> controller.defer(task))).padRight(8);
-        actions.add(createButton("✕", () -> controller.cancel(task)));
-        left.add(actions).left().padTop(4);
+        // ✓ ⌚ ✕ buttons
+//        left.addActor(new TaskActionBar(this, controller, style));
 
-        // Right-side vertical stack: preview + summary
-        Table right = new Table(skin);
-        String desc = task.getDescription();
-        if (desc == null) desc = "";
-        desc = desc.replace("\n", " ").replaceAll(" +", " ").trim();
-        int maxLen = 100;
-        if (desc.length() > maxLen) {
-            desc = desc.substring(0, maxLen - 3) + "...";
-        }
+        VerticalGroup right = new VerticalGroup();
+        right.left().top().space(4).fill();
+
+        // ⏱ Task summary
+        right.addActor(new TaskSummaryPane(skin, task));
+
+        // 📝 Description preview
+        String desc = task.getDescription() == null ? "" : task.getDescription().replace("\n", " ").trim();
+        if (desc.length() > 80) desc = desc.substring(0, 77) + "...";
         Label preview = new Label(desc, style.previewStyle != null ? style.previewStyle : skin.get(Label.LabelStyle.class));
-        preview.setWrap(true);
-        right.add(preview).left().growX().padBottom(4).row();
-        right.add(deadlineView).right();
+        preview.setWrap(false);
+        right.addActor(preview);
 
-        // Lay out left (60%) and right (40%) side by side
-        add(left).width(getWidth() * 0.6f).top().left();
-        add(right).expandX().fillX().top().left();
+        // 💡 Compose layout
+        row.addActor(left);
+        row.addActor(right);
+
+        add(row).left().top().growX().padBottom(4);
     }
 
     /// Build expanded layout showing full details and recurrence.
@@ -146,7 +165,7 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
 
         if (task.getDescription() != null && !task.getDescription().isEmpty()) {
             Label desc = new Label(task.getDescription(), style.descStyle != null ? style.descStyle : skin.get(Label.LabelStyle.class));
-            desc.setWrap(true);
+            desc.setWrap(false);
             add(desc).left().colspan(3).padBottom(8).row();
         }
 
@@ -169,15 +188,17 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
             add(recurTable).left().colspan(2).padBottom(10).row();
         }
 
-        addActionButton("✓", () -> controller.markAsDone(task));
-        addActionButton("→", () -> controller.defer(task));
-        addActionButton("✕", () -> controller.cancel(task));
+        Table actions = new Table(skin);
+        actions.add(addActionButton("✓", () -> controller.markAsDone(task))).padRight(8);
+        actions.add(addActionButton("⌚", () -> controller.defer(task))).padRight(8);
+        actions.add(addActionButton("✕", () -> controller.cancel(task, TaskController.CancelMode.NEXT, 1000)));
+        add(actions).left();
         row().padTop(4);
     }
 
     /// Create a styled Label as a button and hook to action.
-    private Label createButton(String text, Runnable action) {
-        Label button = new Label(text, style.buttonStyle != null ? style.buttonStyle : skin.get(Label.LabelStyle.class));
+    private TextButton addActionButton(String text, Runnable action) {
+        TextButton button = new TextButton(text, style.buttonStyle != null ? style.buttonStyle : skin.get(TextButton.TextButtonStyle.class));
         button.setColor(1f, 1f, 1f, 1f);
         button.addListener(new ClickListener() {
             @Override
@@ -188,7 +209,6 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
         return button;
     }
 
-    /// markdown
     /// Switch between compact and expanded view states.
     public void toggleExpanded() {
         expanded = !expanded;
@@ -216,7 +236,20 @@ public class TaskView extends Table implements IsTaskView<ModelTask> {
     }
 
     @Override
-    public IsDeadlineView<Actor> getDeadlineView() {
+    public IsDeadlineView getDeadlineView() {
         return deadlineView;
+    }
+
+    private void updateBackground() {
+        Drawable bg = style.background;
+        if (isHovered && style.hoveredBackground != null) {
+            bg = style.hoveredBackground;
+        }
+        setBackground(bg);
+    }
+
+    @Override
+    public boolean isExpanded() {
+        return expanded;
     }
 }

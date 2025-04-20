@@ -2,14 +2,14 @@ package net.wti.gdx.theme.raeleus.glassy;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import net.wti.ui.gdx.theme.GdxTheme;
+import net.wti.ui.gdx.theme.AbstractGdxTheme;
 
 /// GdxThemeGlassy:
 ///
 /// A libgdx skin from [Raeleus blog](https://ray3k.wordpress.com/artwork/glassy-ui-skin-for-libgdx)
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 13/02/2025 @ 02:37
-public class GdxThemeGlassy implements GdxTheme {
+public class GdxThemeGlassy extends AbstractGdxTheme {
 
     private final Skin skin;
 

@@ -8,180 +8,207 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import net.wti.gdx.theme.raeleus.sgx.TabbedPane;
-import net.wti.ui.demo.api.CompletionStatus;
-import net.wti.ui.demo.api.ModelTask;
-import net.wti.ui.demo.api.ModelTaskCompletion;
 import net.wti.ui.demo.theme.TaskUiTheme;
 import net.wti.ui.demo.ui.SettingsPanel;
-import net.wti.ui.demo.ui.TaskTable;
 import net.wti.ui.demo.ui.controller.TaskController;
 import net.wti.ui.demo.ui.controller.TaskRegistry;
-import net.wti.ui.demo.view.api.IsTaskView;
-import net.wti.ui.gdx.theme.GdxTheme;
-import xapi.model.X_Model;
+import net.wti.ui.demo.ui.view.TaskTableActive;
+import net.wti.ui.demo.ui.view.TaskTableComplete;
+import net.wti.ui.demo.ui.view.TaskTableDefinitions;
+import xapi.fu.log.Log;
 
 /// DemoApp
 ///
-/// Entry point for the UI.
-/// Initializes and wires up theme, UI layers, tabs, task lists and controllers.
+/// ——— Prefix Legend ———
+/// - 🏗 **APP** : Application‑wide features (DemoApp)
+/// - 🧠 **CTL** : Controller logic (TaskController)
+/// - 🎨 **UI**  : View & widget improvements (TaskView, TaskTable…)
+/// - 🔎 **SORT**: Sorting & filtering concerns
+/// - 🌐 **I18N**: Internationalisation tasks
+/// - 🧪 **TEST**: Automated tests
+/// - ♿ **ACC** : Accessibility enhancements
+/// - 💾 **SYS** : Persistence, preferences, performance
+/// - ⚙️ **CMD** : Command‑line options & parsing
 ///
 /// 『 Roadmap Checklist 』
 ///
-/// 『 ✓ 』   1. ⚙️ Initialization and Setup
-/// 『 ✓ 』      Set up `TaskRegistry` and `TaskController`
-/// 『 ✓ 』      Initialize Active and Done tabs
+/// 🔥 **High Priority**
+/// - 『 ✓ 』 APP‑1 Handle deferral & cancellation flow
+/// - 『 ○ 』 CTL‑1 Implement cancel() in TaskController
+/// - 『 ○ 』 CTL‑2 Implement defer() in TaskController
+/// - 『 ○ 』 UI‑1 Refactor TaskView to TaskActionBar + TaskSummaryPane
+/// - 『 ○ 』 SORT‑1 Sort Active by nearest deadline
+/// - 『 ○ 』 SORT‑2 Weighted sort (deadline × priority)
+/// - 『 ○ 』 SORT‑3 Filter Active by priority
 ///
-/// 『 ✓ 』   2. 📋 Task Flow
-/// 『 ✓ 』      Hook `markAsDone()` to move ONCE tasks to done
-/// 『 ✓ 』      Reschedule recurring tasks
-/// 『   』      Handle deferrals and cancellations
-/// 『 ✓ 』      Toggle expanded/collapsed TaskView with click
-/// 『 ✓ 』      Show expand/collapse icon on hover
-/// 『 ✓ 』      Show more recurrence data in expanded view
-/// 『 ✓ 』      Style expanded view with spacing and labels
-/// 『 ✓ 』      Toggle expanded/collapsed for completed tasks (TaskCompletionView)
+/// 📈 **Medium Priority**
+/// - 『 ○ 』 I18N‑1 Integrate xapi‑i18n for strings & dates
+/// - 『 ○ 』 TEST‑1 Unit‑test task lifecycle (Spock)
+/// - 『 ○ 』 TEST‑2 Recurrence‑handling tests
+/// - 『 ○ 』 UI‑2 Improve ACTIVE list styling/layout
+/// - 『 ○ 』 UI‑3 Improve DONE list styling/layout
+/// - 『 ○ 』 UI‑4 Inline editing in TaskView
+/// - 『 ○ 』 UI‑5 Long‑press tool‑tips on buttons
+/// - 『 ○ 』 CTL‑3 Hook recurrence editing logic
+/// - 『 ○ 』 SORT‑4 Sorting controls UI
+/// - 『 ○ 』 SORT‑5 Remember last sort (smart default)
+/// - 『 ○ 』 UI‑10 Library tab for all tasks
+/// - 『 ○ 』 CTL‑6 Snooze logic persistence
 ///
-/// 『 ✓ 』   3. 📦 Persistence
-/// 『 ✓ 』      Persist new tasks
-/// 『   』      Load saved state
+/// 💤 **Low Priority**
+/// - 『 ○ 』 APP‑2 Load saved state
+/// - 『 ○ 』 APP‑3 Animate task movement between tabs
+/// - 『 ○ 』 TEST‑3 UI state‑transition tests
+/// - 『 ○ 』 CTL‑4 Undo for recent completions
+/// - 『 ○ 』 UI‑6 Editable recurrence control
+/// - 『 ○ 』 UI‑7 Expand/collapse animations
+/// - 『 ○ 』 UI‑8 Search/quick‑find box
+/// - 『 ○ 』 ACC‑1 Screen‑reader labels for controls
+/// - 『 ○ 』 SYS‑1 User preferences (depends on loops port)
+/// - 『 ○ 』 UI‑11 Sorting & filtering of Library tab
 ///
-/// 『   』   4. ✅ UX Polish
-/// 『   』      Animate task movement
-/// 『   』      Undo option after task completion
-/// 『   』      Improve style and layout of ACTIVE list
+/// 🔮 **Future**
+/// - 『 ○ 』 APP‑4 Keyboard‑shortcut help overlay
+/// - 『 ○ 』 CTL‑5 Persist‑finished notification hooks
+/// - 『 ○ 』 UI‑9 Elegant empty‑state handling
+/// - 『 ○ 』 SYS‑2 Performance audit for large lists
+/// - 『 ○ 』 CMD‑1 `--demo=false` flag support
+/// - 『 ○ 』 CMD‑2 `--headless=true` flag support
 ///
-/// 『   』   5. ⚖️ Tests (via Spock/Groovy)
-/// 『   』      Task lifecycle test coverage
-/// 『   』      UI state transitions
-/// 『   』      Recurrence handling logic
-///
-/// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 2025-04-16 @ 21:41 CST
-public class DemoApp extends ApplicationAdapter {
+/// Entry point for the libGDX **task‑tracking demo**.
+public final class DemoApp extends ApplicationAdapter {
+    public static final float MAX_WIDTH = 1024; // After 1024, pad the edges
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Mutable state
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     private Skin skin;
     private Stage stage;
     private TaskRegistry registry;
     private TaskController controller;
-    private TaskTable active; // Table to show active tasks
-    private TaskTable done;   // Table to show completed tasks
+    private TaskTableDefinitions library; // tasks definitions
+    private TaskTableActive active; // active tasks
+    private TaskTableComplete done;   // completed tasks
+    private TabbedPane tabs;
+    private boolean doInvalidate;
+    private TaskUiTheme theme;
 
+    // -------------------------------------------------------------------
+    // Life‑cycle overrides
+    // -------------------------------------------------------------------
+
+    /// libGDX init callback: constructs UI and demo data.
     @Override
     public void create() {
-        // Setup theme and skin
-        final GdxTheme theme = new TaskUiTheme();
+        // 1 — Theme & Skin
+        theme = new TaskUiTheme();
         skin = theme.getSkin();
+
+        // 2 — Stage
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
 
-        // Load background image
-        Texture texture = new Texture(Gdx.files.internal(theme.getAssetPath() + "/background.png"));
-        Image background = new Image(texture);
-        background.setFillParent(true);
-        stage.addActor(background);
+        // 3 — Background
+        Texture tex = new Texture(Gdx.files.internal(theme.getAssetPath() + "/background.png"));
+        Image bg = new Image(tex);
+        bg.setFillParent(true);
+        stage.addActor(bg);
 
-        // Hook the task registry callbacks to the views
+        // 4 — Registry / Controller
         registry = new TaskRegistry(
-                task -> done.addTask(task),      // move completed tasks
-                task -> active.addTask(task)     // reinsert active recurring tasks
+                t -> done.addTask(t),   // move ONCE tasks → Done
+                t -> active.addTask(t)  // reschedule recurring tasks
         );
         controller = new TaskController(registry);
 
-        // Create task tables for active and done views
-        active = new TaskTable(theme, controller);
-        done = new TaskTable(theme, controller);
-
+        // 5 — Task tables
+        library = new TaskTableDefinitions(theme, controller);
+        active = new TaskTableActive(theme, controller);
+        done   = new TaskTableComplete(theme, controller);
+        library.setHeader("All");
         active.setHeader("Active");
         done.setHeader("Done");
 
-        // Tabbed layout root
-        TabbedPane root = new TabbedPane(skin);
-        root.setFillParent(true);
-        if (stage.getWidth() > 400) {
-            root.pad(10, 100, 10, 100);
-        }
-
-        // Layout for the active tab contents
-        Table activePane = new Table(skin);
-        activePane.setFillParent(true);
-        activePane.add(active).expand().fill();
-
-        // Hook up tabs
-        root.addTab("Active", activePane);
-        root.addTab("Done", done);
-        root.addTab("Settings", new SettingsPanel(theme));
-
-        stage.addActor(root);
+        // 6 — Tabs
+        tabs = new TabbedPane(skin);
+        tabs.setFillParent(true);
+        stage.addActor(tabs);
+        tabs.addTab("Active",   active);
+        tabs.addTab("Done",     done);
+        tabs.addTab("All",   library);
+        tabs.addTab("Settings", new SettingsPanel(theme));
         stage.setScrollFocus(active);
 
-        // Inject demo task objects (generated from the checklist)
-        injectTask("Implement Task Deferral", "Handle deferred scheduling and UI state update");
-        injectTask("Implement Task Cancellation", "Allow tasks to be canceled and removed from active list");
-        injectTask("Implement Task Save/Load", "Persist and reload tasks between app sessions");
-        injectTask("Animate Task Movement", "Polish UI transitions when tasks move between lists");
-        injectTask("Implement Undo for Completion", "Add undo option immediately after task is finished");
-        injectTask("Add Unit Tests", "Full task lifecycle unit testing with Groovy/Spock");
-        injectTask("Test Recurrence Logic", "Ensure weekly/biweekly/etc. recurrences work");
-        injectTask("Toggle Expand/Collapse Tasks", "Make ACTIVE items clickable to show full details and description");
-        injectTask("Show Recurrence Info", "Display recurrence details like day/time range in expanded view");
-        injectTask("Hover Expand Button", "Indicate clickable expand/collapse affordance on hover");
-        injectTask("Style Expanded TaskView", "Improve layout of TaskView with clear spacing and labels");
+        // 7 — Add seed data (chatgpt will regen these from the checklist in this class's javadoc)
+        SeedDataGenerator.seed(controller, library, active, done);
 
-        injectCompletion("Mark Task Done", "move ONCE task to done list");
-        injectCompletion("Reschedule Recurring", "reinsert repeating task with updated deadline");
-        injectCompletion("Persist New Task", "uses X_Model.persist");
-        injectCompletion("Create Task UI Views", "TaskView + DeadlineView setup");
-        injectCompletion("Click Expand TaskView", "Make TaskView respond to user click");
-        injectCompletion("Show Expanded Recurrence Info", "Include recurrence data in expanded task view");
-        injectCompletion("Style Expanded View", "Spaced layout, visible deadlines, and readable rows");
-        injectCompletion("Toggle Completed View", "Click to expand/collapse additional info for completed tasks");
+        // 8 - Reset outer tab panel padding / trigger invalidation + layout
+        updatePad();
     }
 
-    private void injectTask(String name, String desc) {
-        ModelTask task = TaskFactory.create(name, desc);
-        controller.save(task);
-        IsTaskView view = active.addTask(task);
-    }
-
-    private void injectCompletion(String name, String desc) {
-        ModelTaskCompletion done = X_Model.create(ModelTaskCompletion.class);
-        done.setName(name);
-        done.setDescription(desc);
-        done.setCompleted(System.currentTimeMillis());
-        done.setStatus(CompletionStatus.COMPLETED);
-        controller.save(done);
-        done(done);
-    }
-
-    private void done(ModelTaskCompletion done) {
-        IsTaskView view = this.done.addTask(done);
-    }
-
+    /// Render loop – clears screen, delegates to Stage, supports F5 hot‑reload.
     @Override
     public void render() {
-        Gdx.gl.glClearColor(1, 0, 0, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL31.GL_COLOR_BUFFER_BIT);
-
+        /// update logic
         stage.act();
+        /// trigger any invalidations
+        if (doInvalidate) {
+            doInvalidate = false;
+            tabs.refreshLayout();
+        }
+        /// perform drawing after children have had a chance to redraw/remeasure themselves
         stage.draw();
 
+        /// Allow triggering a full redraw w/ the F5 key.
         if (Gdx.input.isKeyJustPressed(Input.Keys.F5)) {
             dispose();
             create();
         }
     }
 
+    /// Updates viewport on window resize.
     @Override
     public void resize(int width, int height) {
         super.resize(width, height);
         stage.getViewport().update(width, height, true);
+        updatePad();
     }
 
+    /// Cleanup resources.
     @Override
     public void dispose() {
         skin.dispose();
         stage.dispose();
+    }
+
+    private void updatePad() {
+        final float totalWidth = stage.getWidth();
+        final float totalHeight = stage.getHeight();
+        if (totalWidth > MAX_WIDTH) {
+            // add generic whitespace
+            final int amt = (int)((totalWidth - MAX_WIDTH)/2);
+            tabs.pad(0, amt, 0, amt);
+            // whenever there's lots of width, we should always render in landscape mode
+            theme.setLandscape(true);
+        } else {
+            // check for portrait/landscape and alter rendering patterns
+            if (theme.isLandscape() && tabs.isSquished()) {
+                theme.setLandscape(false);
+            }
+            // no padding if we aren't at max size!
+            tabs.pad(0, 0, 0, 0);
+        }
+        Log.tryLog(DemoApp.class, this,
+                "Updating for screen size", totalWidth, totalHeight
+                , "Tabs Info:", tabs.getInfo()
+        );
+        // we want to invalidate the hierarchy, but not until after this size change goes through
+        // so we set doInvalidate here, and we trigger redraw after stage.act() and before stage.draw()
+        doInvalidate = true;
     }
 }

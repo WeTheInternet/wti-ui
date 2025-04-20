@@ -13,9 +13,7 @@ repositories.mavenCentral()
 
 SourceSet main = sourceSets.maybeCreate('main');
 
-
 SourceSet test = sourceSets.maybeCreate('test');
-
 main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
@@ -26,7 +24,6 @@ test.groovy.srcDir("$rootDir/demo/src/test/groovy")
 dependencies {
     implementation project(path: ":gdx-themes-raeleus-sgx")
     implementation project(path: ":xapi-ui-main")
-    implementation libs.xapi.util
     testImplementation libs.spock
     testImplementation libs.xapi.model.jre
     api project(path: ":demo-api")

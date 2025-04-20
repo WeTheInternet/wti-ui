@@ -1,30 +1,35 @@
 plugins {
+    // GenInclude plugin from file:///opt/wti-ui/demo/src/api/gradle/plugins
+    id	"groovy"
     id	"java-library"
     id	"maven-publish"
 }
+
 // GenStart net.wti.gradle.settings.plugin.XapiSettingsPlugin
 ext.xapiModern = 'true'
-
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 repositories.mavenCentral()
 // setup sourcesets
 
 SourceSet main = sourceSets.maybeCreate('main');
 
-
 SourceSet test = sourceSets.maybeCreate('test');
-
 main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 main.java.srcDir("$rootDir/demo/src/api/java")
 main.resources.srcDir("$rootDir/demo/src/api/resources")
+test.java.srcDir("$rootDir/demo/src/apiTest/java")
+test.groovy.srcDir("$rootDir/demo/src/apiTest/groovy")
 
 dependencies {
     implementation project(path: ":xapi-ui-api")
     implementation project(path: ":gdx-themes-main")
     api libs.xapi.model
+    api libs.xapi.util
+    testImplementation libs.spock
+    testImplementation libs.xapi.model.jre
 }
 // Setup publishing to coordinates: net.wti:demo-api
 project.extensions.add('xapi.mvn.repo', "$rootDir/repo")
@@ -56,4 +61,11 @@ ext.publications.create("xapi", MavenPublication, {
         pub.groupId = "net.wti"
 })
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
+// GenInclude body.end from file:///opt/wti-ui/demo/src/api/gradle/body.end
+tasks.named('test').configure {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
+}
 // Done generating buildfile for :demo at file://$rootDir/demo/src/api/demoApi.gradle

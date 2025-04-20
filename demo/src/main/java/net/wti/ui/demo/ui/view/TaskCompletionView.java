@@ -92,8 +92,9 @@ public class TaskCompletionView extends Table implements IsTaskView<ModelTaskCom
     }
 
     /// Completed tasks do not track deadlines
+    /// TODO: for completed tasks, logs how much ahead/behind schedule the task was completed
     @Override
-    public IsDeadlineView<Table> getDeadlineView() {
+    public IsDeadlineView getDeadlineView() {
         return null;
     }
 
@@ -102,5 +103,11 @@ public class TaskCompletionView extends Table implements IsTaskView<ModelTaskCom
         this.expanded = !this.expanded;
         rerender();
     }
+
+    @Override
+    public boolean isExpanded() {
+        return expanded;
+    }
+
 }
 
