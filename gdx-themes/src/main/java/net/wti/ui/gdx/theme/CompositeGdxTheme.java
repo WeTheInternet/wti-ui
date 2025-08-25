@@ -30,7 +30,7 @@ public class CompositeGdxTheme extends AbstractGdxTheme {
 
     /// Constructs a theme from multiple UiDataBundle inputs.
     /// @param bundles Vararg list of skin bundles to merge. The first bundle is treated as base.
-    public CompositeGdxTheme(UiDataBundle... bundles) {
+    public CompositeGdxTheme(final String assetPath, UiDataBundle... bundles) {
         if (bundles == null || bundles.length == 0) {
             throw new IllegalArgumentException("At least one UiDataBundle must be provided.");
         }
@@ -46,7 +46,7 @@ public class CompositeGdxTheme extends AbstractGdxTheme {
         if (json != null) {
             this.skin.load(json);
         }
-        this.assetPath = base.getBasePath();
+        this.assetPath = assetPath == null ? base.getBasePath() : assetPath;
 
         // Merge remaining skins into the base skin instance
         for (int i = 1; i < bundles.length; i++) {

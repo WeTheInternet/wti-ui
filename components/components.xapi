@@ -1,0 +1,81 @@
+<xapi-schema
+    modules = [
+        <ui />,
+        <inventory />,
+        <main includes=[ ui, inventory, ]/>
+    ]
+
+    platforms = [
+        <main
+            modules = [
+                <inventory
+                    requires = {
+                        @transitive
+                        external : [
+                            ( libs.xapi.model ),
+                            ( libs.xapi.util ),
+                        ],
+                        @transitive
+                        project : { ":wti-ui" : view },
+                        external: "com.badlogicgames.gdx:gdx:$gdxVersion",
+                        @transitive
+                        external: "com.threerings:react:1.5.1",
+                        @transitive("test")
+                        external : [
+                            ( libs.spock ),
+                            ( libs.xapi.model.jre ),
+                        ],
+                    }
+                /inventory>,
+                <ui
+                    requires = {
+                        project : { ":xapi-ui" : main },
+                    }
+                /ui>
+            ]
+        /main>,
+        <impl replaces=main
+            modules = [
+                <inventory
+                    requires = {
+                        @transitive
+                        project : { ":gdx-themes" : main },
+
+                        @transitive("test")
+                        external : [
+                            ( libs.spock ),
+                            ( libs.xapi.model.jre ),
+                            ( libs.gdx.backend.headless ),
+                        ],
+                        @transitive("test") @closure("artifact { classifier = 'natives-desktop' }")
+                        external : ( libs.gdx.platform ),
+                    }
+                /inventory>,
+                <ui
+                    requires = {
+                        project : { ":gdx-themes" : main },
+                    }
+                /ui>
+            ]
+        /impl>,
+        <jre replaces=impl
+            requires = {
+                external : [
+                    ( libs.xapi.model.jre ),
+                    "com.badlogicgames.gdx:gdx-box2d:$gdxVersion",
+                    "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop",
+                    "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop",
+                    "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion",
+                ],
+            }
+            modules = [
+                <inventory
+                    requires = {
+                        @transitive
+                        project: { ":gdx-themes-raeleus-sgx" : "main" },
+                    }
+                /inventory>
+            ]
+        /jre>,
+    ]
+/xapi-schema>

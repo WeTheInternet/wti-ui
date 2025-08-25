@@ -79,7 +79,6 @@ import xapi.fu.log.Log;
 ///
 /// Entry point for the libGDX **task‑tracking demo**.
 public final class DemoApp extends ApplicationAdapter {
-    public static final float MAX_WIDTH = 1024; // After 1024, pad the edges
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // Mutable state
@@ -91,7 +90,7 @@ public final class DemoApp extends ApplicationAdapter {
     private TaskController controller;
     private TaskTableDefinitions library; // tasks definitions
     private TaskTableActive active; // active tasks
-    private TaskTableComplete done;   // completed tasks
+    private TaskTableComplete complete;   // completed tasks
     private TabbedPane tabs;
     private boolean doInvalidate;
     private TaskUiTheme theme;
@@ -119,7 +118,7 @@ public final class DemoApp extends ApplicationAdapter {
 
         // 4 — Registry / Controller
         registry = new TaskRegistry(
-                t -> done.addTask(t),   // move ONCE tasks → Done
+                t -> complete.addTask(t),   // move ONCE tasks → Done
                 t -> active.addTask(t)  // reschedule recurring tasks
         );
         controller = new TaskController(registry);
@@ -127,23 +126,23 @@ public final class DemoApp extends ApplicationAdapter {
         // 5 — Task tables
         library = new TaskTableDefinitions(theme, controller);
         active = new TaskTableActive(theme, controller);
-        done   = new TaskTableComplete(theme, controller);
+        complete = new TaskTableComplete(theme, controller);
         library.setHeader("All");
         active.setHeader("Active");
-        done.setHeader("Done");
+        complete.setHeader("Complete");
 
         // 6 — Tabs
         tabs = new TabbedPane(skin);
         tabs.setFillParent(true);
         stage.addActor(tabs);
         tabs.addTab("Active",   active);
-        tabs.addTab("Done",     done);
+        tabs.addTab("Complete", complete);
         tabs.addTab("All",   library);
         tabs.addTab("Settings", new SettingsPanel(theme));
         stage.setScrollFocus(active);
 
         // 7 — Add seed data (chatgpt will regen these from the checklist in this class's javadoc)
-        SeedDataGenerator.seed(controller, library, active, done);
+        SeedDataGenerator.seed(controller, library, active, complete);
 
         // 8 - Reset outer tab panel padding / trigger invalidation + layout
         updatePad();
@@ -189,9 +188,9 @@ public final class DemoApp extends ApplicationAdapter {
     private void updatePad() {
         final float totalWidth = stage.getWidth();
         final float totalHeight = stage.getHeight();
-        if (totalWidth > MAX_WIDTH) {
+        if (totalWidth > net.wti.ui.demo.common.DemoConstants.MAX_WIDTH) {
             // add generic whitespace
-            final int amt = (int)((totalWidth - MAX_WIDTH)/2);
+            final int amt = (int)((totalWidth - DemoConstants.MAX_WIDTH)/2);
             tabs.pad(0, amt, 0, amt);
             // whenever there's lots of width, we should always render in landscape mode
             theme.setLandscape(true);

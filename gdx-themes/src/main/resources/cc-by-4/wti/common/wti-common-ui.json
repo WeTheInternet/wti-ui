@@ -1,0 +1,114 @@
+{
+  "com.badlogic.gdx.graphics.g2d.BitmapFont": {
+    "font":    { "file": "Questrial-Regular-12.fnt" },
+    "medium":  { "file": "Questrial-Regular-18.fnt" },
+    "small":   { "file": "Questrial-Regular-8.fnt"  },
+    "title":   { "file": "Questrial-Regular-24.fnt" },
+
+    "task-title-font":   { "file": "Questrial-Regular-18.fnt" },
+    "task-preview-font": { "file": "Questrial-Regular-8.fnt"  },
+    "task-action-font":  { "file": "Questrial-Regular-18.fnt" },
+
+    "font-symbol":     { "file": "NotoSansSymbols2-Regular-24.fnt" },
+    "font-emoji":      { "file": "NotoEmoji-Regular-32.fnt" },
+    "font-playfair":   { "file": "PlayfairDisplay-32.fnt" }
+  },
+
+  "com.badlogic.gdx.graphics.Color": {
+    "white":           { "r": 1.0,  "g": 1.0,   "b": 1.0,   "a": 1.0 },
+    "tooltipText":     { "r": 1.0,  "g": 1.0,   "b": 1.0,   "a": 1.0 },
+    "tooltipBg":       { "r": 0.165,"g": 0.165, "b": 0.165, "a": 0.8 },
+
+    "font":            { "r": 0.90, "g": 0.92,  "b": 0.98,  "a": 1.0 },
+    "font-over":       { "r": 1.00, "g": 1.00,  "b": 1.00,  "a": 1.0 },
+    "font-disabled":   { "r": 0.55, "g": 0.60,  "b": 0.70,  "a": 1.0 },
+    "font-text-field": { "r": 0.92, "g": 0.95,  "b": 1.00,  "a": 1.0 },
+    "font-later":      { "r": 0.78, "g": 0.83,  "b": 0.95,  "a": 1.0 },
+    "font-urgent":     { "r": 1.00, "g": 0.55,  "b": 0.55,  "a": 1.0 },
+
+    "task-name":       { "r": 0.80, "g": 0.85,  "b": 1.00,  "a": 1.0 },
+    "task-preview":    { "r": 0.60, "g": 0.745, "b": 1.00,  "a": 1.0 },
+    "task-button":     { "r": 1.00, "g": 1.00,  "b": 1.00,  "a": 1.0 }
+  },
+
+  "com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle": {
+    "default": {
+      "font": "font",
+      "fontColor": "font"
+    },
+
+    "task-name": {
+      "font": "task-title-font",
+      "fontColor": "task-name"
+    },
+    "task-preview": {
+      "font": "task-preview-font",
+      "fontColor": "task-preview"
+    },
+    "task-desc": {
+      "font": "task-preview-font",
+      "fontColor": "task-preview"
+    },
+    "task-recurrence-label": {
+      "font": "task-preview-font",
+      "fontColor": "task-name"
+    },
+    "task-recurrence-value": {
+      "font": "task-title-font",
+      "fontColor": "task-name"
+    },
+
+    "task-button": {
+      "font": "task-action-font",
+      "fontColor": "task-button",
+      "background": "button"
+    },
+
+    "calendar-active":    { "font": "font", "fontColor": "font-later"   },
+    "calendar-hovered":   { "font": "font", "fontColor": "font-over"    },
+    "calendar-selected":  { "font": "font", "fontColor": "font-urgent"  },
+    "calendar-disabled":  { "font": "font", "fontColor": "font-disabled" },
+
+    "recurrence-cell": {
+      "font": "font",
+      "fontColor": "font-disabled",
+      "background": "cell-inactive"
+    },
+    "recurrence-cell-active": {
+      "font": "font",
+      "fontColor": "font",
+      "background": "cell-active"
+    },
+    "recurrence-cell-over": {
+      "font": "font",
+      "fontColor": "font-over",
+      "background": "cell-hover"
+    },
+    "recurrence-cell-selected": {
+      "font": "font",
+      "fontColor": "font-text-field",
+      "background": "cell-selected"
+    }
+  },
+
+  "com.badlogic.gdx.scenes.scene2d.ui.TextTooltip$TextTooltipStyle": {
+    "default": {
+      "label": {
+        "font": "small",
+        "fontColor": "tooltipText"
+      },
+      "background": "tooltip-bg",
+      "wrapWidth": 360
+    }
+  },
+  "com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle": {
+    "default": {
+      "font": "font",
+      "fontColor": "font",
+      "up":   "button",
+      "over": "button-over",
+      "down": "button-pressed",
+      "disabled": "button-disabled"
+    }
+  }
+}

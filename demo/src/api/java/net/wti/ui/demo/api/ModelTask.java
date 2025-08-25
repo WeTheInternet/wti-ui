@@ -41,7 +41,7 @@ import xapi.model.api.ModelKey;
         modelType = ModelTask.MODEL_TASK,
         persistence = @Persistent(strategy = PersistenceStrategy.Remote)
 )
-public interface ModelTask extends BasicModelTask<ModelTask> {
+public interface ModelTask extends RealizedModelTask<ModelTask> {
 
     String MODEL_TASK = "tsk";
 

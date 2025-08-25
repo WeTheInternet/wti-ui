@@ -16,7 +16,7 @@ import xapi.model.api.ModelKey;
         modelType = ModelTaskCompletion.MODEL_TASK_COMPLETION,
         persistence = @Persistent(strategy = PersistenceStrategy.Remote)
 )
-public interface ModelTaskCompletion extends BasicModelTask<ModelTaskCompletion> {
+public interface ModelTaskCompletion extends RealizedModelTask<ModelTaskCompletion> {
 
     String MODEL_TASK_COMPLETION = "tskCmp";
 

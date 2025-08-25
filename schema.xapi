@@ -10,13 +10,15 @@
     projects = {
         virtual : [
             // interfaces and implementations for accessing libgdx resources
-            gdx-api,
+            wti-ui,
             // media assets and interfaces; each platform is a theme implementing the media interfaces
             gdx-themes,
             // cross-platform xapi ui implementations
             xapi-ui,
             // some build tools for assembling finalized xapi-ui implementation binaries
             xapi-ui-tools,
+            // implementations of specialized components
+            components,
             // a complete demo of all functionality, showcasing all supported UI elements
             demo,
         ]

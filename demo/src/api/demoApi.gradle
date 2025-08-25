@@ -28,6 +28,7 @@ dependencies {
     implementation project(path: ":gdx-themes-main")
     api libs.xapi.model
     api libs.xapi.util
+    api libs.xapi.inject
     testImplementation libs.spock
     testImplementation libs.xapi.model.jre
 }

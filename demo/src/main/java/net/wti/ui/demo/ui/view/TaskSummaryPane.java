@@ -6,9 +6,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
 import net.wti.ui.demo.api.ModelRecurrence;
 import net.wti.ui.demo.api.ModelTask;
+import net.wti.ui.demo.api.ModelTaskCompletion;
+import net.wti.ui.demo.api.ModelTimeRecord;
 import net.wti.ui.view.DeadlineView;
-import xapi.fu.Lazy;
+import xapi.model.X_Model;
 import xapi.model.api.ModelList;
+import xapi.model.api.ModelQuery;
+import xapi.time.X_Time;
+import xapi.util.api.SuccessHandler;
 
 /// # TaskSummaryPane
 ///
@@ -38,27 +43,58 @@ import xapi.model.api.ModelList;
 /// Created by ChatGPT 4o and James X. Nelson on 2025-04-17
 public class TaskSummaryPane extends Table {
 
+    private final DeadlineView deadlineView;
+    private final RecurrenceView recurrenceView;
+    private static final String fireEmoji = "\uD83D\uDD25";
+    private static final String clockEmoji = "\uD83D\uDD53";
+
     public TaskSummaryPane(Skin skin, ModelTask task) {
         super(skin);
         align(Align.center);
 
         // DeadlineView (shows alarms, hover tooltips, etc.)
         if (task.getDeadline() != null) {
-            addActor(new DeadlineView(task.getDeadline(), skin, task.getAlarmMinutes()));
+            deadlineView = new DeadlineView(task.getDeadline(), skin, task.getAlarmMinutes());
+            addActor(deadlineView);
+        } else {
+            deadlineView = null; // hm. should replace it w/ a non-null, empty renderer
         }
+        recurrenceView = new RecurrenceView(task, skin);
+        add(recurrenceView).left().row();
 
         // Recurrence Streak Placeholder
-        ModelList<ModelRecurrence> recurrences = task.getRecurrence();
-        if (recurrences != null && !recurrences.isEmpty()) {
-            int count = recurrences.size();
+        final ModelList<ModelRecurrence> recurrences = task.getRecurrence();
+        final ModelList<ModelTimeRecord> timeRecord = task.getTimeRecord();
+        final boolean hasRecurrence = recurrences != null && !recurrences.isEmpty();
+        final boolean hasTimeRecord = timeRecord != null && !timeRecord.isEmpty();
+
+        if (hasRecurrence) {
             // Placeholder streak logic — replace with actual task completion streak
-            Label streak = new Label("Streak: " + count, skin, "task-summary");
-            addActor(streak);
+            final Label streak = new Label(fireEmoji + clockEmoji, skin, "task-emoji");
+            // Load the streak info from the completed tasks
+            final ModelQuery<ModelTaskCompletion> q = new ModelQuery<>();
+            X_Model.query(ModelTaskCompletion.class, q, SuccessHandler.handler(
+                    success -> {
+
+                    }, failure -> {
+                        // TODO: better error handling
+                        streak.setText(failure.getMessage());
+                    }
+            ));
+            add(streak);
         }
 
-        // Time Logged (stub for future duration tracking system)
-        Label timeLogged = new Label("0h logged", skin, "task-summary");
-        addActor(timeLogged);
+        if (hasTimeRecord) {
+            double total = 0;
+            for (ModelTimeRecord record : timeRecord) {
+                total += record.getSeconds();
+                // TODO: something that can expand/contract the time record, to include the notes.
+            }
+
+            // Time Logged (stub for future duration tracking system)
+            Label timeLogged = new Label(clockEmoji + " " + X_Time.print(total), skin, "task-emoji");
+            add(timeLogged);
+        }
 
         // FUTURE: Dynamic State Tags (Paused, Snoozed, etc)
         if (task.isPaused()) {
@@ -77,9 +113,12 @@ public class TaskSummaryPane extends Table {
         // for (String tag : task.getTags()) {
         //     if (isDisplayable(tag)) addTag(skin, tag);
         // }
-        Lazy.deferred1(()->{
-            Table summary = new Table(skin);
-        })
+
+//        Lazy.deferred1(()->{
+//            Table summary = new Table(skin);
+//
+//            return summary;
+//        });
     }
 
     private void addTag(Skin skin, String label) {
@@ -87,10 +126,10 @@ public class TaskSummaryPane extends Table {
     }
 
     public void collapse() {
-
+        recurrenceView.collapse();
     }
 
     public void expand() {
-
+        recurrenceView.expand();
     }
 }

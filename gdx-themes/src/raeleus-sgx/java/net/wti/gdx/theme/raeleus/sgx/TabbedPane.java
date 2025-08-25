@@ -124,7 +124,7 @@ public class TabbedPane extends Table {
         row();
         Table t = new Table();
         t.setBackground(style.bodyBackground);
-        t.add(tabBodyStack);
+        t.add(tabBodyStack);//.growX();
         add(t).colspan(3).expand().fill();
     }
 

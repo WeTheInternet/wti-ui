@@ -1,44 +1,49 @@
 package net.wti.ui.demo.api;
 
 import xapi.model.api.ModelList;
+import xapi.string.X_String;
 import xapi.time.X_Time;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 /// # Schedule
 ///
-/// Provides a higher-order abstraction over a task's recurrence rules.
-/// Groups compatible `ModelRecurrence` entries and generates long-form descriptions
-/// for use in expanded task UIs or visual calendars.
+/// High-level abstraction for summarizing and grouping recurrence rules.
 ///
-/// ### ✅ Features
-/// - 『 ✓ 』 Groups compatible recurrence rules (unit + hour + minute)
-/// - 『 ✓ 』 Memoizes rendered strings into each `ModelRecurrence`
-/// - 『 ✓ 』 Automatically recomputes if task `.updated` field changes
-/// - 『 ✓ 』 Client-friendly: time rendering avoids `java.time`
-/// - 『 ✓ 』 Will support user timezone via `DemoSettingsModel`
+/// This class parses a task's `ModelRecurrence` entries and produces
+/// human-friendly, long-form recurrence descriptions suitable for display.
 ///
-/// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 21/04/2025 @ 02:19 CST
+/// ### ✅ Key Features
+/// - Groups recurring rules by unit + time
+/// - Renders stable, readable user strings
+/// - Automatically re-evaluates when task changes
+/// - Fills in `ModelRecurrence.setRendered(...)` for precomputed rendering
+/// - Supports ONCE + mixed-mode rules
+/// - Properly handles WEEKLY / BIWEEKLY / TRIWEEKLY / MONTHLY / YEARLY
+///
+/// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 21/04/2025 @ 00:37 CST
 public class Schedule {
 
     private final ModelTask task;
     private final ModelList<ModelRecurrence> source;
     private final List<String> longDescriptions = new ArrayList<>();
+
     private boolean dirty = true;
 
     public Schedule(ModelTask task) {
         this.task = task;
         this.source = task.recurrence();
 
-        // Reactively invalidate when recurrence model is updated
-        task.onChange("updated", (before, after) -> this.dirty = true);
+        // Automatically invalidate when model changes
+        this.task.onChange("updated", (before, after) -> this.dirty = true);
 
-        build(); // eagerly compute at least once
+        build(); // Compute once
     }
 
-    /// Returns the list of long-form recurrence descriptions.
-    /// Rebuilds if `dirty` flag is set.
+    /// Public accessor for UI rendering
     public List<String> getLongDescriptions() {
         if (dirty) {
             build();
@@ -46,124 +51,161 @@ public class Schedule {
         return longDescriptions;
     }
 
-    /// Determines if this task has no recurrence entries.
-    public boolean isEmpty() {
-        return source == null || source.isEmpty();
-    }
-
-    /// Determines if this task is a one-time event.
+    /// True if task has only a single ONCE rule or nothing at all
     public boolean isOnceOnly() {
         if (isEmpty()) return true;
 
-        boolean once = true;
-        for (ModelRecurrence r : source) {
-            if (r.getUnit() != RecurrenceUnit.ONCE) return false;
-            if (once) once = false;
-            else return false;
+        for (ModelRecurrence recur : source) {
+            if (recur.getUnit() != RecurrenceUnit.ONCE) {
+                return false;
+            }
         }
         return true;
     }
 
-    /// Allows external code to force recomputation.
-    public void invalidate() {
-        this.dirty = true;
+    /// No recurrence entries at all
+    public boolean isEmpty() {
+        return source == null || source.isEmpty();
     }
 
-    /// Computes merged recurrence descriptions and memoizes into models.
+    /// External hook to reset dirty flag
+    public void invalidate() {
+        dirty = true;
+    }
+
+    /// Main entry point for internal rebuild
     private void build() {
         if (!dirty) return;
-
-        longDescriptions.clear();
         dirty = false;
+        longDescriptions.clear();
 
-        // Group by (unit + hour + minute)
-        Map<String, List<ModelRecurrence>> grouped = new LinkedHashMap<>();
-        for (ModelRecurrence recur : source) {
-            String key = groupKey(recur);
-            grouped.computeIfAbsent(key, k -> new ArrayList<>()).add(recur);
+        if (isEmpty()) {
+            longDescriptions.add("Once only");
+            return;
         }
 
-        for (Map.Entry<String, List<ModelRecurrence>> entry : grouped.entrySet()) {
-            ModelRecurrence first = entry.getValue().get(0);
+        boolean hasNonOnce = source.anyMatch(r -> r.getUnit() != RecurrenceUnit.ONCE);
 
-            // Only recompute if not memoized
-            String rendered = first.getProperty("rendered");
-            if (rendered == null || rendered.trim().isEmpty()) {
-                RecurrenceUnit unit = first.getUnit();
+        // Group recurrences into enum buckets
+        EnumMap<RecurrenceUnit, List<ModelRecurrence>> unitMap = new EnumMap<>(RecurrenceUnit.class);
 
-                if (unit == RecurrenceUnit.ONCE) {
-                    final long value = first.getValue();
-                    if (value == 0L) {
-                        first.setRendered("Once (any time)");
-                    } else {
-                        // Format the long timestamp into a string via X_Time
-                        first.setRendered("Once on " + X_Time.print(value));
-                    }
-                    continue;
-                }
+        for (ModelRecurrence recur : source) {
+            // Skip ONCE recurrences if others exist
+            if (hasNonOnce && recur.getUnit() == RecurrenceUnit.ONCE) continue;
 
-                int hour = first.hour();
-                int minute = first.minute();
+            unitMap.computeIfAbsent(recur.getUnit(), k -> new ArrayList<>()).add(recur);
+        }
 
-                List<DayOfWeek> days = entry.getValue().stream()
-                        .map(ModelRecurrence::dayOfWeek)
-                        .sorted(Comparator.comparingInt(Enum::ordinal))
-                        .collect(Collectors.toList());
+        for (Map.Entry<RecurrenceUnit, List<ModelRecurrence>> entry : unitMap.entrySet()) {
+            RecurrenceUnit unit = entry.getKey();
+            List<ModelRecurrence> list = entry.getValue();
 
-                rendered = renderRecurrence(unit, days, hour, minute);
-                // Memoize
-                for (ModelRecurrence r : entry.getValue()) {
-                    r.setProperty("rendered", rendered);
+            // Group by hour/minute
+            Map<String, List<ModelRecurrence>> byTime = list.stream()
+                    .collect(Collectors.groupingBy(
+                            r -> r.hour() + ":" + r.minute(),
+                            LinkedHashMap::new,
+                            Collectors.toList()
+                    ));
+
+            for (Map.Entry<String, List<ModelRecurrence>> timeEntry : byTime.entrySet()) {
+                List<ModelRecurrence> recurrences = timeEntry.getValue();
+                ModelRecurrence head = recurrences.get(0);
+                int hour = head.hour();
+                int minute = head.minute();
+
+                String description = renderRecurrence(unit, recurrences, hour, minute);
+                longDescriptions.add(description);
+
+                // Fill in rendered field for clients
+                for (ModelRecurrence r : recurrences) {
+                    r.setRendered(description);
                 }
             }
+        }
 
-            longDescriptions.add(rendered);
+        // If all recurrences were ONCE, but with specific timestamps
+        if (!hasNonOnce) {
+            for (ModelRecurrence r : source) {
+                if (r.getUnit() == RecurrenceUnit.ONCE && r.getValue() != 0) {
+                    long delta = r.getValue() - System.currentTimeMillis();
+                    String str = delta < 0 ?
+                            "Overdue by " + X_Time.print(-delta) :
+                            "Within " + X_Time.print(delta);
+                    longDescriptions.set(0, str); // overwrite default "Once only"
+                    r.setRendered(str);
+                }
+            }
         }
     }
 
-    /// Grouping key for recurrence merging (unit + hour + minute).
-    private String groupKey(ModelRecurrence r) {
-        return r.getUnit().name() + "-" + r.hour() + ":" + r.minute();
-    }
-
-    /// Builds a friendly human-readable string for a group of recurrences.
-    ///
-    /// This string will be stored in `ModelRecurrence.setProperty("rendered", ...)`
-    /// and is client-friendly (no timezone awareness unless explicitly added).
-    private String renderRecurrence(RecurrenceUnit unit, List<DayOfWeek> days, int hour, int minute) {
-        final String time = formatTime(hour, minute);
-        final String dayStr = days.stream()
-                .map(day -> capitalize(day.name()))
-                .collect(Collectors.joining(", "));
+    /// Builds a readable sentence from recurrence rules with same unit/time
+    private String renderRecurrence(RecurrenceUnit unit, List<ModelRecurrence> entries, int hour, int minute) {
+        String time = X_String.formatTime(hour, minute);
 
         switch (unit) {
             case ONCE:
-                throw new IllegalStateException("Cannot use renderRecurrence for ONCE type recurrences");
+                return "Once only";
             case DAILY:
                 return "Every day at " + time;
             case WEEKLY:
-                return "Weekly on " + dayStr + " at " + time;
             case BIWEEKLY:
-                return "Every 2nd week on " + dayStr + " at " + time;
-            case TRIWEEKLY:
-                return "Every 3rd week on " + dayStr + " at " + time;
-            case MONTHLY:
-                return "Monthly on " + dayStr + " at " + time;
-            case YEARLY:
-                return "Yearly on " + dayStr + " at " + time;
+            case TRIWEEKLY: {
+                List<DayOfWeek> days = sortedDays(entries);
+                String label = days.stream().map(this::capitalize).collect(Collectors.joining(", "));
+                switch (unit) {
+                    case WEEKLY:
+                        return "Weekly on " + label + " at " + time;
+                    case BIWEEKLY:
+                        return "Every 2nd week on " + label + " at " + time;
+                    case TRIWEEKLY:
+                        return "Every 3rd week on " + label + " at " + time;
+                    default:
+                        return ""; // unreachable
+                }
+            }
+            case MONTHLY: {
+                int size = entries.size();
+                int[] days = new int[size];
+                for (int i = 0; i < size; i++) {
+                    days[i] = (int)(entries.get(i).getValue() / ModelRecurrence.MINUTES_PER_DAY);
+                }
+
+                Arrays.sort(days);
+                String label = X_String.ordinalJoin(days);
+                return "Monthly on the " + label + " at " + time;
+            }
+            case YEARLY: {
+                List<Integer> days = entries.stream()
+                        .map(r -> (int)(r.getValue() / ModelRecurrence.MINUTES_PER_DAY))
+                        .sorted()
+                        .collect(Collectors.toList());
+                StringBuilder sb = new StringBuilder("Yearly on ");
+                for (int i = 0; i < days.size(); i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(TimeUtils.dateOfDayOfYear(days.get(i)));
+                }
+                sb.append(" at ").append(time);
+                return sb.toString();
+            }
             default:
-                return unit.name() + " on " + dayStr + " at " + time;
+                return unit.name() + " on " + time;
         }
     }
 
-    /// Returns a string like `7:00` or `16:45`
-    /// TODO: Move into `X_Time.formatTime(...)` once localization is added.
-    private static String formatTime(int hour, int minute) {
-        return hour + ":" + String.format("%02d", minute);
+    /// Capitalizes a string: MONDAY → Monday
+    private String capitalize(Enum<?> val) {
+        String name = val.name();
+        return name.charAt(0) + name.substring(1).toLowerCase();
     }
 
-    /// Capitalizes a string: "MONDAY" -> "Monday"
-    private static String capitalize(String name) {
-        return name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase();
+    /// Sorts day-of-week values relative to today
+    private List<DayOfWeek> sortedDays(List<ModelRecurrence> list) {
+        int today = LocalDate.now().getDayOfWeek().getValue(); // 1 = Monday, 7 = Sunday
+        return list.stream()
+                .map(ModelRecurrence::dayOfWeek)
+                .sorted(Comparator.comparingInt(d -> (d.ordinal() + 7 - today) % 7))
+                .distinct()
+                .collect(Collectors.toList());
     }
 }

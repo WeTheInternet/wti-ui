@@ -3,6 +3,7 @@ package net.wti.ui.demo.ui.view;
 import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.Align;
 import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.ui.TaskActionBar;
 import net.wti.ui.demo.ui.controller.TaskController;
@@ -55,12 +56,21 @@ public final class TaskViewActive extends AbstractTaskView<ModelTask> {
         actionBar = new TaskActionBar(this, controller, style);
         summaryPane = new TaskSummaryPane(skin, model);
         nameLabel = label(model.getName(), style.nameStyle);
+        nameLabel.setWrap(true);
+        nameLabel.setAlignment(Align.left);
+
+        defaults().space(4).pad(0);
+
         descriptionLabel = label(getDescriptionShort(), style.previewStyle);
-        add(nameLabel).growX().left().colspan(3);
-        add(actionBar).right().colspan(2).row();
+        descriptionLabel.setAlignment(Align.left);
+
+        add(nameLabel).growX().colspan(2);
+        add(actionBar).colspan(1).row();
         descriptionCell = add(descriptionLabel);
-        descriptionCell.growX().center().colspan(5).row();
-        // TODO: have an "extra actions" bar that's only shown when expanded
+        descriptionCell.growX().center().colspan(3).row();
+
+        add(summaryPane).center().colspan(3).row();
+
         rebuild();
     }
 
@@ -94,6 +104,15 @@ public final class TaskViewActive extends AbstractTaskView<ModelTask> {
         descriptionLabel.setWrap(true);
 
         summaryPane.expand();
+    }
+
+    @Override
+    protected void rebuild() {
+        if (isExpanded()) {
+            buildExpanded();
+        } else {
+            buildCollapsed();
+        }
     }
 
     /* ---------------------------------------------------------------- */

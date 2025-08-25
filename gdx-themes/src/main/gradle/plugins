@@ -1,0 +1,2 @@
+id "net.wti.gradle.font" version "$xapiVersion"
+id "net.wti.gradle.atlas" version "$xapiVersion"

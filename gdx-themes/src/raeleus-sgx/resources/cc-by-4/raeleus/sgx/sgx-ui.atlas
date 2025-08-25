@@ -822,7 +822,7 @@ button-task
 task-item-bg
   rotate: false
   xy: 336, 72
-  size: 64, 64
+  size: 32, 32
   split: 8, 8, 8, 8
   orig: 64, 64
   offset: 0, 0
@@ -843,3 +843,27 @@ task-button-bg
   orig: 32, 32
   offset: 0, 0
   index: -1
+calendar-inactive
+  rotate: false
+  xy: 32, 64
+  size: 16, 16
+  split: 4, 4, 4, 4
+  pad: 4, 4, 4, 4
+calendar-active
+  rotate: false
+  xy: 48, 64
+  size: 16, 16
+  split: 4, 4, 4, 4
+  pad: 4, 4, 4, 4
+calendar-hover
+  rotate: false
+  xy: 64, 64
+  size: 16, 16
+  split: 4, 4, 4, 4
+  pad: 4, 4, 4, 4
+calendar-selected
+  rotate: false
+  xy: 80, 64
+  size: 16, 16
+  split: 4, 4, 4, 4
+  pad: 4, 4, 4, 4

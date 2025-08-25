@@ -14,6 +14,7 @@
                         external : [
                             ( libs.xapi.model ),
                             ( libs.xapi.util ),
+                            ( libs.xapi.inject ),
                         ],
                         project : ":xapi-ui",
                         project : { ":gdx-themes" : main },
@@ -43,6 +44,7 @@
             requires = {
                 external : [
                     ( libs.xapi.model.jre ),
+                    ( libs.xapi.inject.jre ),
                     "com.badlogicgames.gdx:gdx-box2d:$gdxVersion",
                     "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop",
                     "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop",

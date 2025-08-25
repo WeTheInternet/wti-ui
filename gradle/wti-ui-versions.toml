@@ -1,6 +1,6 @@
 [versions]
 xapi = '0.5.1'
-gdx = '1.13.1-SNAPSHOT'
+gdx = '2.13.2-SNAPSHOT'
 swt = '4.5.1'
 gwt = '2.8.0'
 elemental = '1.1.0'
@@ -57,6 +57,9 @@ gwt-user = { module = "net.wetheinter:gwt-user", version.ref = "gwt" }
 
 spock = { module = "org.spockframework:spock-core", version.ref = "spock" }
 junit = { module = "junit:junit", version.ref = "junit" }
+
+gdx-platform = { module = "com.badlogicgames.gdx:gdx-platform", version.ref = "gdx" }
+gdx-backend-headless = { module = "com.badlogicgames.gdx:gdx-backend-headless", version.ref = "gdx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "android-plugin" }

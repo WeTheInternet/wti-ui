@@ -10,6 +10,7 @@ import xapi.time.X_Time;
 
 import java.util.concurrent.TimeUnit;
 
+import static net.wti.ui.api.TimeConstants.*;
 import static xapi.time.X_Time.isPast;
 
 /// DeadlineView:
@@ -22,11 +23,6 @@ import static xapi.time.X_Time.isPast;
 /// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 2025-04-16 @ 22:10 CST
 public class DeadlineView extends Label implements IsDeadlineView {
 
-    private static final long ONE_SECOND = 1_000;
-    private static final long ONE_MINUTE = 60_000;
-    private static final long ONE_HOUR = 3_600_000;
-    private static final long ONE_DAY = 24 * ONE_HOUR;
-    private static final long TEN_SECONDS = 10_000;
     private long latency = ONE_MINUTE;
 
     private float lastDraw;

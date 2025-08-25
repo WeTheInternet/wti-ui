@@ -1,8 +1,10 @@
 package net.wti.ui.demo.ui.view;
 
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import net.wti.ui.demo.api.ModelTask;
+import net.wti.ui.demo.api.Schedule;
 
 /// RecurrenceView
 ///
@@ -16,6 +18,7 @@ public class RecurrenceView extends Table {
     private final ModelTask task;
     private final Skin skin;
     private final Schedule schedule;
+    private final RecurrenceCalendar calendar;
     private boolean expanded = false;
 
     private final RecurrenceSummary summary;
@@ -29,6 +32,9 @@ public class RecurrenceView extends Table {
         this.summary = new RecurrenceSummary(task, skin, schedule);
         add(summary).left().row();
 
+        calendar = new RecurrenceCalendar(skin);
+        add(calendar).padTop(6).left().row();
+
         rebuild();
 
         task.onChange("updated", (before, after) -> {
@@ -39,12 +45,17 @@ public class RecurrenceView extends Table {
 
     private void rebuild() {
         detail.clearChildren();
+        calendar.update(task);
         if (expanded) {
-            for (String line : schedule.renderLongDescriptions()) {
+            // show expanded calendar view
+            for (String line : schedule.getLongDescriptions()) {
                 detail.add(new Label(line, skin)).left().row();
             }
             add(detail).padTop(8).left().row();
+        } else {
+            // show collapsed calendar view
         }
+
     }
 
     public void expand() {

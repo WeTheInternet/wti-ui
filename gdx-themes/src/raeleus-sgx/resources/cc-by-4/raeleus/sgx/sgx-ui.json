@@ -22,7 +22,13 @@ com.badlogic.gdx.graphics.g2d.BitmapFont: {
 		file: font-medium-export.fnt
 	}
 	font-symbol: {
-		file: NotoSansSymbols2-Regular-18.fnt
+		file: NotoSansSymbols2-Regular-24.fnt
+	}
+	font-emoji: {
+		file: NotoEmoji-Regular-32.fnt
+	}
+	font-playfair: {
+		file: PlayfairDisplay-32.fnt
 	}
 }
 com.badlogic.gdx.graphics.Color: {
@@ -411,9 +417,49 @@ com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
 		font: small,
 		fontColor: font
 	},
+	task-emoji: {
+		font: font-emoji,
+		fontColor: font
+	},
 	task-summary-tag: {
 		font: small,
 		fontColor: font-urgent
+	}
+	"calendar-active": {
+		"font": "font",
+		"fontColor": "font-later"
+	},
+	"calendar-hovered": {
+		"font": "font",
+		"fontColor": "font-over"
+	},
+	"calendar-selected": {
+		"font": "font",
+		"fontColor": "font-urgent"
+	},
+	"calendar-disabled": {
+		"font": "font",
+		"fontColor": "font-disabled"
+	}
+	"recurrence-cell": {
+		"font": "font",
+		"fontColor": "font-disabled",
+		"background": "cell-inactive"
+	},
+	"recurrence-cell-active": {
+		"font": "font",
+		"fontColor": "font",
+		"background": "cell-active"
+	},
+	"recurrence-cell-over": {
+		"font": "font",
+		"fontColor": "font-over",
+		"background": "cell-hover"
+	},
+	"recurrence-cell-selected": {
+		"font": "font",
+		"fontColor": "font-text-field",
+		"background": "cell-selected"
 	}
 }
 com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle: {

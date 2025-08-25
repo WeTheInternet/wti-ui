@@ -12,7 +12,9 @@ import net.wti.ui.gdx.theme.UiDataBundle;
 public class TaskUiTheme extends CompositeGdxTheme {
     public TaskUiTheme() {
         super(
-                new UiDataBundle(null, "cc-by-4/raeleus/sgx/sgx-fonts.atlas"),
+                "cc-by-4/raeleus/sgx",
+                new UiDataBundle(null, "cc-by-4/wti/common/wti-fonts.atlas"),
+                new UiDataBundle("cc-by-4/wti/common/wti-common-ui.json", "cc-by-4/wti/common/wti-common.atlas"),
                 new UiDataBundle("cc-by-4/raeleus/sgx/sgx-ui.json", "cc-by-4/raeleus/sgx/sgx-ui.atlas"),
                 new UiDataBundle("cc-by-4/wti/task-ui.json", "cc-by-4/raeleus/sgx/sgx-fonts.atlas")
         );

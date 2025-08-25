@@ -40,4 +40,28 @@
 
     }
   }
+  net.wti.ui.demo.ui.view.RecurrenceCalendar$RecurrenceCalendarStyle: {
+    recurrence-calendar: {
+      "cellStyle": {
+        "font": "font",
+        "fontColor": "font-disabled",
+        "background": "cell-inactive"
+      },
+      "activeStyle": {
+        "font": "font",
+        "fontColor": "task-name",
+        "background": "cell-active"
+      },
+      "hoverStyle": {
+        "font": "font",
+        "fontColor": "font-over",
+        "background": "cell-hover"
+      },
+      "selectedStyle": {
+        "font": "font",
+        "fontColor": "font-soon",
+        "background": "cell-selected"
+      }
+    }
+  }
 }

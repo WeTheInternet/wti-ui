@@ -21,6 +21,7 @@ main.java.srcDir("$rootDir/demo/src/jre/java")
 dependencies {
     implementation project(path: ":demo-api")
     implementation libs.xapi.model.jre
+    implementation libs.xapi.inject.jre
     implementation "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
     implementation "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
     implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"

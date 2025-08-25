@@ -1,61 +1,68 @@
 
 sgx-fonts.png
-size: 330, 204
+size: 331, 203
 format: RGBA8888
 filter: Linear, Linear
 repeat: none
+NotoEmoji-Regular-24
+  rotate: false
+  xy: 114, 2
+  size: 20, 25
+  orig: 46, 34
+  offset: 0, 8
+  index: -1
+NotoEmoji-Regular-32
+  rotate: false
+  xy: 294, 167
+  size: 26, 34
+  orig: 52, 44
+  offset: 0, 9
+  index: -1
 NotoSansSymbols2-Regular-18
   rotate: false
-  xy: 2, 9
+  xy: 2, 8
   size: 110, 19
   orig: 120, 20
   offset: 1, 1
   index: -1
 NotoSansSymbols2-Regular-24
   rotate: false
-  xy: 2, 30
+  xy: 2, 29
   size: 135, 23
   orig: 144, 26
   offset: 1, 2
   index: -1
-PlayfairDisplay-18
+PlayfairDisplay-32
   rotate: false
-  xy: 2, 2
-  size: 14, 5
-  orig: 16, 8
-  offset: 1, 2
-  index: -1
-PlayfairDisplay-24
-  rotate: false
-  xy: 114, 21
-  size: 18, 7
-  orig: 22, 10
-  offset: 1, 2
+  xy: 136, 18
+  size: 25, 9
+  orig: 26, 14
+  offset: 1, 4
   index: -1
 Questrial-Regular-12
   rotate: false
-  xy: 162, 5
+  xy: 163, 4
   size: 94, 84
   orig: 96, 96
   offset: 0, 12
   index: -1
 Questrial-Regular-18
   rotate: false
-  xy: 162, 91
+  xy: 162, 90
   size: 130, 111
   orig: 132, 132
   offset: 0, 21
   index: -1
 Questrial-Regular-24
   rotate: false
-  xy: 2, 55
+  xy: 2, 54
   size: 158, 147
   orig: 160, 160
   offset: 0, 13
   index: -1
 Questrial-Regular-8
   rotate: false
-  xy: 258, 26
+  xy: 259, 25
   size: 70, 63
   orig: 72, 72
   offset: 1, 9

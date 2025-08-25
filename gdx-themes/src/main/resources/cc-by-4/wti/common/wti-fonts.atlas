@@ -1,0 +1,69 @@
+
+wti-fonts.png
+size: 330, 204
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+NotoEmoji-Regular-24
+  rotate: false
+  xy: 132, 2
+  size: 20, 25
+  orig: 46, 34
+  offset: 0, 8
+  index: -1
+NotoEmoji-Regular-32
+  rotate: false
+  xy: 292, 168
+  size: 26, 34
+  orig: 52, 44
+  offset: 0, 9
+  index: -1
+NotoSansSymbols2-Regular-18
+  rotate: false
+  xy: 2, 9
+  size: 128, 18
+  orig: 140, 24
+  offset: 2, 5
+  index: -1
+NotoSansSymbols2-Regular-24
+  rotate: false
+  xy: 2, 29
+  size: 158, 24
+  orig: 182, 30
+  offset: 1, 6
+  index: -1
+PlayfairDisplay-32
+  rotate: false
+  xy: 258, 15
+  size: 23, 9
+  orig: 26, 16
+  offset: 2, 6
+  index: -1
+Questrial-Regular-12
+  rotate: false
+  xy: 162, 5
+  size: 94, 84
+  orig: 96, 96
+  offset: 1, 12
+  index: -1
+Questrial-Regular-18
+  rotate: false
+  xy: 161, 91
+  size: 129, 111
+  orig: 132, 132
+  offset: 1, 21
+  index: -1
+Questrial-Regular-24
+  rotate: false
+  xy: 2, 55
+  size: 157, 147
+  orig: 160, 160
+  offset: 1, 13
+  index: -1
+Questrial-Regular-8
+  rotate: false
+  xy: 258, 26
+  size: 70, 63
+  orig: 72, 72
+  offset: 1, 9
+  index: -1

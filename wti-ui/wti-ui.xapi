@@ -1,0 +1,57 @@
+<xapi-schema
+    modules = [
+        <api />,
+        <view includes = api />,
+        <controls includes = [ view ] />,
+        <color includes = api />,
+        <image includes = api />,
+        <event includes = api />,
+        <scene includes = [ controls, event ] />,
+        <modelbind />,
+        <main includes=[ controls, color, image, scene, event, modelbind ]/>
+    ]
+
+    platforms = [
+        <main
+            requires = {
+                @transitive("test")
+                external : [
+                    ( libs.spock ),
+                    ( libs.xapi.model.jre ),
+                ],
+            }
+            modules = [
+                <modelbind
+                    requires = {
+                        @transitive
+                        external : [
+                            ( libs.xapi.model ),
+                            ( libs.xapi.util ),
+                        ],
+                    }
+                /modelbind>,
+                <controls
+                    requires = {
+                        @transitive("test")
+                        project : { ":xapi-ui" : main },
+                    }
+                /controls>,
+            ]
+        /main>,
+        <impl replaces=main
+            modules = [
+            ]
+        /impl>,
+        <jre replaces=impl
+            requires = {
+                external : [
+                    ( libs.xapi.model.jre ),
+                    "com.badlogicgames.gdx:gdx-box2d:$gdxVersion",
+                    "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop",
+                    "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop",
+                    "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion",
+                ],
+            }
+        /jre>,
+    ]
+/xapi-schema>

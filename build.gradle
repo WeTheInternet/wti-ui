@@ -17,10 +17,11 @@ gradle.beforeProject {
     p ->
         p.group = 'net.wti.ui'
         p.version = '0.51'
+        final File repo = file(findProperty('xapiRepo') ?: "$rootDir/../xapi/repo").absoluteFile
         p.repositories {
             maven {
                 name = 'xapi-repo'
-                url = file(findProperty('xapiRepo') ?: "$rootDir/../xapi/repo").absoluteFile
+                url = repo
             }
             mavenCentral()
             mavenLocal()
