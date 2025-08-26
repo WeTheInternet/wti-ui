@@ -105,6 +105,7 @@ public final class DemoApp extends ApplicationAdapter {
         // 1 — Theme & Skin
         theme = new TaskUiTheme();
         skin = theme.getSkin();
+        theme.applyTooltipDefaults();
 
         // 2 — Stage
         stage = new Stage(new ScreenViewport());

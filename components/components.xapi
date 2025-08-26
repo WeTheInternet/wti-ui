@@ -29,7 +29,10 @@
                 /inventory>,
                 <ui
                     requires = {
+                        @transitive
+                        project : { ":wti-ui" : view },
                         project : { ":xapi-ui" : main },
+                        external: "com.badlogicgames.gdx:gdx:$gdxVersion",
                     }
                 /ui>
             ]

@@ -17,7 +17,9 @@
                             ( libs.xapi.inject ),
                         ],
                         project : ":xapi-ui",
+                        @transitive
                         project : { ":gdx-themes" : main },
+                        project : { ":components" : main },
                         @transitive("test")
                         external : [
                             ( libs.spock ),
@@ -27,6 +29,8 @@
                 /api>,
                 <main
                     requires = {
+                        @transitive
+                        project : { ":components" : main },
                         project : ":xapi-ui",
                         @transitive(test)
                         external : ( libs.spock ),

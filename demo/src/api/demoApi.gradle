@@ -25,7 +25,8 @@ test.groovy.srcDir("$rootDir/demo/src/apiTest/groovy")
 
 dependencies {
     implementation project(path: ":xapi-ui-api")
-    implementation project(path: ":gdx-themes-main")
+    api project(path: ":gdx-themes-main")
+    implementation project(path: ":components-main")
     api libs.xapi.model
     api libs.xapi.util
     api libs.xapi.inject

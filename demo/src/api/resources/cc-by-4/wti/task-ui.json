@@ -1,43 +1,42 @@
 {
   com.badlogic.gdx.scenes.scene2d.ui.TextButton$TextButtonStyle: {
-    action-button: {
-      font: font-symbol
-      fontColor: font
-      overFontColor: font-over
-      up: file-menu-button
-      down: file-menu-button-pressed
-      over: file-menu-button-over
-    }
-    action-edit: {                        /// 🛠
-      font: font-symbol,
-      fontColor: font,
-      overFontColor: font-over,
-      up: file-menu-button,
-      down: file-menu-button-pressed,
-      over: file-menu-button-over
+    "action-button": {
+      "font": "medium",
+      "fontColor": "white",
+      "up": "button",
+      "over": "button-over",
+      "down": "button-pressed",
+      "disabled": "button-disabled"
     },
-    action-toggle: {                      /// ▶ / ▼
-      font: font-symbol,
-      fontColor: font,
-      overFontColor: font-over,
-      up: file-menu-button,
-      down: file-menu-button-pressed,
-      over: file-menu-button-over
+    "action-edit": {
+      "font": "medium",
+      "fontColor": "white",
+      "up": "button-emphasis",
+      "over": "button-emphasis-over",
+      "down": "button-emphasis-pressed",
+      "disabled": "button-emphasis-disabled"
+    },
+    "action-toggle": {
+      "font": "medium",
+      "fontColor": "white",
+      "up": "button-emphasis-color",
+      "over": "button-emphasis-color-over",
+      "down": "button-emphasis-color-pressed",
+      "disabled": "button-emphasis-color-disabled"
     }
   }
   net.wti.ui.demo.ui.view.AbstractTaskView$TaskViewStyle: {
     taskview: {
-      background: task-item-bg,
-      hoveredBackground: task-item-hover,
-      nameStyle: task-name,
-      descStyle: default,
-      previewStyle: task-preview,
-      recurrenceLabelStyle: small,
-      recurrenceValueStyle: small-white,
-      buttonStyle: action-button,
-      editButtonStyle: action-edit,
-      toggleButtonStyle: action-toggle
-
+      background: "cell-inactive",
+      hoveredBackground: "cell-hover",
+      nameStyle: "task-name",
+      descStyle: "task-preview",
+      previewStyle: "task-preview",
+      recurrenceLabelStyle: "small",
+      recurrenceValueStyle: "small",
+      buttonStyle: "action-button",
+      editButtonStyle: "action-edit",
+      toggleButtonStyle: "action-toggle"
     }
   }
   net.wti.ui.demo.ui.view.RecurrenceCalendar$RecurrenceCalendarStyle: {

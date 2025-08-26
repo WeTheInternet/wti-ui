@@ -81,6 +81,7 @@ xapiFonts {
         addSizedWeight 46, 34, 'Regular', 24
         addSizedWeight 52, 44, 'Regular', 32
     }
+
     googleFont 'PlayfairDisplay', {
         extraUrl = '[wght]'
         charFile = file("$rootDir/playfair-display-chars.txt")
@@ -97,72 +98,142 @@ tasks.register('copyFonts', Copy) {
 packFonts.configure {
     finalizedBy 'copyFonts'
 }
-
 xapiAtlas {
-  atlasName = 'wti-common'
+  atlasName = 'wti-common-ui'
+  // adjust if you prefer a different output path:
   outputDir = layout.projectDirectory.dir('resources/cc-by-4/wti/common')
 
-  // --- pixels (for tinting or fallbacks)
-  pixel 'white',     '#ffffffff'
+  // ------------------------------------------------------------------
+  // 1) Utility pixel
+  // ------------------------------------------------------------------
+  pixel 'white', '#FFFFFFFF'
 
-  // --- ninepatch: tooltip background (has content insets)
+  // ------------------------------------------------------------------
+  // 2) Tooltip background (scalable 9-patch)
+  //    Names produced: tooltip-bg
+  // ------------------------------------------------------------------
   ninePatch('tooltip-bg') {
     width = 16; height = 16
-    // content insets -> bottom/right 9patch guides
+
+    // Scalable nine-patch margins (left, right, top, bottom)
+    // Previously: split 4, 4, 4, 4
+    stretch 4, 4, 4, 4
+
+    // Content padding applied by Scene2D layout (top, left, bottom, right)
     padTop = 6; padLeft = 8; padBottom = 6; padRight = 8
+
+    // Base fill; semi-opaque slate
     fillHex = '#2a2a2acc'
-    // Optional: per-image extra inset (to avoid AA hugging guides)
-    // inset 0.65f
+
+    // Optional: extra inset to keep AA off guides
+    // inset 0.5f
   }
 
-  // --- family: general purpose button (text / text+icon / icon-only)
+  // ------------------------------------------------------------------
+  // 3) General button family (normal)
+  //    Names produced:
+  //      button, button-over, button-pressed, button-disabled
+  // ------------------------------------------------------------------
   family('button') {
-    size 52, 50; corner 8
-    // split margins (non-stretch); center region stretches
+    size 52, 50
+    corner 8
+    // splits (L,R,T,B) – center stretches
     split 8, 8, 7, 8
-    // content area (bottom/right guides)
+    // content pad (T,L,B,R)
     pad 4, 4, 5, 4
     // base look
-    fill '#2c2f3aff'; gradient 0.12f, -0.08f
+    fill '#2C2F3AFF'
+    gradient 0.12f, -0.08f
     stroke '#00000066', 1
-    innerStroke '#ffffff10', 1
-    shadow 1, '#00000040'  // soft offset shadow
+    innerStroke '#FFFFFF10', 1
+    shadow 1, '#00000040'
 
-    state('default') {}
-    state('over')    { gradient 0.18f, -0.05f }
-    state('pressed') { gradient 0.06f, -0.18f; padDelta 1,0,-1,0 }
-    state('disabled'){ alpha 0.55f }
+    state('default') { /* -> "button" */ }
+    state('over')    { gradient 0.18f, -0.05f }             // -> "button-over"
+    state('pressed') { gradient 0.06f, -0.18f; padDelta 1,0,-1,0 } // -> "button-pressed"
+    state('disabled'){ alpha 0.55f }                        // -> "button-disabled"
   }
 
-  // Optional: slimmer emphasis button (matches names you used earlier)
+  // ------------------------------------------------------------------
+  // 4) Emphasis button (slimmer)
+  //    Names produced:
+  //      button-emphasis, button-emphasis-over,
+  //      button-emphasis-pressed, button-emphasis-disabled
+  // ------------------------------------------------------------------
   variant('button-emphasis', 'button') {
     size 51, 31
+    // tuned for the slimmer height
     split 8, 7, 9, 10
-    pad 7, 9, 4, 6
-  }
-  variant('button-emphasis-color', 'button-emphasis') {
-    fill '#3452b8ff'
+    pad   7, 9, 4, 6
+    // slight brightness bump for emphasis base
+    gradient 0.16f, -0.08f
   }
 
-  // --- family: calendar/recurrence cells used by your RecurrenceCalendar styles
-  // Produces: cell-inactive, cell-active, cell-hover, cell-selected
+  // ------------------------------------------------------------------
+  // 5) Colored emphasis (blue) – same states as emphasis
+  //    Names produced:
+  //      button-emphasis-color, ...-over, ...-pressed, ...-disabled
+  // ------------------------------------------------------------------
+  variant('button-emphasis-color', 'button-emphasis') {
+    fill '#3452B8FF'        // deep blue
+    gradient 0.18f, -0.10f
+  }
+
+  // ------------------------------------------------------------------
+  // 6) Calendar / recurrence cells
+  //    Names produced:
+  //      cell-inactive, cell-active, cell-hover, cell-selected
+  // ------------------------------------------------------------------
   family('cell') {
     size 24, 24
     corner 6
     split 4, 4, 4, 4
     pad 2, 2, 2, 2
-    fill '#23272eff'; gradient 0.10f, -0.05f
-    stroke '#00000066', 1
-    innerStroke '#ffffff10', 1
 
-    state('inactive') { alpha 0.85f }                   // cell-inactive
-    state('active')   { fill '#313844ff'; gradient 0.12f, -0.08f } // cell-active
-    state('hover')    { gradient 0.16f, -0.02f }        // cell-hover
-    state('selected') { fill '#3a4252ff'; gradient 0.20f, -0.12f } // cell-selected
+    // shared base look
+    fill '#23272EFF'
+    gradient 0.10f, -0.05f
+    stroke '#00000066', 1
+    innerStroke '#FFFFFF10', 1
+
+    state('inactive') { alpha 0.85f }                                      // -> "cell-inactive"
+    state('active')   { fill '#313844FF'; gradient 0.12f, -0.08f }         // -> "cell-active"
+    state('hover')    { gradient 0.16f, -0.02f }                           // -> "cell-hover"
+    state('selected') { fill '#3A4252FF'; gradient 0.20f, -0.12f }         // -> "cell-selected"
   }
 
-  // Global default inset (extra interior padding to keep AA away from guides)
-  // defaultInsetPx = 0.65f
-  // insetPrefix   = 'inset-'   // if you want writer to optionally produce inset clones
+  // ------------------------------------------------------------------
+  // 7) A slim vertical divider you can stretch in Y (shorter than full height in layout)
+  // ------------------------------------------------------------------
+  ninePatch('divider-vert') {
+    width = 2; height = 16
+    // make center stretchable
+    stretch 1, 1, 6, 6
+    // no content padding
+    padTop = 0; padLeft = 0; padBottom = 0; padRight = 0
+    fillHex = '#00000055'    // subtle
+  }
+
+  // ------------------------------------------------------------------
+  // 8) A soft panel background for the action bar
+  // ------------------------------------------------------------------
+  family('panel-actionbar') {
+    size 4, 4            // tiny base; ninepatch will scale
+    corner 8
+    split 6, 6, 6, 6
+    pad   4, 6, 4, 6     // inner padding
+    fill  '#2C2F3AFF'
+    gradient 0.08f, -0.04f
+    stroke '#00000066', 1
+    innerStroke '#FFFFFF10', 1
+
+    state('default') { } // exports: "panel-actionbar"
+  }
+
+  // ------------------------------------------------------------------
+  // Global insetting (optional)
+  // ------------------------------------------------------------------
+  // defaultInsetPx = 0.5f
+  // insetPrefix    = 'inset-'
 }
 // Done generating buildfile for :gdx-themes at file://$rootDir/gdx-themes/src/main/gdx-themesMain.gradle

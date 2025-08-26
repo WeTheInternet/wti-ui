@@ -16,9 +16,12 @@ main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
+main.java.srcDir("$rootDir/components/src/ui/java")
 
 dependencies {
+    api project(path: ":wti-ui-view")
     implementation project(path: ":xapi-ui-main")
+    implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
 }
 // Setup publishing to coordinates: net.wti:components-ui
 project.extensions.add('xapi.mvn.repo', "$rootDir/repo")
