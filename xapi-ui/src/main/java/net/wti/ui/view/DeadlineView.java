@@ -76,14 +76,14 @@ public class DeadlineView extends Label implements IsDeadlineView {
     }
 
     public static String printDeadline(Double deadline) {
-        if (deadline == null) {
+        if (deadline == null || deadline == 0d) {
             return "";
         }
         String suffix = "";
         if (isPast(deadline)) {
             suffix = "!";
         }
-        return X_Time.print(deadline - X_Time.nowMillis()) + suffix;
+        return X_Time.timestampHuman(deadline - X_Time.nowMillis()) + suffix;
     }
 
     @Override

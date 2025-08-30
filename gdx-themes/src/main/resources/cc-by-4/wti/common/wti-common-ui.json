@@ -16,6 +16,12 @@
 
   "com.badlogic.gdx.graphics.Color": {
     "text":            { "r": 0.90, "g": 0.92,  "b": 0.98,  "a": 1.0 },
+    "note-color": {
+      "r": 0.75,
+      "g": 0.77,
+      "b": 0.83,
+      "a": 1.0
+    },
     "text-over":       { "r": 1.00, "g": 1.00,  "b": 1.00,  "a": 1.0 },
     "text-disabled":   { "r": 0.55, "g": 0.60,  "b": 0.70,  "a": 1.0 },
     "text-field":      { "r": 0.92, "g": 0.95,  "b": 1.00,  "a": 1.0 },
@@ -34,7 +40,14 @@
       "font": "font",
       "fontColor": "text"
     },
-
+    "note": {
+      "font": "font",
+      "fontColor": "note-color"
+    },
+    "note-small": {
+      "font": "small",
+      "fontColor": "note-color"
+    },
     "tooltip-label": {
       "font": "small",
       "fontColor": "tooltip-text"
@@ -157,5 +170,14 @@
       "checked":     "button-emphasis-color-over",
       "checkedOver": "button-emphasis-color-over"
     }
+  },
+  "com.badlogic.gdx.scenes.scene2d.ui.SplitPane$SplitPaneStyle": {
+    "default-horizontal": {
+      "handle": "divider-vert"
+    },
+    "default-vertical": {
+      "handle": "divider-horiz"
+    }
   }
+
 }

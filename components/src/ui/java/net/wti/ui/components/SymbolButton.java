@@ -2,7 +2,9 @@ package net.wti.ui.components;
 
 
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextTooltip;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ObjectMap;
@@ -15,6 +17,11 @@ import com.badlogic.gdx.utils.ObjectMap;
 /// Created by James X. Nelson (James@WeTheInter.net) on 25/08/2025 @ 14:45
 /** Button that displays a single symbol/emoji and sizes itself square based on atlas+font. */
 public class SymbolButton extends TextButton {
+    // ---------------------------------------------------------------------
+    // Style names
+    // ---------------------------------------------------------------------
+    public static final String STYLE_NORMAL = "actionbar";
+    public static final String STYLE_PRIMARY = "actionbar-emphasis";
     private static final ObjectMap<String, Float> SIZE_CACHE = new ObjectMap<>();
     private static float BASELINE_NUDGE_Y = 3.5f; // tune per font; -1..-2 works well for NotoSymbols 24pt
 
@@ -41,14 +48,7 @@ public class SymbolButton extends TextButton {
 
         // TOOLTIP: use sizing tooltip so it wraps horizontally
         if (tooltipText != null && !tooltipText.isEmpty() && skin.has("tooltip-default", TextTooltip.TextTooltipStyle.class)) {
-            final TextTooltip.TextTooltipStyle tts = skin.get("tooltip-default", TextTooltip.TextTooltipStyle.class);
-            final TooltipManager tm = TooltipManager.getInstance();
-            tm.initialTime = 0.25f;
-            tm.subsequentTime = 0.10f;
-            tm.resetTime = 0.25f;
-            tm.maxWidth = Math.max(tm.maxWidth, 360f); // ensure sane width
-
-            final SizingTextTooltip tt = new SizingTextTooltip(tooltipText, tm, tts);
+            final SizingTextTooltip tt = new SizingTextTooltip(tooltipText, skin);
             addListener(tt);
         }
     }

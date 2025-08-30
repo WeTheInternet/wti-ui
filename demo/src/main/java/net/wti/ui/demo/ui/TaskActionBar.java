@@ -1,15 +1,18 @@
 package net.wti.ui.demo.ui;
 
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 import net.wti.ui.components.SymbolButton;
+import net.wti.ui.controls.focus.FocusReturner;
 import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.common.DemoConstants;
 import net.wti.ui.demo.i18n.Messages;
 import net.wti.ui.demo.ui.controller.TaskController;
+import net.wti.ui.demo.ui.dialog.TaskCancelDialog;
 import net.wti.ui.demo.ui.view.AbstractTaskView;
 import net.wti.ui.demo.view.api.IsTaskView;
 import xapi.time.X_Time;
@@ -37,25 +40,6 @@ import static net.wti.ui.api.TimeConstants.ONE_DAY;
 /// * 『 ○ 』 Theming override per‑button (future)
 ///
 public final class TaskActionBar extends Table {
-
-    // ---------------------------------------------------------------------
-    // Constants
-    // ---------------------------------------------------------------------
-
-//    private static final String GLYPH_INFINITY = "\uD800\uDD85";
-    public static final String GLYPH_INFINITY = "∞";
-    private static final String GLYPH_FINISH   = "✓";
-    private static final String GLYPH_DEFER    = "⌚";
-    private static final String GLYPH_CANCEL   = "✕";
-    private static final String GLYPH_EDIT     = "🛠";
-    private static final String GLYPH_EXPAND   = "+"; // down arrows; consider ▼ or ⯯
-    private static final String GLYPH_COLLAPSE = "-"; // down arrows; consider ▲ or ⯯
-
-    // ---------------------------------------------------------------------
-    // Style names
-    // ---------------------------------------------------------------------
-    final String STYLE_NORMAL = "actionbar";
-    final String STYLE_PRIMARY = "actionbar-emphasis";
 
     // ---------------------------------------------------------------------
     // Fields
@@ -100,18 +84,25 @@ public final class TaskActionBar extends Table {
 
 
         /* expand / collapse button (initial state follows view) */
-        edit = new SymbolButton(GLYPH_EDIT, STYLE_NORMAL, skin, msgs.buttonEdit());
-        defer = new SymbolButton(GLYPH_DEFER, STYLE_NORMAL, skin, msgs.buttonReschedule());
-        cancel = new SymbolButton(GLYPH_CANCEL, STYLE_NORMAL, skin, msgs.buttonCancel());
-        finish = new SymbolButton(GLYPH_FINISH, STYLE_PRIMARY, skin, msgs.buttonFinish());
+        edit = new SymbolButton(DemoConstants.GLYPH_EDIT, SymbolButton.STYLE_NORMAL, skin, msgs.buttonEdit());
+        defer = new SymbolButton(DemoConstants.GLYPH_DEFER, SymbolButton.STYLE_NORMAL, skin, msgs.buttonReschedule());
+        cancel = new SymbolButton(DemoConstants.GLYPH_CANCEL, SymbolButton.STYLE_NORMAL, skin, msgs.buttonCancel());
+        finish = new SymbolButton(DemoConstants.GLYPH_FINISH, SymbolButton.STYLE_PRIMARY, skin, msgs.buttonFinish());
 
         toggleButton = new SymbolButton(
-                view.isExpanded() ? GLYPH_COLLAPSE : GLYPH_EXPAND,
-                STYLE_NORMAL,
+                view.isExpanded() ? DemoConstants.GLYPH_COLLAPSE : DemoConstants.GLYPH_EXPAND,
+                SymbolButton.STYLE_NORMAL,
                 skin,
                 view.isExpanded() ? msgs.buttonMinimize() : msgs.buttonMaximize()
         );
         toggleButton.setName("task-btn-toggle");
+
+        FocusReturner.attach(edit);
+        FocusReturner.attach(defer);
+        FocusReturner.attach(cancel);
+        FocusReturner.attach(finish);
+        FocusReturner.attach(toggleButton);
+
         float targetH = 29f; // try 26–30 until it feels right on your font/monitor
 
         float hEdit   = edit.clampedSquare(targetH);
@@ -123,8 +114,23 @@ public final class TaskActionBar extends Table {
 
         // Wire actions
         edit.addListener(click(() -> controller.edit(view)));
-        defer.addListener(click(() -> controller.defer(view.getTask())));
-        cancel.addListener(click(() -> controller.cancel(view.getTask(), TaskController.CancelMode.NEXT, X_Time.nowMillis() + ONE_DAY)));
+        defer.addListener(click(() -> {
+            final Stage stage = getStage();
+            if (stage != null) {
+
+//                new TaskCancelDialog(getStage(), getSkin(), controller, view.getTask()).show(stage);
+            } else {
+                controller.defer(view.getTask());
+            }
+        }));
+        cancel.addListener(click(() -> {
+            final Stage stage = getStage();
+            if (stage != null) {
+                new TaskCancelDialog(getStage(), getSkin(), controller, view.getTask()).show(stage);
+            } else {
+                controller.cancel(view.getTask(), TaskController.CancelMode.NEXT, X_Time.nowMillis() + ONE_DAY);
+            }
+        }));
         finish.addListener(click(() -> controller.markAsDone(view.getTask())));
         toggleButton.addListener(click(this::toggleExpand));
 
@@ -167,7 +173,7 @@ public final class TaskActionBar extends Table {
     private void toggleExpand() {
         parentView.toggleExpanded();
         toggleButton.setText(
-                parentView.isExpanded() ? GLYPH_COLLAPSE : GLYPH_EXPAND
+                parentView.isExpanded() ? DemoConstants.GLYPH_COLLAPSE : DemoConstants.GLYPH_EXPAND
         );
     }
 

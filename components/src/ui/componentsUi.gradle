@@ -21,6 +21,7 @@ main.java.srcDir("$rootDir/components/src/ui/java")
 dependencies {
     api project(path: ":wti-ui-view")
     implementation project(path: ":xapi-ui-main")
+    api project(path: ":wti-ui-controls")
     implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
 }
 // Setup publishing to coordinates: net.wti:components-ui

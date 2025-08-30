@@ -33,6 +33,8 @@
                         project : { ":wti-ui" : view },
                         project : { ":xapi-ui" : main },
                         external: "com.badlogicgames.gdx:gdx:$gdxVersion",
+                        @transitive
+                        project: { ":wti-ui" : controls }
                     }
                 /ui>
             ]

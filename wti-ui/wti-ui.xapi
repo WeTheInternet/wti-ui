@@ -1,8 +1,8 @@
 <xapi-schema
     modules = [
         <api />,
-        <view includes = api />,
-        <controls includes = [ view ] />,
+        <controls includes = api />,
+        <view includes = [ controls ] />,
         <color includes = api />,
         <image includes = api />,
         <event includes = api />,
@@ -34,6 +34,8 @@
                     requires = {
                         @transitive("test")
                         project : { ":xapi-ui" : main },
+                        @transitive
+                        external : ( libs.gdx.core ),
                     }
                 /controls>,
             ]

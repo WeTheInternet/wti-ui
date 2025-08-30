@@ -64,8 +64,8 @@ xapiAtlas {
     // Content padding applied by Scene2D layout (top, left, bottom, right)
     padTop = 6; padLeft = 8; padBottom = 6; padRight = 8
 
-    // Base fill; semi-opaque slate
-    fillHex = '#2a2a2acc'
+    // Base fill; opaque slate
+    fillHex = '#2a2a2aff'
 
     // Optional: extra inset to keep AA off guides
     // inset 0.5f
@@ -147,14 +147,24 @@ xapiAtlas {
   // ------------------------------------------------------------------
   // 7) A slim vertical divider you can stretch in Y (shorter than full height in layout)
   // ------------------------------------------------------------------
-  ninePatch('divider-vert') {
-    width = 2; height = 16
-    // make center stretchable
-    stretch 1, 1, 6, 6
-    // no content padding
-    padTop = 0; padLeft = 0; padBottom = 0; padRight = 0
-    fillHex = '#00000055'    // subtle
-  }
+    ninePatch('divider-vert') {
+      width = 2; height = 16
+      // make center stretchable
+      stretch 1, 1, 6, 6
+      // no content padding
+      padTop = 0; padLeft = 0; padBottom = 0; padRight = 0
+      fillHex = '#00000055'    // subtle
+    }
+
+    // Add a matching horizontal divider for vertical SplitPane handles
+    ninePatch('divider-horiz') {
+      width = 16; height = 2
+      // make center stretchable
+      stretch 6, 6, 1, 1
+      // no content padding
+      padTop = 0; padLeft = 0; padBottom = 0; padRight = 0
+      fillHex = '#00000055'    // subtle
+    }
 
   // ------------------------------------------------------------------
   // 8) A soft panel background for the action bar

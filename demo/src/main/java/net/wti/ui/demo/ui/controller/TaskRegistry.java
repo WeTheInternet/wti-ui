@@ -5,6 +5,7 @@ import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.api.ModelTaskCompletion;
 import net.wti.ui.demo.util.TaskConverter;
 import xapi.fu.In1;
+import xapi.fu.In2;
 import xapi.model.X_Model;
 import xapi.util.api.SuccessHandler;
 
@@ -39,11 +40,11 @@ import xapi.util.api.SuccessHandler;
 /// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 2025-04-16 @ 22:10:28 CST
 public class TaskRegistry {
 
-    private final In1<ModelTaskCompletion> moveToDoneCallback;
+    private final In2<ModelTask, ModelTaskCompletion> moveToDoneCallback;
     private final In1<ModelTask> reinsertTodoCallback;
 
     /// Constructs a registry with the given callbacks for moving and rescheduling tasks.
-    public TaskRegistry(In1<ModelTaskCompletion> moveToDone, In1<ModelTask> reinsertTodo) {
+    public TaskRegistry(In2<ModelTask, ModelTaskCompletion> moveToDone, In1<ModelTask> reinsertTodo) {
         this.moveToDoneCallback = moveToDone;
         this.reinsertTodoCallback = reinsertTodo;
     }
@@ -54,7 +55,7 @@ public class TaskRegistry {
         ModelTaskCompletion cmp = TaskConverter.toCompletion(task, CompletionStatus.CANCELLED);
         X_Model.persist(cmp, SuccessHandler.noop());
         if (moveToDoneCallback != null) {
-            moveToDoneCallback.in(cmp);
+            moveToDoneCallback.in(task, cmp);
         }
     }
 

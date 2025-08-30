@@ -2,18 +2,19 @@ package net.wti.ui.demo.ui.view;
 
 
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import net.wti.ui.components.SymbolButton;
 import net.wti.ui.demo.api.BasicModelTask;
 import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.api.ModelTaskDescription;
+import net.wti.ui.demo.common.DemoConstants;
+import net.wti.ui.demo.i18n.Messages;
 import net.wti.ui.demo.ui.controller.TaskController;
-import net.wti.ui.view.DeadlineView;
 import xapi.model.X_Model;
-import xapi.util.api.SuccessHandler;
 
 /// TaskViewDescription
 ///
@@ -28,6 +29,8 @@ import xapi.util.api.SuccessHandler;
 /// - 『 ○ 』 Keyboard shortcuts for quick actions
 public final class TaskViewDescription extends AbstractTaskView<ModelTaskDescription> {
 
+    private Cell<TaskViewDescription> cell;
+
     public TaskViewDescription(ModelTaskDescription d, Skin skin, TaskController ctl) {
         this(d,
                 skin.has("taskview", TaskViewStyle.class)
@@ -40,9 +43,6 @@ public final class TaskViewDescription extends AbstractTaskView<ModelTaskDescrip
         rebuild();
     }
 
-    /* ---------------------------------------------------------------- */
-    @Override protected DeadlineView createDeadlineView(ModelTaskDescription m){ return null; }
-
     @Override protected void buildCollapsed() {
         add(label(model.getName(), style.nameStyle)).left().expandX();
         add(buttonBar()).right();
@@ -52,9 +52,10 @@ public final class TaskViewDescription extends AbstractTaskView<ModelTaskDescrip
     /* ---------------------------------------------------------------- */
     private Table buttonBar() {
         Table t = new Table(skin);
-        t.add(icon("▶", this::startTask)).padRight(4);
-        t.add(icon("✏", this::editTask)).padRight(4);
-        t.add(icon("🗑", this::deleteTask));
+        Messages msg = DemoConstants.MESSAGES;
+        t.add(icon(DemoConstants.GLYPH_START, this::startTask, msg.buttonStart())).padRight(4);
+        t.add(icon(DemoConstants.GLYPH_EDIT, this::editTask, msg.buttonEdit())).padRight(4);
+        t.add(icon(DemoConstants.GLYPH_CANCEL, this::deleteTask, msg.buttonDelete()));
         return t;
     }
 
@@ -66,17 +67,34 @@ public final class TaskViewDescription extends AbstractTaskView<ModelTaskDescrip
     }
     private void editTask(){ /* TODO UI‑4 */ }
     private void deleteTask(){
-        X_Model.delete(model.getKey(), SuccessHandler.noop());
+        controller.deleteTaskDescription(model);
         remove();
+        if (cell != null) {
+            cell.spaceBottom(0);
+            cell = null;
+        }
     }
 
     /* helpers */
-    private TextButton icon(String glyph, Runnable r){
-        TextButton b = new TextButton(glyph, style.buttonStyle);
-        b.addListener(new ClickListener(){@Override public void clicked(InputEvent e, float x, float y){r.run();}});
+    private SymbolButton icon(final String glyph, final Runnable r, final String tooltip) {
+        SymbolButton b = new SymbolButton(glyph, SymbolButton.STYLE_NORMAL, skin, tooltip);
+        b.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent e, float x, float y) {
+                r.run();
+            }
+        });
         return b;
     }
     private Label label(String s, Label.LabelStyle ls){
         return new Label(s, ls!=null?ls:skin.get(Label.LabelStyle.class));
+    }
+
+    public void setCell(final Cell<TaskViewDescription> cell) {
+        this.cell = cell;
+    }
+
+    public Cell<TaskViewDescription> getCell() {
+        return cell;
     }
 }

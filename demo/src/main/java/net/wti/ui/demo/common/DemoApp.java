@@ -8,8 +8,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import net.wti.gdx.theme.raeleus.sgx.TabbedPane;
+import net.wti.tasks.event.RefreshFinishedEvent;
+import net.wti.tasks.index.TaskIndex;
 import net.wti.ui.demo.theme.TaskUiTheme;
 import net.wti.ui.demo.ui.SettingsPanel;
 import net.wti.ui.demo.ui.controller.TaskController;
@@ -17,6 +20,9 @@ import net.wti.ui.demo.ui.controller.TaskRegistry;
 import net.wti.ui.demo.ui.view.TaskTableActive;
 import net.wti.ui.demo.ui.view.TaskTableComplete;
 import net.wti.ui.demo.ui.view.TaskTableDefinitions;
+import net.wti.ui.demo.ui.view.TodayView;
+import xapi.fu.Do;
+import xapi.fu.Pointer;
 import xapi.fu.log.Log;
 
 /// DemoApp
@@ -88,12 +94,14 @@ public final class DemoApp extends ApplicationAdapter {
     private Stage stage;
     private TaskRegistry registry;
     private TaskController controller;
+    private TodayView today; // main interface for completing tasks
     private TaskTableDefinitions library; // tasks definitions
     private TaskTableActive active; // active tasks
     private TaskTableComplete complete;   // completed tasks
     private TabbedPane tabs;
     private boolean doInvalidate;
     private TaskUiTheme theme;
+    private Do cleanup = Do.NOTHING;
 
     // -------------------------------------------------------------------
     // Life‑cycle overrides
@@ -102,29 +110,45 @@ public final class DemoApp extends ApplicationAdapter {
     /// libGDX init callback: constructs UI and demo data.
     @Override
     public void create() {
-        // 1 — Theme & Skin
+        // Theme & Skin
         theme = new TaskUiTheme();
         skin = theme.getSkin();
         theme.applyTooltipDefaults();
 
-        // 2 — Stage
+        // Stage
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
 
-        // 3 — Background
+        // Background
         Texture tex = new Texture(Gdx.files.internal(theme.getAssetPath() + "/background.png"));
         Image bg = new Image(tex);
         bg.setFillParent(true);
         stage.addActor(bg);
 
-        // 4 — Registry / Controller
+        // Registry / Controller
         registry = new TaskRegistry(
-                t -> complete.addTask(t),   // move ONCE tasks → Done
+                (task, completion) -> {
+                    active.removeTask(task);
+                    complete.addTask(completion);
+                },   // move ONCE tasks → Done
                 t -> active.addTask(t)  // reschedule recurring tasks
         );
-        controller = new TaskController(registry);
+        final TaskIndex index = new TaskIndex();
+        Pointer<Do> undo = Pointer.pointer();
+        undo.in(index.subscribeEvents(e->{
+            undo.out1().done();
+            if (index.getAll().isEmpty()) {
+                Log.tryLog(DemoApp.class, this, "No index data yet; seeding new data");
+                // 7 — Add seed data (chatgpt will regen these from the checklist in this class's javadoc)
+                SeedDataGenerator.seed(controller, library, active, complete);
+            }
+        }, RefreshFinishedEvent.class));
+        controller = new TaskController(registry, index);
+        cleanup = cleanup.doAfter(index.startAutoRefresh(5));
 
-        // 5 — Task tables
+        // Task views
+
+        today = new TodayView(theme, controller);
         library = new TaskTableDefinitions(theme, controller);
         active = new TaskTableActive(theme, controller);
         complete = new TaskTableComplete(theme, controller);
@@ -132,20 +156,18 @@ public final class DemoApp extends ApplicationAdapter {
         active.setHeader("Active");
         complete.setHeader("Complete");
 
-        // 6 — Tabs
-        tabs = new TabbedPane(skin);
+        // Tabs
+        tabs = new TabbedPane(skin, Align.center);
         tabs.setFillParent(true);
         stage.addActor(tabs);
+        tabs.addTab("Today",   today);
         tabs.addTab("Active",   active);
         tabs.addTab("Complete", complete);
         tabs.addTab("All",   library);
         tabs.addTab("Settings", new SettingsPanel(theme));
-        stage.setScrollFocus(active);
+        stage.setScrollFocus(today);
 
-        // 7 — Add seed data (chatgpt will regen these from the checklist in this class's javadoc)
-        SeedDataGenerator.seed(controller, library, active, complete);
-
-        // 8 - Reset outer tab panel padding / trigger invalidation + layout
+        // Reset outer tab panel padding / trigger invalidation + layout
         updatePad();
     }
 
@@ -182,6 +204,8 @@ public final class DemoApp extends ApplicationAdapter {
     /// Cleanup resources.
     @Override
     public void dispose() {
+        cleanup.done();
+        cleanup = Do.NOTHING;
         skin.dispose();
         stage.dispose();
     }
@@ -189,26 +213,20 @@ public final class DemoApp extends ApplicationAdapter {
     private void updatePad() {
         final float totalWidth = stage.getWidth();
         final float totalHeight = stage.getHeight();
-        if (totalWidth > net.wti.ui.demo.common.DemoConstants.MAX_WIDTH) {
-            // add generic whitespace
-            final int amt = (int)((totalWidth - DemoConstants.MAX_WIDTH)/2);
-            tabs.pad(0, amt, 0, amt);
-            // whenever there's lots of width, we should always render in landscape mode
-            theme.setLandscape(true);
-        } else {
-            // check for portrait/landscape and alter rendering patterns
-            if (theme.isLandscape() && tabs.isSquished()) {
-                theme.setLandscape(false);
-            }
-            // no padding if we aren't at max size!
-            tabs.pad(0, 0, 0, 0);
-        }
+        // Use nearly full width, leaving only a small horizontal gutter.
+        // This replaces the previous MAX_WIDTH clamp that centered a narrow column.
+        final float gutter = Math.min(16f, totalWidth * 0.02f); // tweak if you want more/less margin
+        tabs.pad(0, gutter, 0, gutter);
+
+        // Determine portrait vs landscape based on actual aspect ratio
+        theme.setLandscape(totalWidth >= totalHeight);
+
         Log.tryLog(DemoApp.class, this,
                 "Updating for screen size", totalWidth, totalHeight
                 , "Tabs Info:", tabs.getInfo()
         );
-        // we want to invalidate the hierarchy, but not until after this size change goes through
-        // so we set doInvalidate here, and we trigger redraw after stage.act() and before stage.draw()
+        // Trigger a re‑layout after the size/padding change is applied
         doInvalidate = true;
+
     }
 }

@@ -4,13 +4,14 @@ package net.wti.ui.demo.ui.view;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import net.wti.ui.api.IsDeadlineView;
 import net.wti.ui.demo.api.BasicModelTask;
 import net.wti.ui.demo.ui.controller.TaskController;
 import net.wti.ui.demo.view.api.IsTaskView;
-import net.wti.ui.view.DeadlineView;
 
 /// AbstractTaskView
 ///
@@ -52,7 +53,6 @@ public abstract class AbstractTaskView<M extends BasicModelTask<M>>
     protected final TaskController controller;
     protected final Skin skin;
     protected final TaskViewStyle style;
-    protected final DeadlineView deadlineView;
 
     private boolean expanded;
     private boolean hovered;
@@ -71,7 +71,6 @@ public abstract class AbstractTaskView<M extends BasicModelTask<M>>
         this.skin       = skin;
         this.style      = style;
         this.controller = controller;
-        this.deadlineView = createDeadlineView(model);
 
         if (style.background != null) setBackground(style.background);
         addHoverListener();
@@ -80,7 +79,6 @@ public abstract class AbstractTaskView<M extends BasicModelTask<M>>
     // ------------------------------------------------------------------ //
     // Abstract hooks implemented by subclasses                            //
     // ------------------------------------------------------------------ //
-    protected abstract DeadlineView createDeadlineView(M model);
     protected abstract void buildCollapsed();
     protected abstract void buildExpanded();
 
@@ -91,7 +89,6 @@ public abstract class AbstractTaskView<M extends BasicModelTask<M>>
     @Override public void collapse() { if (expanded)  toggleExpanded(); }
     @Override public boolean isExpanded() { return expanded; }
     @Override public M getTask() { return model; }
-    @Override public IsDeadlineView getDeadlineView() { return deadlineView; }
     @Override public void rerender() { rebuild(); }
 
     // ------------------------------------------------------------------ //

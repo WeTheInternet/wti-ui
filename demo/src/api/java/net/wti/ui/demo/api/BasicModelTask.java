@@ -1,5 +1,6 @@
 package net.wti.ui.demo.api;
 
+import net.wti.ui.inventory.model.Inventory;
 import xapi.fu.In1Out1;
 import xapi.fu.In2;
 import xapi.fu.api.Ignore;
@@ -24,9 +25,9 @@ public interface BasicModelTask<Self extends BasicModelTask<Self>> extends Model
     String getDescription();
     Self setDescription(String description);
 
-    /// The priority (higher enum .ordinal() == higher priority)
-    TaskPriority getPriority();
-    Self setPriority(TaskPriority priority);
+    /// The priority of the task; default is 0, higher tasks render first
+    int getPriority();
+    Self setPriority(int priority);
 
     /// Timestamp when the task was first created
     long getBirth();
@@ -43,6 +44,19 @@ public interface BasicModelTask<Self extends BasicModelTask<Self>> extends Model
     /// Recurrence schedule
     ModelList<ModelRecurrence> getRecurrence();
     Self setRecurrence(ModelList<ModelRecurrence> recurrence);
+
+    default boolean hasRecurrence() {
+        final ModelList<ModelRecurrence> recurrence = getRecurrence();
+        if (recurrence == null || recurrence.isEmpty()) {
+            return false;
+        }
+        for (final ModelRecurrence recur : recurrence) {
+            if (recur.getUnit() != RecurrenceUnit.ONCE) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /// Ensures that a recurrence list is available, initializing if null.
     default ModelList<ModelRecurrence> recurrence() {
@@ -74,4 +88,7 @@ public interface BasicModelTask<Self extends BasicModelTask<Self>> extends Model
         copyModel(self(), target);
         return target;
     }
+
+    Inventory getRewards();
+    Self setRewards(Inventory rewards);
 }

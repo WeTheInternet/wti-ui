@@ -73,7 +73,7 @@ public final class SeedDataGenerator {
             ModelTaskDescription def = X_Model.create(ModelTaskDescription.class)
                     .setName(title)
                     .setDescription(desc)
-                    .setPriority(TaskPriority.medium)
+                    .setPriority(20)
                     .setBirth(System.currentTimeMillis());
 
             persist(def);

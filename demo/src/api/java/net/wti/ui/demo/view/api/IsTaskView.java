@@ -2,7 +2,6 @@ package net.wti.ui.demo.view.api;
 
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import net.wti.ui.api.IsDeadlineView;
 import net.wti.ui.demo.api.BasicModelTask;
 
 /// IsTaskView
@@ -31,9 +30,6 @@ public interface IsTaskView<Model extends BasicModelTask<Model>> {
 
     /// @return The underlying task model being rendered
     Model getTask();
-
-    /// @return The deadline-aware view used to show time until due
-    IsDeadlineView getDeadlineView();
 
     /// Expand this task view (e.g. show recurrence, notes, etc.)
     void expand();

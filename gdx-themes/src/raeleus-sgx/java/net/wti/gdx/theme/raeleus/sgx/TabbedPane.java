@@ -12,6 +12,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Pools;
+import net.wti.ui.view.api.HasScrollPane;
 
 /// TabbedPane:
 ///
@@ -124,7 +125,7 @@ public class TabbedPane extends Table {
         row();
         Table t = new Table();
         t.setBackground(style.bodyBackground);
-        t.add(tabBodyStack);//.growX();
+        t.add(tabBodyStack).grow();
         add(t).colspan(3).expand().fill();
     }
 
@@ -173,8 +174,15 @@ public class TabbedPane extends Table {
 
 
         /// create a scrollpane to wrap around the actor. TODO: make configurable (if needed)
-        ScrollPane scrollPane = new ScrollPane(actor, getSkin(), "no-bg");
-        tabBodyStack.add(scrollPane);
+        final Actor body;
+        if (actor instanceof HasScrollPane) {
+            body = actor;
+        } else {
+            ScrollPane scrollPane = new ScrollPane(actor, getSkin(), "no-bg");
+            scrollPane.setFadeScrollBars(false);
+            body = scrollPane;
+        }
+        tabBodyStack.add(body);
 
         // Make sure the 1st tab is selected even after adding the tab
         // TODO

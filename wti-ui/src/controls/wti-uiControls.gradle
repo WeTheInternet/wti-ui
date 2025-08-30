@@ -16,10 +16,12 @@ main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
+main.java.srcDir("$rootDir/wti-ui/src/controls/java")
 
 dependencies {
     testImplementation project(path: ":xapi-ui-main")
-    api project(path: ":wti-ui-view")
+    api libs.gdx.core
+    api project(path: ":wti-ui-api")
 }
 // Setup publishing to coordinates: net.wti:wti-ui-controls
 project.extensions.add('xapi.mvn.repo', "$rootDir/repo")

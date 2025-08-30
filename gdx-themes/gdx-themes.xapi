@@ -6,7 +6,11 @@
                 <main
                     requires = {
                         @transitive
-                        external: "com.badlogicgames.gdx:gdx:$gdxVersion"
+                        external: "com.badlogicgames.gdx:gdx:$gdxVersion",
+                        @transitive
+                        external: ( libs.xapi.fu ),
+                        @transitive
+                        project: { "wti-ui" : view },
                     }
                 /main>,
             ]

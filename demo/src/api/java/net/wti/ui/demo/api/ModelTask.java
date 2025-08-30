@@ -57,6 +57,14 @@ public interface ModelTask extends RealizedModelTask<ModelTask> {
     boolean isPaused();
     ModelTask setPaused(boolean paused);
 
+    /// True if the task was cancelled
+    boolean isCancelled();
+    ModelTask setCancelled(boolean cancelled);
+
+    /// True if the task was finished
+    boolean isFinished();
+    ModelTask setFinished(boolean finished);
+
     /// True if task is archived (excluded from normal views)
     boolean isArchived();
     ModelTask setArchived(boolean archived);

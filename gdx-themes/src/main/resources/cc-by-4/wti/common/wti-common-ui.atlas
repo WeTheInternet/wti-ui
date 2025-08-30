@@ -148,6 +148,15 @@ cell-selected
   orig: 24, 24
   offset: 0, 0
   index: -1
+divider-horiz
+  rotate: false
+  xy: 239, 63
+  size: 16, 2
+  split: 6, 9, 1, 0
+  pad: 0, 0, 0, 0
+  orig: 16, 2
+  offset: 0, 0
+  index: -1
 divider-vert
   rotate: false
   xy: 249, 101
@@ -166,7 +175,7 @@ panel-actionbar
   index: -1
 tooltip-bg
   rotate: false
-  xy: 239, 49
+  xy: 239, 45
   size: 16, 16
   split: 4, 11, 4, 11
   pad: -1, -1, 6, 6

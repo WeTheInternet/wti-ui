@@ -2,10 +2,7 @@ package net.wti.ui.components;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
-import com.badlogic.gdx.scenes.scene2d.ui.Container;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.TextTooltip;
-import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.utils.Align;
 
 /// A `TextTooltip` variant that **forces horizontal wrapping** without
@@ -64,5 +61,9 @@ public class SizingTextTooltip extends TextTooltip {
         // Ensure the new constraints are honored before first show
         lbl.invalidateHierarchy();
         c.invalidateHierarchy();
+    }
+
+    public SizingTextTooltip(final String text, final Skin skin) {
+        this(text, TooltipManager.getInstance(), skin.get("tooltip-default", TextTooltip.TextTooltipStyle.class));
     }
 }

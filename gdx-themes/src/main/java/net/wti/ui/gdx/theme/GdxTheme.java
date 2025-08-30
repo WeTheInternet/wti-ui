@@ -1,6 +1,8 @@
 package net.wti.ui.gdx.theme;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import xapi.fu.Do;
+import xapi.fu.In1;
 
 /// GdxTheme:
 ///
@@ -15,4 +17,7 @@ public interface GdxTheme {
     boolean isLandscape();
 
     void setLandscape(boolean landscape);
+
+    Do onOrientationChanged(In1<ViewMode> callback);
+
 }

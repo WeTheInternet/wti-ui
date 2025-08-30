@@ -27,9 +27,12 @@ import java.util.stream.Collectors;
 /// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 21/04/2025 @ 00:37 CST
 public class Schedule {
 
+    private static final String nonRepeating = "Does not repeat";
     private final ModelTask task;
     private final ModelList<ModelRecurrence> source;
     private final List<String> longDescriptions = new ArrayList<>();
+    private Long nextDueMillis;
+    private String shortDescription;
 
     private boolean dirty = true;
 
@@ -78,9 +81,12 @@ public class Schedule {
         if (!dirty) return;
         dirty = false;
         longDescriptions.clear();
+        nextDueMillis = null;
+        shortDescription = null;
 
         if (isEmpty()) {
-            longDescriptions.add("Once only");
+            longDescriptions.add(nonRepeating);
+            shortDescription = "";
             return;
         }
 
@@ -145,7 +151,7 @@ public class Schedule {
 
         switch (unit) {
             case ONCE:
-                return "Once only";
+                return nonRepeating;
             case DAILY:
                 return "Every day at " + time;
             case WEEKLY:
@@ -207,5 +213,19 @@ public class Schedule {
                 .sorted(Comparator.comparingInt(d -> (d.ordinal() + 7 - today) % 7))
                 .distinct()
                 .collect(Collectors.toList());
+    }
+
+    public Long getNextDueMillis() {
+        if (dirty) {
+            build();
+        }
+        return nextDueMillis;
+    }
+
+    public String getShortDescription() {
+        if (dirty) {
+            build();
+        }
+        return shortDescription != null ? shortDescription : (longDescriptions.isEmpty() ? nonRepeating : longDescriptions.get(0));
     }
 }

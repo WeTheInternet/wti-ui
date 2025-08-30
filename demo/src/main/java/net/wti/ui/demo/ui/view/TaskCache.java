@@ -17,4 +17,8 @@ public class TaskCache<M extends BasicModelTask<M>, V extends Actor & IsTaskView
     public void add(final V actor, final Cell<V> cell) {
         map.put(actor, cell);
     }
+
+    public Cell<V> remove(final V view) {
+        return map.remove(view);
+    }
 }

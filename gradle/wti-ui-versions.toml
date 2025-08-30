@@ -58,6 +58,7 @@ gwt-user = { module = "net.wetheinter:gwt-user", version.ref = "gwt" }
 spock = { module = "org.spockframework:spock-core", version.ref = "spock" }
 junit = { module = "junit:junit", version.ref = "junit" }
 
+gdx-core = { module = "com.badlogicgames.gdx:gdx", version.ref = "gdx" }
 gdx-platform = { module = "com.badlogicgames.gdx:gdx-platform", version.ref = "gdx" }
 gdx-backend-headless = { module = "com.badlogicgames.gdx:gdx-backend-headless", version.ref = "gdx" }
 

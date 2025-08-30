@@ -1,13 +1,12 @@
 package net.wti.ui.demo.ui.view;
 
-import com.badlogic.gdx.scenes.scene2d.ui.Cell;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.utils.Align;
 import net.wti.ui.demo.api.ModelTask;
+import net.wti.ui.demo.api.Schedule;
 import net.wti.ui.demo.ui.TaskActionBar;
 import net.wti.ui.demo.ui.controller.TaskController;
-import net.wti.ui.view.DeadlineView;
 
 /// TaskViewActive
 ///
@@ -41,8 +40,8 @@ public final class TaskViewActive extends AbstractTaskView<ModelTask> {
     private final TaskActionBar actionBar;
     private final TaskSummaryPane summaryPane;
     private final Label nameLabel;
-    private final Label descriptionLabel;
-    private final Cell<Label> descriptionCell;
+    private final RecurrenceSummary recurrenceSummary;
+    private final TaskRewardView rewardView;
 
     public TaskViewActive(ModelTask task, Skin skin, TaskController ctl) {
         this(task,
@@ -51,27 +50,45 @@ public final class TaskViewActive extends AbstractTaskView<ModelTask> {
                         : new TaskViewStyle(),
                 skin, ctl);
     }
-    private TaskViewActive(ModelTask t, TaskViewStyle st, Skin sk, TaskController ctl) {
-        super(t, st, sk, ctl);
+    private TaskViewActive(ModelTask task, TaskViewStyle viewStyle, Skin skin, TaskController controller) {
+        super(task, viewStyle, skin, controller);
+
+        // create our components
         actionBar = new TaskActionBar(this, controller, style);
-        summaryPane = new TaskSummaryPane(skin, model);
+        summaryPane = new TaskSummaryPane(skin, model, false);
         nameLabel = label(model.getName(), style.nameStyle);
-        nameLabel.setWrap(true);
+        final Schedule schedule = new Schedule(task);
+        recurrenceSummary = new RecurrenceSummary(model, skin, schedule);
+        rewardView = new TaskRewardView(model, skin);
+
+        // configure components
+        nameLabel.setWrap(false);
         nameLabel.setAlignment(Align.left);
 
         defaults().space(4).pad(0);
 
-        descriptionLabel = label(getDescriptionShort(), style.previewStyle);
-        descriptionLabel.setAlignment(Align.left);
+        // attach components
+        add(nameLabel).expandX().center().colspan(3).row();
 
-        add(nameLabel).growX().colspan(2);
-        add(actionBar).colspan(1).row();
-        descriptionCell = add(descriptionLabel);
-        descriptionCell.growX().center().colspan(3).row();
+        add(summaryPane).colspan(3).row();
 
-        add(summaryPane).center().colspan(3).row();
+
+        add(recurrenceSummary).padLeft(5).left();
+        add(actionBar).center();
+        add(rewardView).padRight(5).right().row();
+
 
         rebuild();
+    }
+
+    @Override
+    public float getMaxWidth() {
+        return 640;
+    }
+
+    @Override
+    public float getPrefWidth() {
+        return super.getPrefWidth();
     }
 
     private String getDescriptionShort() {
@@ -85,24 +102,13 @@ public final class TaskViewActive extends AbstractTaskView<ModelTask> {
     }
 
     /* ---------------------------------------------------------------- */
-    @Override protected DeadlineView createDeadlineView(ModelTask t) {
-        return new DeadlineView(t.getDeadline(), skin, t.getAlarmMinutes());
-    }
-
-    /* ---------------------------------------------------------------- */
     @Override protected void buildCollapsed() {
         nameLabel.setText(model.getName());
-        descriptionLabel.setText(getDescriptionShort());
-        descriptionLabel.setWrap(false);
-
         summaryPane.collapse();
     }
 
     @Override protected void buildExpanded() {
         nameLabel.setText(model.getName());
-        descriptionLabel.setText(model.getDescription());
-        descriptionLabel.setWrap(true);
-
         summaryPane.expand();
     }
 

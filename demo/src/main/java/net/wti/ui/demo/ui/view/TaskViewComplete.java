@@ -4,7 +4,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import net.wti.ui.demo.api.ModelTaskCompletion;
 import net.wti.ui.demo.ui.controller.TaskController;
-import net.wti.ui.view.DeadlineView;
 
 
 /// TaskViewCompleted
@@ -46,9 +45,6 @@ public final class TaskViewComplete
     // ------------------------------------------------------------------ //
     // AbstractTaskView hooks                                             //
     // ------------------------------------------------------------------ //
-
-    /// Completed tasks no longer track deadlines.
-    @Override protected DeadlineView createDeadlineView(ModelTaskCompletion m) { return null; }
 
     /// Collapsed row: simple summary.
     @Override protected void buildCollapsed() {

@@ -19,7 +19,7 @@ test.resources.setSrcDirs([]);
 
 dependencies {
     api project(path: ":wti-ui-implControls")
-    api project(path: ":wti-ui-jreView")
+    api project(path: ":wti-ui-jreApi")
 }
 // Setup publishing to coordinates: net.wti:wti-ui-controls-jre
 project.extensions.add('xapi.mvn.repo', "$rootDir/repo")
