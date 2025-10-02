@@ -5,12 +5,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
-import net.wti.tasks.event.*;
+import net.wti.tasks.event.RefreshFinishedEvent;
 import net.wti.tasks.index.TaskIndex;
 import net.wti.ui.controls.focus.HoverScrollFocus;
-import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.view.api.IsView;
 import xapi.fu.Do;
+import xapi.fu.log.Log;
 
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -39,6 +39,7 @@ public class ScheduleView extends Table implements IsView {
     private Do unsubscribeAll = Do.NOTHING;
 
     private final Skin skin;
+    private boolean initialized;
 
     private final Table dayStack = new Table();
     private final ScrollPane scroller;
@@ -64,18 +65,8 @@ public class ScheduleView extends Table implements IsView {
         scroller.setScrollingDisabled(true, false); // vertical only
         add(scroller).grow();
 
-        // Prime with yesterday, today, tomorrow.
-        LocalDate today = LocalDate.now();
-        mountDay(today.minusDays(1), false);
-        mountDay(today, false);
-        mountDay(today.plusDays(1), false);
-        layoutDayStack();
-
         // Subscriptions: keep the view hot while data arrives asynchronously.
         wireIndexSubscriptions();
-
-        // If everything is empty, extend outward to find the nearest matches.
-        ensureSomeContent(today, 7); // probe up to ±7 days initially
 
         // Lazy edge loading
         scroller.addListener(event -> {
@@ -90,21 +81,20 @@ public class ScheduleView extends Table implements IsView {
     }
 
     private void wireIndexSubscriptions() {
-        // 1) Listen for refresh-complete → full rebuild from index snapshot
+        // 1) First refresh finished -> initialize days
         Do a = index.subscribeEvents(evt -> {
-            refresh();
+            if (!initialized) {
+                initialized = true;
+                initDays();
+            } else {
+                refresh();
+            }
         }, RefreshFinishedEvent.class);
 
-        // 2) Listen for incremental updates (created/started/updated) that should be visible in the schedule
+        // 2) Incremental updates -> refresh (can be optimized later)
         Do b = index.subscribe(taskEvent -> {
-            if (taskEvent instanceof TaskCreatedEvent
-                    || taskEvent instanceof TaskStartedEvent
-                    || taskEvent instanceof TaskUpdatedEvent
-                    || taskEvent instanceof TaskFinishedEvent
-                    || taskEvent instanceof TaskCancelledEvent
-                    || taskEvent instanceof TaskLoadedEvent
-                    || taskEvent instanceof TaskDeletedEvent) {
-                // Minimal approach: just refresh. Index posts on GL thread, so this is UI-safe.
+            if (initialized) {
+                Log.tryLog(ScheduleView.class, this, "Refreshing due to", taskEvent);
                 refresh();
             }
         });
@@ -115,18 +105,31 @@ public class ScheduleView extends Table implements IsView {
         };
     }
 
+    private void initDays() {
+        dayStack.clearChildren();
+        mountedDays.clear();
+
+        LocalDate today = LocalDate.now();
+        mountDay(today.minusDays(1), false);
+        mountDay(today, false);
+        mountDay(today.plusDays(1), false);
+        layoutDayStack();
+
+        ensureSomeContent(today, 7); // probe outward initially
+        invalidateHierarchy();
+        layout();
+    }
 
     @Override
     public void refresh() {
         // Rebuild all mounted days from the index’s current snapshot of ACTIVE tasks.
         // If your definition changes, swap to getAll().
-        Iterable<ModelTask> active = index.getActive();
 
+        if (!initialized) return;
         for (Map.Entry<LocalDate, DayView> e : mountedDays.entrySet()) {
-            e.getValue().setTasks(active);
+            e.getValue().setTasks(index.getDayWithDeadlines(e.getKey()));
             e.getValue().refresh();
         }
-
         // If still empty, extend outward a bit more to find items (non-destructive).
         LocalDate pivot = LocalDate.now();
         ensureSomeContent(pivot, 3);
@@ -166,10 +169,9 @@ public class ScheduleView extends Table implements IsView {
     }
 
     private void mountDay(LocalDate date, boolean prepend) {
-        DayView view = new DayView(skin, date, index.getActive());
+        DayView view = new DayView(skin, date, index.getDayWithDeadlines(date));
         view.refresh();
         if (prepend) {
-            // rebuild ordered map: new first entry
             LinkedHashMap<LocalDate, DayView> tmp = new LinkedHashMap<>();
             tmp.put(date, view);
             tmp.putAll(mountedDays);

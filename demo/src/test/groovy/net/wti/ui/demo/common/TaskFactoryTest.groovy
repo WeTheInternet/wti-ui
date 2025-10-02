@@ -1,5 +1,6 @@
 package net.wti.ui.demo.common
 
+import net.wti.tasks.index.TaskFactory
 import net.wti.ui.demo.api.*
 import spock.lang.Specification
 import xapi.time.X_Time

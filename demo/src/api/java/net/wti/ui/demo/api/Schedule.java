@@ -1,5 +1,7 @@
 package net.wti.ui.demo.api;
 
+import net.wti.tasks.index.TaskFactory;
+import xapi.model.api.ModelKey;
 import xapi.model.api.ModelList;
 import xapi.string.X_String;
 import xapi.time.X_Time;
@@ -143,6 +145,8 @@ public class Schedule {
                 }
             }
         }
+
+        nextDueMillis = TaskFactory.nextTime(task).longValue();
     }
 
     /// Builds a readable sentence from recurrence rules with same unit/time
@@ -227,5 +231,13 @@ public class Schedule {
             build();
         }
         return shortDescription != null ? shortDescription : (longDescriptions.isEmpty() ? nonRepeating : longDescriptions.get(0));
+    }
+
+    public ModelTask getTask() {
+        return task;
+    }
+
+    public ModelKey getKey() {
+        return getTask().getKey();
     }
 }

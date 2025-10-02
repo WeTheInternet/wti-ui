@@ -5,8 +5,11 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Timer;
 import net.wti.tasks.event.*;
 import net.wti.ui.demo.api.ModelTask;
+import net.wti.ui.demo.api.Schedule;
 import xapi.fu.Do;
 import xapi.fu.Filter;
+import xapi.fu.In1;
+import xapi.fu.X_Fu;
 import xapi.fu.data.MapLike;
 import xapi.fu.itr.MappedIterable;
 import xapi.fu.itr.SizedIterable;
@@ -22,9 +25,13 @@ import xapi.time.api.Moment;
 import xapi.util.api.ErrorHandler;
 import xapi.util.api.SuccessHandler;
 
+import java.time.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /// TaskIndex
@@ -51,23 +58,23 @@ import java.util.function.Consumer;
 /// index.refresh(); // initial load
 ///
 /// Do stop = index.subscribeActiveTasks(task -> {
-///   // render or track active tasks
-/// });
+///// render or track active tasks
+///});
 ///
-/// // when disposing:
+///// when disposing:
 /// stop.done();
-/// ```
+///```
 ///
 /// ### Controller hooks (examples)
 /// ```java
-/// // in TaskController:
+///// in TaskController:
 /// taskIndex.onTaskCreated(task);
 /// taskIndex.onTaskStarted(task);
 /// taskIndex.onTaskFinished(task);
 /// taskIndex.onTaskCancelled(task);
 /// taskIndex.onTaskUpdated(task);   // generic state change
 /// taskIndex.onTaskDeleted(taskId); // remove
-/// ```
+///```
 ///
 /// ### Identifying tasks
 /// The index relies on a stable task id. By default we call `task.getId()`.
@@ -75,13 +82,30 @@ import java.util.function.Consumer;
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) and chatgpt on 27/08/2025 @ 06:54
 public class TaskIndex {
+    private final String namespace;
+
+    public TaskIndex() {
+        namespace = "";
+    }
+    public TaskIndex(final String namespace) {
+        this.namespace = namespace;
+    }
 
     // ---------------------------------------------------------------------
     // State
     // ---------------------------------------------------------------------
 
-    private final MapLike<ModelKey, ModelTask> byId = X_Jdk.mapHashConcurrent();
+    private final MapLike<ModelKey, Schedule> byId = X_Jdk.mapHashConcurrent();
     private final CopyOnWriteArrayList<TaskEventListener> listeners = new CopyOnWriteArrayList<>();
+
+    // ---- Bucketing (deadlines grouped by LocalDate) ----
+    private final ConcurrentMap<LocalDate, CopyOnWriteArrayList<Schedule>> byDay = new ConcurrentHashMap<>();
+    private ZoneId bucketZone = ZoneId.systemDefault();
+    private int rolloverHour = 4; // "4am rule"
+
+    // ---- Metrics ----
+    private final AtomicInteger refreshCount = new AtomicInteger();
+    private final AtomicInteger bucketUpdates = new AtomicInteger();
 
 
     /// Optional repeating refresh task.
@@ -95,26 +119,26 @@ public class TaskIndex {
     // ---------------------------------------------------------------------
 
     /// Snapshot of all tasks.
-    public SizedIterable<ModelTask> getAll() {
+    public SizedIterable<Schedule> getAll() {
         return byId.mappedValues();
     }
 
     /// Tasks considered "active" (not finished and not canceled).
-    public MappedIterable<ModelTask> getActive() {
+    public MappedIterable<Schedule> getActive() {
         return filter(this::isActive);
     }
 
     /// Tasks considered "finished".
-    public MappedIterable<ModelTask> getFinished() {
+    public MappedIterable<Schedule> getFinished() {
         return filter(this::isFinished);
     }
 
     /// Tasks considered "canceled".
-    public MappedIterable<ModelTask> getCanceled() {
+    public MappedIterable<Schedule> getCanceled() {
         return filter(this::isCanceled);
     }
 
-    private MappedIterable<ModelTask> filter(Filter.Filter1<ModelTask> p) {
+    private MappedIterable<Schedule> filter(Filter.Filter1<Schedule> p) {
         return byId.mappedValues().filter(p);
     }
 
@@ -142,21 +166,21 @@ public class TaskIndex {
     /// Iterate over current active tasks immediately, then get incremental updates:
     /// - TaskCreated/Started/Updated that become active
     /// - TaskFinished/Cancelled that remove active
-    public Do subscribeActiveTasks(Consumer<ModelTask> onEach) {
+    public Do subscribeActiveTasks(In1<ModelTask> onEach) {
         // immediate dump
-        for (ModelTask t : getActive()) onEach.accept(t);
+        getActive().map(Schedule::getTask).forAll(onEach);
 
         // incremental
         TaskEventListener l = evt -> {
             if (evt instanceof TaskCreatedEvent && isActive(((TaskCreatedEvent) evt).task)) {
                 TaskCreatedEvent e = (TaskCreatedEvent) evt;
-                onEach.accept(e.task);
+                onEach.in(e.task);
             } else if (evt instanceof TaskStartedEvent && isActive(((TaskStartedEvent) evt).task)) {
                 TaskStartedEvent e = (TaskStartedEvent) evt;
-                onEach.accept(e.task);
+                onEach.in(e.task);
             } else if (evt instanceof TaskUpdatedEvent && isActive(((TaskUpdatedEvent) evt).task)) {
                 TaskUpdatedEvent e = (TaskUpdatedEvent) evt;
-                onEach.accept(e.task);
+                onEach.in(e.task);
             }
             // finishes/cancels remove from active; if a view needs removal notice,
             // it should listen to those event types directly.
@@ -181,8 +205,9 @@ public class TaskIndex {
                 }
             };
             RunningRefreshQuery operation = new RunningRefreshQuery(failHandler);
+            operation.getQuery().setNamespace(namespace);
             post(new RefreshStartedEvent(operation));
-            X_Model.query(ModelTask.class, operation.getQuery(), SuccessHandler.handler( 
+            X_Model.query(ModelTask.class, operation.getQuery(), SuccessHandler.handler(
                     success ->
                             processResults(operation, success), failHandler)
             );
@@ -207,7 +232,7 @@ public class TaskIndex {
 
     private void processResults(final RunningRefreshQuery operation, final ModelQueryResult<ModelTask> success) {
         operation.setSuccess(success);
-        Log.tryLog(TaskIndex.class, this, "Received " + success.getSize() + " results");
+        Log.tryLog(TaskIndex.class, this, "Received " + success.getSize() + " results", LocalDateTime.now());
         final ModelQuery<ModelTask> query = operation.getQuery();
         final ErrorHandler<? extends Throwable> failHandler = operation.getFailHandler();
         for (ModelTask model : success.getModels()) {
@@ -222,25 +247,29 @@ public class TaskIndex {
             operation.setCursor(newCursor);
             // there is a cursor, keep loading results
             X_Model.query(ModelTask.class, query, SuccessHandler.handler(next -> {
-                    processResults(operation, next); 
+                processResults(operation, next);
             }, failHandler));
 
         }
     }
 
     private void finishRefresh() {
+        refreshCount.incrementAndGet();
+        post(new RefreshFinishedEvent(byId.size()));
         refreshPending.set(false);
         synchronized (refreshPending) {
             refreshPending.notifyAll();
         }
-        post(new RefreshFinishedEvent(byId.size()));
     }
 
     /// Start auto-refresh every N minutes. Returns Do to stop it.
     public Do startAutoRefresh(float minutes) {
         stopAutoRefresh();
         autoRefreshTask = Timer.schedule(new Timer.Task() {
-            @Override public void run() { refresh(); }
+            @Override
+            public void run() {
+                refresh();
+            }
         }, 0f, minutes * 60f); // first immediately, then every N minutes
         return this::stopAutoRefresh;
     }
@@ -287,11 +316,17 @@ public class TaskIndex {
         post(new TaskUpdatedEvent(task));
     }
 
-    /// Remove task by id (e.g., hard delete or archive).
     public void onTaskDeleted(ModelKey taskId) {
-        byId.remove(taskId);
+        Schedule removed = byId.remove(taskId);
+        if (removed != null) {
+            LocalDate oldDay = bucketDate(removed.getTask().getDeadline());
+            if (oldDay != null) {
+                removeFromBucket(oldDay, removed.getKey());
+            }
+        }
         post(new TaskDeletedEvent(taskId));
     }
+
 
     // ---------------------------------------------------------------------
     // Internals
@@ -299,32 +334,78 @@ public class TaskIndex {
 
     private UpdateInfo upsert(ModelTask task) {
         final ModelKey modelKey = task.getKey();
-        ModelTask existing = byId.get(modelKey);
-        byId.put(modelKey, task);
-        boolean newlyAdded = existing == null;
+        Schedule existing = byId.get(modelKey);
+        final boolean newlyAdded = existing == null;
+        // Track previous bucket (if any) before we mutate/replace
+        final LocalDate oldDay;
+        final ModelTask canonical;
+        final boolean isCanonical;
+        final boolean isChanged;
         if (newlyAdded) {
+            canonical = task;
+            isCanonical = false;
+            isChanged = true;
+            oldDay = null;
+            existing = new Schedule(task);
+            byId.put(modelKey, existing);
             post(new TaskLoadedEvent(task));
-        } else if (task != existing) {
-            // not the same instance - need to absorb the foreign model
-            final Do undo = existing.onGlobalChange((key, was, is) -> {
-                Log.tryLog(TaskIndex.class, this,
-                        "Detected task change in model ", modelKey,
-                        "Property " + key, was + " -> " + is);
-            });
-            existing.absorb(task);
-            undo.done();
+        } else {
+            canonical = existing.getTask();
+            isCanonical = canonical == task;
+            oldDay = bucketDate(canonical.getDeadline());
+            if (isCanonical) {
+                isChanged = false;
+            } else {
+                final boolean[] changes = {false};
+                final Do undo = canonical.onGlobalChange((key, was, is) -> {
+                    changes[0] = true;
+                    Log.tryLog(TaskIndex.class, this,
+                            "Detected task change in model ", modelKey,
+                            "Property " + key, was + " -> " + is);
+                });
+                canonical.absorb(task);
+                undo.done();
+                isChanged = changes[0];
+            }
         }
+
+        // Post a change event for new + updated tasks
+        if (isChanged) {
+            canonical.setUpdated(System.currentTimeMillis());
+            post(new TaskUpdatedEvent(canonical));
+        }
+
+        final Double nextTime = TaskFactory.nextTime(canonical);
+        // Reindex buckets: remove from old (if changed) and add to new (if applicable)
+        LocalDate newDay = bucketDate(nextTime);
+        if (oldDay != null && !oldDay.equals(newDay)) {
+            removeFromBucket(oldDay, task.getKey());
+        }
+        if (newDay != null) {
+            addToBucket(newDay, existing);
+        }
+
         return new UpdateInfo(modelKey, newlyAdded, task.getUpdated());
+
     }
 
+    private boolean isFinished(Schedule s) {
+        return isFinished(s.getTask());
+    }
     private boolean isFinished(ModelTask t) {
         return t.isFinished();
     }
 
+    private boolean isCanceled(Schedule s) {
+        return isCanceled(s.getTask());
+    }
     private boolean isCanceled(ModelTask t) {
         return t.isCancelled();
     }
 
+    private boolean isActive(Schedule s) {
+        return isActive(s.getTask());
+    }
     private boolean isActive(ModelTask t) {
         return !isFinished(t) && !isCanceled(t);
     }
@@ -333,8 +414,101 @@ public class TaskIndex {
         // Always notify on the main thread for UI safety.
         Gdx.app.postRunnable(() -> {
             for (TaskEventListener l : listeners) {
-                try { l.onEvent(evt); } catch (Throwable ignored) {}
+                try {
+                    l.onEvent(evt);
+                } catch (Throwable ignored) {
+                }
             }
         });
+    }
+
+
+// ------------------------- Bucketing helpers + API -------------------------
+
+    private LocalDate bucketDate(Double epochMillis) {
+        if (epochMillis == null || epochMillis == 0d) return null;
+        ZonedDateTime zdt = Instant.ofEpochMilli(epochMillis.longValue()).atZone(bucketZone);
+        if (zdt.getHour() < rolloverHour) {
+            zdt = zdt.minusHours(rolloverHour);
+        }
+        return zdt.toLocalDate();
+    }
+
+    private void addToBucket(LocalDate day, Schedule schedule) {
+        // Only bucket tasks with a real deadline; active filter is applied at read-time
+        byDay.computeIfAbsent(day, d -> new CopyOnWriteArrayList<>()).addIfAbsent(schedule);
+        bucketUpdates.incrementAndGet();
+    }
+
+    private void removeFromBucket(LocalDate day, ModelKey key) {
+        CopyOnWriteArrayList<Schedule> list = byDay.get(day);
+        if (list != null) {
+            list.removeIf(m -> m.getKey().equals(key));
+            bucketUpdates.incrementAndGet();
+            if (list.isEmpty()) {
+                byDay.remove(day, list);
+                // TODO hide missing days
+            }
+        }
+    }
+
+    /// Return tasks for a given day that have deadlines, filtered to active and sorted by deadline time.
+    public List<Schedule> getDayWithDeadlines(LocalDate day) {
+        CopyOnWriteArrayList<Schedule> raw = byDay.get(day);
+        if (raw == null || raw.isEmpty()) return Collections.emptyList();
+        List<Schedule> out = new ArrayList<>();
+        for (Schedule t : raw) {
+            try {
+                if (isActive(t.getTask())) {
+                    Double d = t.getTask().getDeadline();
+                    if (d != null && d != 0d) {
+                        out.add(t);
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+        }
+        out.sort(Comparator.comparingLong(Schedule::getNextDueMillis));
+        return out;
+    }
+
+    /// Configure the rollover hour used to bucket deadlines into days (default 4).
+    public void setRolloverHour(int hour0to23) {
+        this.rolloverHour = Math.max(0, Math.min(23, hour0to23));
+    }
+
+    /// Configure the time zone used for day bucketing (default system zone).
+    public void setBucketZone(ZoneId zone) {
+        if (zone != null) this.bucketZone = zone;
+    }
+
+    /// Diagnostic counters
+    public int getRefreshCount() {
+        return refreshCount.get();
+    }
+
+    public int getBucketUpdateCount() {
+        return bucketUpdates.get();
+    }
+
+    void awaitRefresh(final long timeout) {
+        if (refreshPending.get()) {
+            synchronized (refreshPending) {
+                try {
+                    refreshPending.wait(timeout);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw X_Fu.rethrow(e);
+                }
+            }
+        }
+        if (lastError != null) {
+            throw X_Fu.rethrow(lastError);
+        }
+    }
+
+    public void destroy() {
+        autoRefreshTask.cancel();
+
     }
 }

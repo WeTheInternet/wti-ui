@@ -22,6 +22,7 @@ main.java.srcDir("$rootDir/demo/src/api/java")
 main.resources.srcDir("$rootDir/demo/src/api/resources")
 test.java.srcDir("$rootDir/demo/src/apiTest/java")
 test.groovy.srcDir("$rootDir/demo/src/apiTest/groovy")
+test.resources.srcDir("$rootDir/demo/src/apiTest/resources")
 
 dependencies {
     implementation project(path: ":xapi-ui-api")
@@ -31,6 +32,7 @@ dependencies {
     api libs.xapi.util
     api libs.xapi.inject
     testImplementation libs.spock
+    testImplementation libs.gdx.backend.headless
     testImplementation libs.xapi.model.jre
 }
 // Setup publishing to coordinates: net.wti:demo-api

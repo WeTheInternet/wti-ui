@@ -1,5 +1,6 @@
 package net.wti.ui.demo.common;
 
+import net.wti.tasks.index.TaskFactory;
 import net.wti.ui.demo.api.*;
 import net.wti.ui.demo.ui.controller.TaskController;
 import net.wti.ui.demo.ui.view.TaskTableActive;
@@ -102,22 +103,60 @@ public final class SeedDataGenerator {
         }
 
         // human-generated, life-relevant tasks
-        active.addTask(wakeUp());
-        active.addTask(cookBreakfast());
-        active.addTask(brushTeethMorning());
-        active.addTask(cookLunch());
-        active.addTask(cookDinner());
-        active.addTask(brushTeethNight());
-        active.addTask(bedTimeKids());
-        active.addTask(bedTime());
+        ModelTask task = wakeUp();
+        controller.save(task);
+        active.addTask(task);
+
+        task = cookBreakfast();
+        controller.save(task);
+        active.addTask(task);
+
+        task = brushTeethMorning();
+        controller.save(task);
+        active.addTask(task);
+
+        task = cookLunch();
+        controller.save(task);
+        active.addTask(task);
+
+        task = cookDinner();
+        controller.save(task);
+        active.addTask(task);
+
+        task = brushTeethNight();
+        controller.save(task);
+        active.addTask(task);
+
+        task = bedTimeKids();
+        controller.save(task);
+        active.addTask(task);
+
+        task = bedTime();
+        controller.save(task);
+        active.addTask(task);
 
         // weeklies
-        active.addTask(doLaundry());
-        active.addTask(checkMail());
+        task = doLaundry();
+        controller.save(task);
+        active.addTask(task);
+
+        task = checkMail();
+        controller.save(task);
+        active.addTask(task);
 
         // monthlies
-        active.addTask(payMortgage());
-        active.addTask(payBills());
+        task = payMortgage();
+        controller.save(task);
+        active.addTask(task);
+
+        task = payBills();
+        controller.save(task);
+        active.addTask(task);
+
+        task = payCtfs();
+        controller.save(task);
+        active.addTask(task);
+        // 19th ctfs - payment
         // one-offs
         active.addTask(buyPotatoes());
 
@@ -139,6 +178,12 @@ public final class SeedDataGenerator {
     private static ModelTask payBills() {
         final ModelTask task = TaskFactory.create("Pay Bills", "Pay monthly bills");
         task.recurrence().add(ModelRecurrence.monthly(21));
+        return task;
+    }
+
+    private static ModelTask payCtfs() {
+        final ModelTask task = TaskFactory.create("Pay CTFS", "Monthly payment");
+        task.recurrence().add(ModelRecurrence.monthly(15)); // real deadline is the 19th, but it takes time to process
         return task;
     }
 
@@ -187,7 +232,6 @@ public final class SeedDataGenerator {
         specialBiWeekly(recur, 6, 45, 9, 0);
         return task;
     }
-
 
     /// @return a {@link ModelTask} describing my bed time schedule.
     ///

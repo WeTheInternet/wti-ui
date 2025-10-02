@@ -102,6 +102,9 @@ public final class DemoApp extends ApplicationAdapter {
     private boolean doInvalidate;
     private TaskUiTheme theme;
     private Do cleanup = Do.NOTHING;
+    private TaskIndex index;
+    private long lastRendered;
+    private float delta;
 
     // -------------------------------------------------------------------
     // Life‑cycle overrides
@@ -111,6 +114,7 @@ public final class DemoApp extends ApplicationAdapter {
     @Override
     public void create() {
         // Theme & Skin
+        index = new TaskIndex();
         theme = new TaskUiTheme();
         skin = theme.getSkin();
         theme.applyTooltipDefaults();
@@ -133,7 +137,6 @@ public final class DemoApp extends ApplicationAdapter {
                 },   // move ONCE tasks → Done
                 t -> active.addTask(t)  // reschedule recurring tasks
         );
-        final TaskIndex index = new TaskIndex();
         Pointer<Do> undo = Pointer.pointer();
         undo.in(index.subscribeEvents(e->{
             undo.out1().done();
@@ -174,10 +177,19 @@ public final class DemoApp extends ApplicationAdapter {
     /// Render loop – clears screen, delegates to Stage, supports F5 hot‑reload.
     @Override
     public void render() {
+        final long now = System.currentTimeMillis();
+        delta += Gdx.graphics.getDeltaTime();
+        // only render 30x per second
+        if (now - lastRendered < 33) {
+            return;
+        }
+        lastRendered = now;
+        /// update logic
+        stage.act(delta);
+        delta = 0;
+
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL31.GL_COLOR_BUFFER_BIT);
-        /// update logic
-        stage.act();
         /// trigger any invalidations
         if (doInvalidate) {
             doInvalidate = false;

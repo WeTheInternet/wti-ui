@@ -119,7 +119,7 @@ public interface ModelRecurrence extends Model {
         final ModelRecurrence recur = X_Model.create(ModelRecurrence.class);
         recur.setUnit(RecurrenceUnit.ONCE);
         //noinspection IntegerMultiplicationImplicitCastToLong
-        recur.setValue(hour * 60 + minute);
+        recur.setValue(System.currentTimeMillis() + (hour * 60 + minute) * 60_000);
         return recur;
     }
     static ModelRecurrence once(long birth, int days, int hour, int minute) {

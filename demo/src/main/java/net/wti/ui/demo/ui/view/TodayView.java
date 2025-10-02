@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import net.wti.tasks.event.RefreshFinishedEvent;
 import net.wti.tasks.index.TaskIndex;
 import net.wti.ui.demo.api.ModelTask;
+import net.wti.ui.demo.api.Schedule;
 import net.wti.ui.demo.theme.TaskUiTheme;
 import net.wti.ui.demo.ui.controller.TaskController;
 import net.wti.ui.gdx.view.AccordionPane;
@@ -94,10 +95,6 @@ public class TodayView extends Table implements HasScrollPane {
         index.subscribeActiveTasks(task -> {
             Log.tryLog(TodayView.class, this, "Subscribed to task", task.getName());
         });
-        index.subscribeEvents(evt-> {
-            // TODO: make this auto-refresh conditional to avoid churn
-            refresh();
-        }, RefreshFinishedEvent.class);
 
         setBackground(optionalDrawable(skin, "panel-actionbar", "button"));
 
@@ -142,18 +139,23 @@ public class TodayView extends Table implements HasScrollPane {
         // External orientation change hook (if your theme emits one)
         cleanup = theme.onOrientationChanged(viewMode -> refresh());
 
+        // TODO: show a "Loading..." spinner
+        index.subscribeEvents(evt-> {
+            // TODO: make this auto-refresh conditional to avoid churn
+            refresh();
+        }, RefreshFinishedEvent.class);
 
-        refresh(); // initial population
     }
 
     /// Re-query tasks and rebuild both lists (chronological + priority).
     public void refresh() {
-        final MappedIterable<ModelTask> all = index.getActive();
+        final MappedIterable<Schedule> all = index.getActive();
 
         final List<ModelTask> withDeadline = new ArrayList<>();
         final List<ModelTask> withoutDeadline = new ArrayList<>();
 
-        for (ModelTask t : all) {
+        for (Schedule s : all) {
+            final ModelTask t = s.getTask();
             Long due = getDeadlineMillis(t);
             if (due != null) withDeadline.add(t);
             else withoutDeadline.add(t);

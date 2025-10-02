@@ -9,7 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import net.wti.gdx.theme.raeleus.sgx.MenuButton;
 import net.wti.gdx.theme.raeleus.sgx.MenuButtonGroup;
 import net.wti.ui.demo.api.ModelTask;
-import net.wti.ui.demo.common.TaskFactory;
+import net.wti.tasks.index.TaskFactory;
 import net.wti.ui.view.DeadlineView;
 import xapi.fu.In1;
 

@@ -1,4 +1,4 @@
-package net.wti.ui.demo.common;
+package net.wti.tasks.index;
 
 import net.wti.ui.demo.api.*;
 import xapi.model.X_Model;
@@ -26,7 +26,7 @@ public class TaskFactory {
         task.setBirth(X_Time.now().millisLong());
         task.setName(name);
         task.setDescription(description);
-        task.setDeadline(nextTime(task));
+        nextTime(task); // sets the deadline on the task, if there is one
         return task;
     }
 
@@ -44,7 +44,9 @@ public class TaskFactory {
                 nextTime = next;
             }
         }
-        return nextTime == Double.MAX_VALUE ? null : nextTime;
+        final Double result = nextTime == Double.MAX_VALUE ? null : nextTime;
+        task.setDeadline(result);
+        return result;
     }
 
     /// Calculates the next occurrence time for a recurrence
@@ -61,7 +63,7 @@ public class TaskFactory {
         }
 
         Long lastFinished = task.getLastFinished();
-        if (lastFinished == null) {
+        if (lastFinished == null || lastFinished == 0) {
             lastFinished = task.getBirth();
         }
 
@@ -71,17 +73,22 @@ public class TaskFactory {
         final DayOfWeek today = dayOf(now);
         final Long startOfWeek = toStartOfWeek(now);
 
+        final long targetThisWeek = startOfWeek + (value * 60000L);
         if (neverFinished) {
             // First-time execution: compute based on current weekday position
-            if (today.ordinal() <= day.ordinal()) {
-                return startOfWeek + (value * 60000.0d);
+            final long nowMillis = System.currentTimeMillis();
+
+            // If target is still in the future this week, use it; otherwise next week
+            if (targetThisWeek > nowMillis) {
+                return (double) targetThisWeek;
             } else {
                 return startOfWeek + ((value + ModelRecurrence.MINUTES_PER_WEEK) * 60000.0d);
             }
+
         } else {
             // Recurrence after previous execution
-            if (lastFinished < (startOfWeek + value)) {
-                return startOfWeek + (value * 60000.0d);
+            if (lastFinished < targetThisWeek) {
+                return (double) targetThisWeek;
             } else {
                 return startOfWeek + ((value + ModelRecurrence.MINUTES_PER_WEEK) * 60000.0d);
             }

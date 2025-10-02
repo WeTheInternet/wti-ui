@@ -23,6 +23,7 @@
                         @transitive("test")
                         external : [
                             ( libs.spock ),
+                            ( libs.gdx.backend.headless ),
                             ( libs.xapi.model.jre ),
                         ],
                     }

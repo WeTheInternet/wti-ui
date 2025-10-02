@@ -5,6 +5,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import net.wti.ui.demo.api.ModelTask;
+import net.wti.ui.demo.api.Schedule;
 import net.wti.ui.view.api.IsView;
 
 import java.time.*;
@@ -32,8 +33,8 @@ public class DayView extends Table implements IsView {
     private final DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("h:mm a");
 
     private LocalDate date;
-    private List<ModelTask> tasks = Collections.emptyList();
-    private Function<ModelTask, Table> rowFactory;
+    private List<Schedule> tasks = Collections.emptyList();
+    private Function<Schedule, Table> rowFactory;
 
     // “4am rule”: deadlines before 4am count toward the previous day
     private int rolloverHour = 4;
@@ -41,11 +42,11 @@ public class DayView extends Table implements IsView {
     // Track whether this day currently renders any items
     private boolean hasItems;
 
-    public DayView(Skin skin, LocalDate date, Iterable<ModelTask> tasks) {
+    public DayView(Skin skin, LocalDate date, Iterable<Schedule> tasks) {
         this(skin, date, tasks, null);
     }
 
-    public DayView(Skin skin, LocalDate date, Iterable<ModelTask> tasks, Function<ModelTask, Table> rowFactory) {
+    public DayView(Skin skin, LocalDate date, Iterable<Schedule> tasks, Function<Schedule, Table> rowFactory) {
         super(skin);
         this.skin = skin;
         this.date = date;
@@ -57,9 +58,11 @@ public class DayView extends Table implements IsView {
     }
 
     /// Replace the task source for this day (call refresh() afterward).
-    public void setTasks(Iterable<ModelTask> tasks) {
-        List<ModelTask> list = new ArrayList<>();
-        if (tasks != null) for (ModelTask t : tasks) list.add(t);
+    public void setTasks(Iterable<Schedule> tasks) {
+        List<Schedule> list = new ArrayList<>();
+        if (tasks != null) for (Schedule t : tasks) {
+            list.add(t);
+        }
         this.tasks = list;
     }
 
@@ -75,15 +78,16 @@ public class DayView extends Table implements IsView {
         add(headerLabel(dateTitle(date))).left().row();
 
         // Map tasks to hours for this specific date.
-        Map<Integer, List<ModelTask>> byHour = tasks.stream()
-                .filter(t -> {
+        Map<Integer, List<Schedule>> byHour = tasks.stream()
+                .filter(s -> {
+                    final ModelTask t = s.getTask();
                     Double d = t.getDeadline();
                     if (d == null || d == 0d) return false;
                     LocalDate bucket = bucketDate(d.longValue());
                     return bucket.equals(date);
                 })
                 .collect(Collectors.groupingBy(t -> {
-                    Double d = t.getDeadline();
+                    Double d = t.getTask().getDeadline();
                     ZonedDateTime zdt = Instant.ofEpochMilli(d.longValue()).atZone(zone);
                     return zdt.getHour();
                 }));
@@ -99,9 +103,9 @@ public class DayView extends Table implements IsView {
                 int end = h - 1;
                 add(emptyHourLabel(collapseTitle(start, end))).left().row();
             } else {
-                List<ModelTask> items = sortedByTime(byHour.get(h));
+                List<Schedule> items = sortedByTime(byHour.get(h));
                 add(hourLabel(hourFmt(h))).left().row();
-                for (ModelTask t : items) {
+                for (Schedule t : items) {
                     add(rowFactory.apply(t)).left().row();
                 }
                 h++;
@@ -125,8 +129,8 @@ public class DayView extends Table implements IsView {
         return zdt.toLocalDate();
     }
 
-    private static List<ModelTask> sortedByTime(List<ModelTask> in) {
-        in.sort(Comparator.comparingLong(t -> t.getDeadline().longValue()));
+    private static List<Schedule> sortedByTime(List<Schedule> in) {
+        in.sort(Comparator.comparingLong(t -> t.getTask().getDeadline().longValue()));
         return in;
     }
 
@@ -171,7 +175,8 @@ public class DayView extends Table implements IsView {
         return lbl;
     }
 
-    private Table defaultRow(ModelTask t) {
+    private Table defaultRow(final Schedule s) {
+        final ModelTask t = s.getTask();
         // Minimal row: “h:mm — Task Name”
         Double d = t.getDeadline();
         String time = d == null ? "" : Instant.ofEpochMilli(d.longValue()).atZone(zone).toLocalTime().format(timeFmt);
