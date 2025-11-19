@@ -25,6 +25,7 @@ dependencies {
     implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
     api project(path: ":wti-ui-impl")
     api project(path: ":wti-ui-jreControls")
+    api project(path: ":wti-ui-jreTime")
     api project(path: ":wti-ui-jreColor")
     api project(path: ":wti-ui-jreImage")
     api project(path: ":wti-ui-jreScene")

@@ -4,9 +4,14 @@ package net.wti.ui.demo.ui.view;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import net.wti.tasks.index.DateKey;
+import net.wti.ui.demo.api.ModelSettings;
 import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.api.Schedule;
 import net.wti.ui.view.api.IsView;
+import xapi.string.X_String;
+import xapi.time.X_Time;
+import xapi.time.api.TimeComponents;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -28,11 +33,10 @@ import java.util.stream.Collectors;
 public class DayView extends Table implements IsView {
 
     private final Skin skin;
-    private final ZoneId zone = ZoneId.systemDefault();
     private final DateTimeFormatter hourFmt = DateTimeFormatter.ofPattern("h a");
     private final DateTimeFormatter timeFmt = DateTimeFormatter.ofPattern("h:mm a");
 
-    private LocalDate date;
+    private DateKey date;
     private List<Schedule> tasks = Collections.emptyList();
     private Function<Schedule, Table> rowFactory;
 
@@ -42,11 +46,11 @@ public class DayView extends Table implements IsView {
     // Track whether this day currently renders any items
     private boolean hasItems;
 
-    public DayView(Skin skin, LocalDate date, Iterable<Schedule> tasks) {
+    public DayView(Skin skin, DateKey date, Iterable<Schedule> tasks) {
         this(skin, date, tasks, null);
     }
 
-    public DayView(Skin skin, LocalDate date, Iterable<Schedule> tasks, Function<Schedule, Table> rowFactory) {
+    public DayView(Skin skin, DateKey date, Iterable<Schedule> tasks, Function<Schedule, Table> rowFactory) {
         super(skin);
         this.skin = skin;
         this.date = date;
@@ -81,15 +85,14 @@ public class DayView extends Table implements IsView {
         Map<Integer, List<Schedule>> byHour = tasks.stream()
                 .filter(s -> {
                     final ModelTask t = s.getTask();
-                    Double d = t.getDeadline();
+                    final Double d = t.getDeadline();
                     if (d == null || d == 0d) return false;
-                    LocalDate bucket = bucketDate(d.longValue());
+                    final DateKey bucket = bucketDate(d.longValue());
                     return bucket.equals(date);
                 })
                 .collect(Collectors.groupingBy(t -> {
                     Double d = t.getTask().getDeadline();
-                    ZonedDateTime zdt = Instant.ofEpochMilli(d.longValue()).atZone(zone);
-                    return zdt.getHour();
+                    return X_Time.breakdown(d.longValue(), ModelSettings.timeZone()).getHour();
                 }));
 
         hasItems = !byHour.isEmpty();
@@ -121,12 +124,13 @@ public class DayView extends Table implements IsView {
 
     // ---- helpers ---------------------------------------------------------
 
-    private LocalDate bucketDate(long millis) {
-        ZonedDateTime zdt = Instant.ofEpochMilli(millis).atZone(zone);
-        if (zdt.getHour() < rolloverHour) {
-            zdt = zdt.minusHours(rolloverHour);
+    private DateKey bucketDate(long millis) {
+        TimeComponents tc = X_Time.breakdown(millis, ModelSettings.timeZone());
+        if (tc.hour() < rolloverHour) {
+            millis -= rolloverHour * 60 * 60 * 1000L; // subtract rollover hours
+            tc = X_Time.breakdown(millis, ModelSettings.timeZone());
         }
-        return zdt.toLocalDate();
+        return DateKey.from(tc);
     }
 
     private static List<Schedule> sortedByTime(List<Schedule> in) {
@@ -134,12 +138,12 @@ public class DayView extends Table implements IsView {
         return in;
     }
 
-    private String dateTitle(LocalDate d) {
-        LocalDate today = LocalDate.now(zone);
+    private String dateTitle(DateKey d) {
+        DateKey today = DateKey.from(TimeComponents.now());
         if (d.equals(today)) return "Today";
         if (d.equals(today.minusDays(1))) return "Yesterday";
         if (d.equals(today.plusDays(1))) return "Tomorrow";
-        return d.getDayOfWeek() + ", " + d;
+        return X_String.formatDayOfWeekDate(d.getTime().getDayOfWeek(), d.getTime().getDayOfMonth());
     }
 
     private String collapseTitle(int start, int end) {
@@ -179,6 +183,7 @@ public class DayView extends Table implements IsView {
         final ModelTask t = s.getTask();
         // Minimal row: “h:mm — Task Name”
         Double d = t.getDeadline();
+        final TimeComponents timeData = X_Time.breakdown(d, ModelSettings.timeZone());
         String time = d == null ? "" : Instant.ofEpochMilli(d.longValue()).atZone(zone).toLocalTime().format(timeFmt);
         String title = t.getName() == null ? "" : t.getName();
 

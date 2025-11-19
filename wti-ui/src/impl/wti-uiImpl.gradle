@@ -19,6 +19,7 @@ test.resources.setSrcDirs([]);
 
 dependencies {
     implementation project(path: ":wti-ui-controls")
+    implementation project(path: ":wti-ui-time")
     implementation project(path: ":wti-ui-color")
     implementation project(path: ":wti-ui-image")
     implementation project(path: ":wti-ui-scene")
@@ -26,6 +27,7 @@ dependencies {
     implementation project(path: ":wti-ui-modelbind")
     api project(path: ":wti-ui-main")
     api project(path: ":wti-ui-implControls")
+    api project(path: ":wti-ui-implTime")
     api project(path: ":wti-ui-implColor")
     api project(path: ":wti-ui-implImage")
     api project(path: ":wti-ui-implScene")

@@ -6,11 +6,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
 import net.wti.tasks.event.RefreshFinishedEvent;
+import net.wti.tasks.index.DateKey;
 import net.wti.tasks.index.TaskIndex;
 import net.wti.ui.controls.focus.HoverScrollFocus;
 import net.wti.ui.view.api.IsView;
 import xapi.fu.Do;
 import xapi.fu.log.Log;
+import xapi.time.X_Time;
+import xapi.time.api.TimeComponents;
 
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -45,7 +48,7 @@ public class ScheduleView extends Table implements IsView {
     private final ScrollPane scroller;
 
     // Keep mounted days in order. We append/prepend as we scroll.
-    private final LinkedHashMap<LocalDate, DayView> mountedDays = new LinkedHashMap<>();
+    private final LinkedHashMap<DateKey, DayView> mountedDays = new LinkedHashMap<>();
 
     // How close to an edge (in pixels) before we load a new day.
     private static final float LOAD_THRESHOLD_PX = 80f;
@@ -109,7 +112,7 @@ public class ScheduleView extends Table implements IsView {
         dayStack.clearChildren();
         mountedDays.clear();
 
-        LocalDate today = LocalDate.now();
+        DateKey today = DateKey.from(TimeComponents.now());
         mountDay(today.minusDays(1), false);
         mountDay(today, false);
         mountDay(today.plusDays(1), false);
@@ -126,12 +129,12 @@ public class ScheduleView extends Table implements IsView {
         // If your definition changes, swap to getAll().
 
         if (!initialized) return;
-        for (Map.Entry<LocalDate, DayView> e : mountedDays.entrySet()) {
-            e.getValue().setTasks(index.getDayWithDeadlines(e.getKey()));
+        for (Map.Entry<DateKey, DayView> e : mountedDays.entrySet()) {
+            e.getValue().setTasks(index.getDayWithDeadlines(e.getKey().getTime()));
             e.getValue().refresh();
         }
         // If still empty, extend outward a bit more to find items (non-destructive).
-        LocalDate pivot = LocalDate.now();
+        DateKey pivot = DateKey.from(TimeComponents.now());
         ensureSomeContent(pivot, 3);
 
         invalidateHierarchy();
@@ -152,27 +155,31 @@ public class ScheduleView extends Table implements IsView {
 
         if (y <= LOAD_THRESHOLD_PX) {
             // Near top: add previous day
-            LocalDate first = mountedDays.keySet().iterator().next();
-            LocalDate prev = first.minusDays(1);
+            DateKey first = mountedDays.keySet().iterator().next();
+            DateKey prev = first.minusDays(1);
             if (!mountedDays.containsKey(prev)) {
                 mountDay(prev, true);
             }
         } else if (max - y <= LOAD_THRESHOLD_PX) {
             // Near bottom: add next day
-            LocalDate last = null;
-            for (LocalDate d : mountedDays.keySet()) last = d;
-            LocalDate next = last.plusDays(1);
-            if (!mountedDays.containsKey(next)) {
-                mountDay(next, false);
+            DateKey last = null;
+            for (DateKey d : mountedDays.keySet()) {
+                last = d;
+            }
+            if (last != null) {
+                DateKey next = last.plusDays(1);
+                if (!mountedDays.containsKey(next)) {
+                    mountDay(next, false);
+                }
             }
         }
     }
 
-    private void mountDay(LocalDate date, boolean prepend) {
-        DayView view = new DayView(skin, date, index.getDayWithDeadlines(date));
+    private void mountDay(DateKey date, boolean prepend) {
+        DayView view = new DayView(skin, date, index.getDayWithDeadlines(date.getTime()));
         view.refresh();
         if (prepend) {
-            LinkedHashMap<LocalDate, DayView> tmp = new LinkedHashMap<>();
+            LinkedHashMap<DateKey, DayView> tmp = new LinkedHashMap<>();
             tmp.put(date, view);
             tmp.putAll(mountedDays);
             mountedDays.clear();
@@ -186,12 +193,12 @@ public class ScheduleView extends Table implements IsView {
 
     // If all mounted days are empty, expand outward around a pivot date
     // until we find any items or exhaust the probe limit.
-    private void ensureSomeContent(LocalDate pivot, int maxRadiusDays) {
+    private void ensureSomeContent(DateKey pivot, int maxRadiusDays) {
         if (mountedDays.values().stream().anyMatch(DayView::hasItems)) return;
 
         for (int r = 1; r <= maxRadiusDays; r++) {
-            LocalDate prev = pivot.minusDays(r);
-            LocalDate next = pivot.plusDays(r);
+            DateKey prev = pivot.minusDays(r);
+            DateKey next = pivot.plusDays(r);
 
             if (!mountedDays.containsKey(prev)) mountDay(prev, true);
             if (mountedDays.values().stream().anyMatch(DayView::hasItems)) break;

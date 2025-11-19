@@ -19,6 +19,7 @@ main.java.srcDir("$rootDir/wti-ui/src/view/java")
 
 dependencies {
     api project(path: ":wti-ui-controls")
+    api project(path: ":wti-ui-time")
 }
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
 // Done generating buildfile for :wti-ui at file://$rootDir/wti-ui/src/view/wti-uiView.gradle

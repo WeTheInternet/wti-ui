@@ -5,10 +5,8 @@ import xapi.annotation.model.PersistenceStrategy;
 import xapi.annotation.model.Persistent;
 import xapi.model.X_Model;
 import xapi.model.api.Model;
-
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import xapi.time.X_Time;
+import xapi.time.api.TimeZoneInfo;
 
 /// ModelSettings:
 ///
@@ -40,19 +38,17 @@ public interface ModelSettings extends Model {
         return defaultMinute;
     }
 
-    static ZoneOffset timeZone() {
-        String zone = INSTANCE.getTimeZone();
+    static TimeZoneInfo timeZone() {
+        TimeZoneInfo zone = INSTANCE.getTimeZone();
         if (zone == null) {
-            final ZoneId defaultZone = ZoneId.systemDefault();
-            INSTANCE.setTimeZone(defaultZone.getId());
-            return defaultZone.getRules().getOffset(Instant.now());
+            zone = X_Time.systemZone();
+            INSTANCE.setTimeZone(zone);
         }
-        ZoneId zoneId = ZoneId.of(zone);
-        return zoneId.getRules().getOffset(Instant.now());
+        return zone;
     }
 
-    String getTimeZone();
-    ModelSettings setTimeZone(String timeZone);
+    TimeZoneInfo getTimeZone();
+    ModelSettings setTimeZone(TimeZoneInfo timeZone);
 
     Integer getDefaultHour();
     ModelSettings setDefaultHour(Integer hour);

@@ -2,13 +2,14 @@
     modules = [
         <api />,
         <controls includes = api />,
-        <view includes = [ controls ] />,
+        <time includes = api />,
+        <event includes = api />,
+        <view includes = [ controls, time ] />,
         <color includes = api />,
         <image includes = api />,
-        <event includes = api />,
         <scene includes = [ controls, event ] />,
         <modelbind />,
-        <main includes=[ controls, color, image, scene, event, modelbind ]/>
+        <main includes=[ controls, time, color, image, scene, event, modelbind ]/>
     ]
 
     platforms = [
@@ -30,6 +31,15 @@
                         ],
                     }
                 /modelbind>,
+                <time
+                    requires = {
+                        @transitive
+                        external : [
+                            ( libs.xapi.model ),
+                            ( libs.xapi.util ),
+                        ],
+                    }
+                /time>,
                 <controls
                     requires = {
                         @transitive("test")
@@ -42,6 +52,15 @@
         /main>,
         <impl replaces=main
             modules = [
+                <time
+                    requires = {
+                        @transitive("test")
+                        external : [
+                            ( libs.spock ),
+                            ( libs.xapi.model.jre ),
+                        ]
+                    }
+                /time>
             ]
         /impl>,
         <jre replaces=impl

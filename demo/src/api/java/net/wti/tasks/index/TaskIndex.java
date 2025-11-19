@@ -22,10 +22,11 @@ import xapi.model.api.ModelQueryResult;
 import xapi.string.X_String;
 import xapi.time.X_Time;
 import xapi.time.api.Moment;
+import xapi.time.api.TimeComponents;
+import xapi.time.api.TimeZoneInfo;
 import xapi.util.api.ErrorHandler;
 import xapi.util.api.SuccessHandler;
 
-import java.time.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -82,6 +83,7 @@ import java.util.function.Consumer;
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) and chatgpt on 27/08/2025 @ 06:54
 public class TaskIndex {
+
     private final String namespace;
 
     public TaskIndex() {
@@ -98,9 +100,9 @@ public class TaskIndex {
     private final MapLike<ModelKey, Schedule> byId = X_Jdk.mapHashConcurrent();
     private final CopyOnWriteArrayList<TaskEventListener> listeners = new CopyOnWriteArrayList<>();
 
-    // ---- Bucketing (deadlines grouped by LocalDate) ----
-    private final ConcurrentMap<LocalDate, CopyOnWriteArrayList<Schedule>> byDay = new ConcurrentHashMap<>();
-    private ZoneId bucketZone = ZoneId.systemDefault();
+    // ---- Bucketing (deadlines grouped by DateKey) ----
+    private final ConcurrentMap<DateKey, CopyOnWriteArrayList<Schedule>> byDay = new ConcurrentHashMap<>();
+    private TimeZoneInfo bucketZone = X_Time.systemZone();
     private int rolloverHour = 4; // "4am rule"
 
     // ---- Metrics ----
@@ -232,7 +234,7 @@ public class TaskIndex {
 
     private void processResults(final RunningRefreshQuery operation, final ModelQueryResult<ModelTask> success) {
         operation.setSuccess(success);
-        Log.tryLog(TaskIndex.class, this, "Received " + success.getSize() + " results", LocalDateTime.now());
+        Log.tryLog(TaskIndex.class, this, "Received " + success.getSize() + " results", TimeComponents.now());
         final ModelQuery<ModelTask> query = operation.getQuery();
         final ErrorHandler<? extends Throwable> failHandler = operation.getFailHandler();
         for (ModelTask model : success.getModels()) {
@@ -319,7 +321,7 @@ public class TaskIndex {
     public void onTaskDeleted(ModelKey taskId) {
         Schedule removed = byId.remove(taskId);
         if (removed != null) {
-            LocalDate oldDay = bucketDate(removed.getTask().getDeadline());
+            DateKey oldDay = bucketDate(removed.getTask().getDeadline());
             if (oldDay != null) {
                 removeFromBucket(oldDay, removed.getKey());
             }
@@ -337,7 +339,7 @@ public class TaskIndex {
         Schedule existing = byId.get(modelKey);
         final boolean newlyAdded = existing == null;
         // Track previous bucket (if any) before we mutate/replace
-        final LocalDate oldDay;
+        final DateKey oldDay;
         final ModelTask canonical;
         final boolean isCanonical;
         final boolean isChanged;
@@ -377,7 +379,7 @@ public class TaskIndex {
 
         final Double nextTime = TaskFactory.nextTime(canonical);
         // Reindex buckets: remove from old (if changed) and add to new (if applicable)
-        LocalDate newDay = bucketDate(nextTime);
+        DateKey newDay = bucketDate(nextTime);
         if (oldDay != null && !oldDay.equals(newDay)) {
             removeFromBucket(oldDay, task.getKey());
         }
@@ -425,22 +427,23 @@ public class TaskIndex {
 
 // ------------------------- Bucketing helpers + API -------------------------
 
-    private LocalDate bucketDate(Double epochMillis) {
+    private DateKey bucketDate(Double epochMillis) {
         if (epochMillis == null || epochMillis == 0d) return null;
-        ZonedDateTime zdt = Instant.ofEpochMilli(epochMillis.longValue()).atZone(bucketZone);
-        if (zdt.getHour() < rolloverHour) {
-            zdt = zdt.minusHours(rolloverHour);
+        TimeComponents now = TimeComponents.now();
+        if (now.getHour() < rolloverHour) {
+            now = X_Time.breakdown(now.getEpochMillis() - (rolloverHour * 60 * 60 * 1000L), bucketZone);
         }
-        return zdt.toLocalDate();
+        // Note: DateKey equality/hash only use year/dayOfYear
+        return DateKey.from(now);
     }
 
-    private void addToBucket(LocalDate day, Schedule schedule) {
+    private void addToBucket(DateKey day, Schedule schedule) {
         // Only bucket tasks with a real deadline; active filter is applied at read-time
         byDay.computeIfAbsent(day, d -> new CopyOnWriteArrayList<>()).addIfAbsent(schedule);
         bucketUpdates.incrementAndGet();
     }
 
-    private void removeFromBucket(LocalDate day, ModelKey key) {
+    private void removeFromBucket(DateKey day, ModelKey key) {
         CopyOnWriteArrayList<Schedule> list = byDay.get(day);
         if (list != null) {
             list.removeIf(m -> m.getKey().equals(key));
@@ -453,8 +456,8 @@ public class TaskIndex {
     }
 
     /// Return tasks for a given day that have deadlines, filtered to active and sorted by deadline time.
-    public List<Schedule> getDayWithDeadlines(LocalDate day) {
-        CopyOnWriteArrayList<Schedule> raw = byDay.get(day);
+    public List<Schedule> getDayWithDeadlines(TimeComponents day) {
+        CopyOnWriteArrayList<Schedule> raw = byDay.get(DateKey.from(day));
         if (raw == null || raw.isEmpty()) return Collections.emptyList();
         List<Schedule> out = new ArrayList<>();
         for (Schedule t : raw) {
@@ -472,13 +475,14 @@ public class TaskIndex {
         return out;
     }
 
+
     /// Configure the rollover hour used to bucket deadlines into days (default 4).
     public void setRolloverHour(int hour0to23) {
         this.rolloverHour = Math.max(0, Math.min(23, hour0to23));
     }
 
     /// Configure the time zone used for day bucketing (default system zone).
-    public void setBucketZone(ZoneId zone) {
+    public void setBucketZone(TimeZoneInfo zone) {
         if (zone != null) this.bucketZone = zone;
     }
 

@@ -5,8 +5,8 @@ import xapi.model.api.ModelKey;
 import xapi.model.api.ModelList;
 import xapi.string.X_String;
 import xapi.time.X_Time;
+import xapi.time.api.TimeComponents;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -211,10 +211,10 @@ public class Schedule {
 
     /// Sorts day-of-week values relative to today
     private List<DayOfWeek> sortedDays(List<ModelRecurrence> list) {
-        int today = LocalDate.now().getDayOfWeek().getValue(); // 1 = Monday, 7 = Sunday
+        int today = TimeComponents.now().dayOfWeek();
         return list.stream()
                 .map(ModelRecurrence::dayOfWeek)
-                .sorted(Comparator.comparingInt(d -> (d.ordinal() + 7 - today) % 7))
+                .sorted(Comparator.comparingInt(d -> (d.ordinal() + 6 - today) % 7))
                 .distinct()
                 .collect(Collectors.toList());
     }

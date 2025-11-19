@@ -4,8 +4,7 @@ import net.wti.ui.demo.api.*;
 import xapi.model.X_Model;
 import xapi.model.api.ModelList;
 import xapi.time.X_Time;
-
-import java.time.LocalDateTime;
+import xapi.time.api.TimeComponents;
 
 /// TaskFactory
 ///
@@ -69,11 +68,12 @@ public class TaskFactory {
 
         final boolean neverFinished = lastFinished.equals(task.getBirth());
         final DayOfWeek day = recur.dayOfWeek();
-        final LocalDateTime now = LocalDateTime.now();
-        final DayOfWeek today = dayOf(now);
-        final Long startOfWeek = toStartOfWeek(now);
+        final double now = System.currentTimeMillis();
+        final TimeComponents nowComponents = X_Time.breakdown(now, ModelSettings.timeZone());
+        final DayOfWeek today = DayOfWeek.values()[nowComponents.dayOfWeek()];
+        final double startOfWeek = X_Time.toStartOfWeek(now, ModelSettings.timeZone());
 
-        final long targetThisWeek = startOfWeek + (value * 60000L);
+        final long targetThisWeek = (long)(startOfWeek + (value * 60000L));
         if (neverFinished) {
             // First-time execution: compute based on current weekday position
             final long nowMillis = System.currentTimeMillis();
@@ -95,44 +95,13 @@ public class TaskFactory {
         }
     }
 
-    /// Computes the start of this calendar week (Sunday 00:00)
-    public static long toStartOfWeek(final LocalDateTime moment) {
-        LocalDateTime result;
-        switch (moment.getDayOfWeek()) {
-            case MONDAY:    result = moment.minusDays(1); break;
-            case TUESDAY:   result = moment.minusDays(2); break;
-            case WEDNESDAY: result = moment.minusDays(3); break;
-            case THURSDAY:  result = moment.minusDays(4); break;
-            case FRIDAY:    result = moment.minusDays(5); break;
-            case SATURDAY:  result = moment.minusDays(6); break;
-            case SUNDAY:    result = moment; break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + moment.getDayOfWeek());
-        }
-
-        return result
-                .withHour(0)
-                .withMinute(0)
-                .withSecond(0)
-                .withNano(0)
-                .toEpochSecond(ModelSettings.timeZone()) * 1000;
-    }
-
     /// Applies 4am rule to consider before-4am as previous day
-    private static DayOfWeek dayOf(LocalDateTime now) {
-        if (now.getHour() < 4) {
-            now = now.minusHours(4);
+    private static DayOfWeek dayOf(double nowMillis) {
+        TimeComponents components = X_Time.breakdown(nowMillis, ModelSettings.timeZone());
+        if (components.hour() < 4) {
+            nowMillis -= 4 * 60 * 60 * 1000; // subtract 4 hours
+            components = X_Time.breakdown(nowMillis, ModelSettings.timeZone());
         }
-        switch (now.getDayOfWeek()) {
-            case MONDAY:    return DayOfWeek.MONDAY;
-            case TUESDAY:   return DayOfWeek.TUESDAY;
-            case WEDNESDAY: return DayOfWeek.WEDNESDAY;
-            case THURSDAY:  return DayOfWeek.THURSDAY;
-            case FRIDAY:    return DayOfWeek.FRIDAY;
-            case SATURDAY:  return DayOfWeek.SATURDAY;
-            case SUNDAY:    return DayOfWeek.SUNDAY;
-            default:
-                throw new IllegalStateException("Unexpected enum: " + now.getDayOfWeek());
-        }
+        return DayOfWeek.values()[components.dayOfWeek()];
     }
 }
