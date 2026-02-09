@@ -56,7 +56,7 @@ public class CompositeGdxTheme extends AbstractGdxTheme {
                 skin.addRegions(maybeAtlas);                // Add atlas regions
             }
             final FileHandle maybeJson = bundle.getJsonHandleOrNull();
-            if (maybeJson != null) {
+            if (GdxTheme.isGlAvailable() && maybeJson != null) {
                 skin.load(maybeJson);     // Load JSON styles into same Skin instance
             }
         }

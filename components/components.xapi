@@ -1,12 +1,20 @@
 <xapi-schema
     modules = [
         <ui />,
-        <inventory />,
-        <main includes=[ ui, inventory, ]/>
+        <quest includes = [ ui ] />,
+        <inventory includes = [ ui ] />,
+        <main includes = [ ui, inventory, ] />
     ]
 
     platforms = [
         <main
+            requires = {
+                @transitive("test")
+                external : [
+                    ( libs.spock ),
+                    ( libs.xapi.model.jre ),
+                ],
+            }
             modules = [
                 <inventory
                     requires = {
@@ -16,15 +24,11 @@
                             ( libs.xapi.util ),
                         ],
                         @transitive
-                        project : { ":wti-ui" : view },
                         external: "com.badlogicgames.gdx:gdx:$gdxVersion",
                         @transitive
+                        project : { ":wti-ui" : view },
+                        @transitive
                         external: "com.threerings:react:1.5.1",
-                        @transitive("test")
-                        external : [
-                            ( libs.spock ),
-                            ( libs.xapi.model.jre ),
-                        ],
                     }
                 /inventory>,
                 <ui
@@ -32,14 +36,27 @@
                         @transitive
                         project : { ":wti-ui" : view },
                         project : { ":xapi-ui" : main },
-                        external: "com.badlogicgames.gdx:gdx:$gdxVersion",
                         @transitive
                         project: { ":wti-ui" : controls }
                     }
-                /ui>
+                /ui>,
+                <quest
+                    requires = {
+                        @transitive
+                        project : { ":wti-ui" : [ time, quest, view ] },
+                    }
+                /quest>
             ]
         /main>,
-        <impl replaces=main
+        <impl replace=main
+            requires = {
+                @transitive("test")
+                external : [
+                    ( libs.spock ),
+                    ( libs.xapi.model.jre ),
+                    ( libs.gdx.backend.headless ),
+                ],
+            }
             modules = [
                 <inventory
                     requires = {
@@ -60,11 +77,33 @@
                     requires = {
                         project : { ":gdx-themes" : main },
                     }
-                /ui>
+                /ui>,
+                <quest
+                    requires = {
+                        // @transitive("test") @closure("artifact { classifier = 'natives-desktop' }")
+                        // external : ( libs.gdx.platform ),
+
+                        @transitive("test")
+                        project : {
+                            ":wti-ui" : implTime,
+                            ":demo" : main,
+                            ":gdx-themes-raeleus-sgx" : main,
+                            ":test-tools" : headless,
+                        },
+                        @transitive("test")
+                        external : [
+                            ( libs.spock ),
+                            ( libs.xapi.model.jre ),
+                            ( libs.gdx.backend.headless ),
+
+                        ],
+                    }
+                /quest>
             ]
         /impl>,
-        <jre replaces=impl
+        <jre replace=impl
             requires = {
+                @transitive
                 external : [
                     ( libs.xapi.model.jre ),
                     "com.badlogicgames.gdx:gdx-box2d:$gdxVersion",
@@ -76,11 +115,35 @@
             modules = [
                 <inventory
                     requires = {
-                        @transitive
-                        project: { ":gdx-themes-raeleus-sgx" : "main" },
+                        //@transitive
+                        //project : { ":gdx-themes-raeleus-sgx" : main },
                     }
                 /inventory>
             ]
         /jre>,
+        <sample replace=jre
+            // the sample module is a place to dump "testing mains"
+            // which can launch java "playground" apps for individual components
+
+            modules = [
+                <quest
+                    requires = {
+                        internal : sample,
+                        project : {
+                            ":wti-ui" : implTime,
+                            ":gdx-themes-raeleus-sgx" : main,
+                            ":demo" : main
+                        },
+                        external : [
+                            ( libs.xapi.model.jre ),
+                            "com.badlogicgames.gdx:gdx-box2d:$gdxVersion",
+                            "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop",
+                            "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop",
+                            "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion",
+                        ],
+                    }
+                /quest>
+            ]
+        /sample>
     ]
 /xapi-schema>

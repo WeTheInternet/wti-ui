@@ -20,5 +20,12 @@ dependencies {
     implementation project(path: ":gdx-themes-main")
     api project(path: ":gdx-themes-main")
 }
+
+repositories {
+    maven {
+        name = 'xapiLocal'
+        url = "/opt/xapi/repo"
+    }
+}
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
 // Done generating buildfile for :gdx-themes at file://$rootDir/gdx-themes/src/sample/gdx-themesSample.gradle

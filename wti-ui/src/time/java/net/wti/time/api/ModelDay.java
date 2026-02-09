@@ -3,7 +3,9 @@ package net.wti.time.api;
 import xapi.annotation.model.IsModel;
 import xapi.annotation.model.PersistenceStrategy;
 import xapi.annotation.model.Persistent;
+import xapi.model.api.KeyBuilder;
 import xapi.model.api.Model;
+import xapi.model.api.ModelKey;
 import xapi.time.api.TimeComponents;
 import xapi.time.api.TimeZoneInfo;
 
@@ -35,12 +37,15 @@ import xapi.time.api.TimeZoneInfo;
 )
 public interface ModelDay extends Model {
     String MODEL_DAY = "day";
-
+    KeyBuilder KEY_BUILDER_DAY = KeyBuilder.build(MODEL_DAY).withType(ModelKey.KEY_TYPE_LONG);
+    static ModelKey newKey(long day) {
+        return KEY_BUILDER_DAY.buildKeyLong(day);
+    }
     /// Returns the DayIndex this ModelDay represents.
-    Long getDayNum();
-    void setDayNum(Long dayNum);
+    Integer getDayNum();
+    void setDayNum(Integer dayNum);
     default DayIndex dayIndex() {
-        Long num = getDayNum();
+        Integer num = getDayNum();
         if (num == null) {
             throw new IllegalStateException("ModelDay has no dayNum set");
         }

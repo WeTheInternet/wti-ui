@@ -1,0 +1,7 @@
+gradle.beforeProject {
+  Project p ->
+    p.repositories.mavenLocal()
+    p.tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
+}

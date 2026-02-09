@@ -4,6 +4,7 @@ package net.wti.tasks.index;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Timer;
 import net.wti.tasks.event.*;
+import net.wti.ui.demo.api.ModelSettings;
 import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.api.Schedule;
 import xapi.fu.Do;
@@ -234,7 +235,7 @@ public class TaskIndex {
 
     private void processResults(final RunningRefreshQuery operation, final ModelQueryResult<ModelTask> success) {
         operation.setSuccess(success);
-        Log.tryLog(TaskIndex.class, this, "Received " + success.getSize() + " results", TimeComponents.now());
+        Log.tryLog(TaskIndex.class, this, "Received " + success.getSize() + " results", X_Time.now());
         final ModelQuery<ModelTask> query = operation.getQuery();
         final ErrorHandler<? extends Throwable> failHandler = operation.getFailHandler();
         for (ModelTask model : success.getModels()) {
@@ -429,7 +430,7 @@ public class TaskIndex {
 
     private DateKey bucketDate(Double epochMillis) {
         if (epochMillis == null || epochMillis == 0d) return null;
-        TimeComponents now = TimeComponents.now();
+        TimeComponents now = X_Time.breakdown(X_Time.nowMillis(), ModelSettings.timeZone());
         if (now.getHour() < rolloverHour) {
             now = X_Time.breakdown(now.getEpochMillis() - (rolloverHour * 60 * 60 * 1000L), bucketZone);
         }

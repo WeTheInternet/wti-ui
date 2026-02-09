@@ -54,7 +54,8 @@ public class DateKey {
     public DateKey plusDays(final int daysToAdd) {
         long millisToAdd = daysToAdd * 24L * 60L * 60L * 1000L;
         double newEpochMillis = time.getEpochMillis() + millisToAdd;
-        TimeComponents adjusted = TimeComponents.of(newEpochMillis);
+        // TODO: get this from a cache
+        TimeComponents adjusted = new TimeComponents(newEpochMillis, time.getZone());
         return DateKey.from(adjusted);
     }
 }

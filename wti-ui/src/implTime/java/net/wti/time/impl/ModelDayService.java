@@ -10,9 +10,10 @@ import net.wti.time.api.DayIndex;
 import net.wti.time.api.ModelDay;
 import xapi.fu.data.MapLike;
 import xapi.fu.java.X_Jdk;
+import xapi.model.X_Model;
 import xapi.time.api.TimeZoneInfo;
 
-/// DayService
+/// ModelDayService
 ///
 /// Service for computing and caching ModelDay instances.
 /// Provides create-if-missing semantics for ModelDay objects.
@@ -21,12 +22,12 @@ import xapi.time.api.TimeZoneInfo;
 /// ModelDay instances to storage in the future.
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 2025-11-18
-public class DayService {
+public class ModelDayService {
 
     private final DayIndexService indexService;
     private final MapLike<String, ModelDay> cache;
 
-    public DayService(DayIndexService indexService) {
+    public ModelDayService(DayIndexService indexService) {
         this.indexService = indexService;
         this.cache = X_Jdk.mapOrderedKeyConcurrent();
     }
@@ -45,7 +46,30 @@ public class DayService {
     /// Uses cache to avoid recomputing.
     public ModelDay getOrCreateModelDay(DayIndex dayIndex, TimeZoneInfo zone, int rolloverHour) {
         String cacheKey = makeCacheKey(dayIndex, zone, rolloverHour);
-        return cache.computeIfAbsent(cacheKey, k -> indexService.createModelDay(dayIndex, zone, rolloverHour));
+        return cache.computeIfAbsent(cacheKey, k -> createModelDay(indexService, dayIndex, zone, rolloverHour));
+    }
+
+    /// Creates a new ModelDay instance with computed values.
+    /// No cache lookups are performed, avoid using this in production code
+    @Deprecated // to discourage direct creation; we are not deleting this method, just avoiding overuse
+    @SuppressWarnings("DeprecatedIsStillUsed")
+    public static ModelDay createModelDay(final DayIndexService idxSvc, DayIndex dayIndex, TimeZoneInfo zone, int rolloverHour) {
+        ModelDay day = X_Model.create(ModelDay.class);
+        day.setKey(ModelDay.newKey(dayIndex.getDayNum()));
+        day.setDayNum(dayIndex.getDayNum());
+
+        day.setZone(zone);
+        day.setRolloverHour(rolloverHour);
+
+        // Compute timestamps
+        long start = idxSvc.computeDayStart(dayIndex, zone, rolloverHour);
+        long end = idxSvc.computeDayEnd(dayIndex, zone, rolloverHour);
+
+        day.setStartTimestamp(start);
+        day.setEndTimestamp(end);
+        day.setDurationMillis(end - start + 1);
+
+        return day;
     }
 
     /// Gets or creates a ModelDay for the given epoch millis using default zone and rolloverHour.

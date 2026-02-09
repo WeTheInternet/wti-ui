@@ -211,7 +211,7 @@ public class Schedule {
 
     /// Sorts day-of-week values relative to today
     private List<DayOfWeek> sortedDays(List<ModelRecurrence> list) {
-        int today = TimeComponents.now().dayOfWeek();
+        int today = new TimeComponents(X_Time.nowMillis(), ModelSettings.timeZone()).getDayOfWeek();
         return list.stream()
                 .map(ModelRecurrence::dayOfWeek)
                 .sorted(Comparator.comparingInt(d -> (d.ordinal() + 6 - today) % 7))

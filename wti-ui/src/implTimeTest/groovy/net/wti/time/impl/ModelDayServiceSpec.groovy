@@ -21,9 +21,9 @@ import java.time.ZonedDateTime
 /// - Concurrent access (cache safety)
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 2025-11-18
-class DayServiceSpec extends Specification {
+class ModelDayServiceSpec extends Specification {
 
-    DayService service
+    ModelDayService service
     DayIndexService indexService
     TimeZoneInfo utcZone
     TimeZoneInfo estZone
@@ -35,7 +35,7 @@ class DayServiceSpec extends Specification {
         pstZone = new TimeZoneInfo("America/Los_Angeles", "Pacific", -8 * 3600000, true)
 
         indexService = new DayIndexService(utcZone, 4)
-        service = new DayService(indexService)
+        service = new ModelDayService(indexService)
     }
 
     // -------------------------------------------------------------------------

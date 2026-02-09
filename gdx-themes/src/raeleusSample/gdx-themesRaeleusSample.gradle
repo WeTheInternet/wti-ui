@@ -24,5 +24,12 @@ dependencies {
     api project(path: ":gdx-themes-sample")
     api project(path: ":gdx-themes-raeleus")
 }
+
+repositories {
+    maven {
+        name = 'xapiLocal'
+        url = "/opt/xapi/repo"
+    }
+}
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
 // Done generating buildfile for :gdx-themes at file://$rootDir/gdx-themes/src/raeleusSample/gdx-themesRaeleusSample.gradle

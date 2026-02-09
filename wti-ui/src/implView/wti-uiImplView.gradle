@@ -18,8 +18,19 @@ test.resources.setSrcDirs([]);
 
 dependencies {
     implementation project(path: ":wti-ui-controls")
+    implementation project(path: ":wti-ui-time")
+    testImplementation libs.spock
+    testImplementation libs.xapi.model.jre
     api project(path: ":wti-ui-view")
     api project(path: ":wti-ui-implControls")
+    api project(path: ":wti-ui-implTime")
+}
+
+repositories {
+    maven {
+        name = 'xapiLocal'
+        url = "/opt/xapi/repo"
+    }
 }
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
 // Done generating buildfile for :wti-ui at file://$rootDir/wti-ui/src/implView/wti-uiImplView.gradle

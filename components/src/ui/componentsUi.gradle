@@ -22,10 +22,16 @@ dependencies {
     api project(path: ":wti-ui-view")
     implementation project(path: ":xapi-ui-main")
     api project(path: ":wti-ui-controls")
-    implementation "com.badlogicgames.gdx:gdx:$gdxVersion"
+}
+
+repositories {
+    maven {
+        name = 'xapiLocal'
+        url = "/opt/xapi/repo"
+    }
 }
 // Setup publishing to coordinates: net.wti:components-ui
-project.extensions.add('xapi.mvn.repo', "$rootDir/repo")
+project.extensions.add('xapi.mvn.repo', "/opt/xapi/repo")
 Task xapiPublish = tasks.create('xapiPublish')
 xapiPublish.group = 'Publishing'
 xapiPublish.description = 'Publish jars to xapiLocal repository'
@@ -35,7 +41,7 @@ PublishingExtension ext = extensions.findByName(PublishingExtension.NAME) as Pub
 ext.repositories.maven {
     MavenArtifactRepository repo ->
         repo.name = 'xapiLocal'
-        repo.url = "file://$rootDir/repo"
+        repo.url = "file:///opt/xapi/repo"
 }
 // not really what we want, but it's good enough for right now
 java.withSourcesJar()

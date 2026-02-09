@@ -9,6 +9,8 @@
 
     projects = {
         virtual : [
+            // a set of test-specific modules and abstract spock specifications
+            test-tools,
             // interfaces and implementations for accessing libgdx resources
             wti-ui,
             // media assets and interfaces; each platform is a theme implementing the media interfaces

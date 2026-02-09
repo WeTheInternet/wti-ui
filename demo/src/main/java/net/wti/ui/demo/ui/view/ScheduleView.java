@@ -9,13 +9,13 @@ import net.wti.tasks.event.RefreshFinishedEvent;
 import net.wti.tasks.index.DateKey;
 import net.wti.tasks.index.TaskIndex;
 import net.wti.ui.controls.focus.HoverScrollFocus;
+import net.wti.ui.demo.api.ModelSettings;
 import net.wti.ui.view.api.IsView;
 import xapi.fu.Do;
 import xapi.fu.log.Log;
 import xapi.time.X_Time;
 import xapi.time.api.TimeComponents;
 
-import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -112,7 +112,8 @@ public class ScheduleView extends Table implements IsView {
         dayStack.clearChildren();
         mountedDays.clear();
 
-        DateKey today = DateKey.from(TimeComponents.now());
+        final TimeComponents now = X_Time.breakdown(X_Time.nowMillis(), ModelSettings.timeZone());
+        DateKey today = DateKey.from(now);
         mountDay(today.minusDays(1), false);
         mountDay(today, false);
         mountDay(today.plusDays(1), false);
@@ -134,7 +135,8 @@ public class ScheduleView extends Table implements IsView {
             e.getValue().refresh();
         }
         // If still empty, extend outward a bit more to find items (non-destructive).
-        DateKey pivot = DateKey.from(TimeComponents.now());
+        final TimeComponents now = X_Time.breakdown(X_Time.nowMillis(), ModelSettings.timeZone());
+        DateKey pivot = DateKey.from(now);
         ensureSomeContent(pivot, 3);
 
         invalidateHierarchy();

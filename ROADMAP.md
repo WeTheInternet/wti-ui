@@ -1,7 +1,8 @@
 # ROADMAP
 
 Author: James X. Nelson and AI Assistant (both chatGPT and claude engines)
-Date: 2025-10-10
+Created: 2025-10-10
+Last updated: 2025-12-08
 
 This roadmap defines the LifeQuest data model, daily windowing model, key splaying scheme, materialization/rollover behavior, indexing/querying approach, and an implementation plan with checklists. It is intended to be a living document; update, annotate, and check items as progress is made.
 
@@ -88,16 +89,21 @@ Key formats
 
 - Future (optional, likely unnecessary; synthetic preferred)
     - dy/{DayNum}/ftr/{LiveKey}
+      LiveKey
+      A LiveKey uniquely identifies a quest instance within a given day by combining:
 
-LiveKey
-- Default RuleKey: "default" (matches categorized quests with no specific rule name).
-- Recommend LiveKey format:
-    - {DefinitionKey}[/{RuleKey}]
-    - Keep it short; both DefinitionKey and RuleKey should be compact.
+1. The DefinitionKey (ID of the original QuestDefinition)
+2. An optional RuleKey that specifies which RecurrenceRule created this instance (defaults to "default")
 
-Notes
-- Keys are opaque to most clients; only the splaying path matters for query planning.
-- Everything else (tags, schedules/templates, etc.) are fields on the models and filtered by clients via ModelQuery.
+Format: {DefinitionKey}[/{RuleKey}]
+
+Examples:
+
+- "dailyStandup" (uses default rule)
+- "weeklyReport/monday" (specific rule)
+
+Keys should be kept short and compact since they appear in paths.
+The parent ModelDay key (dy/{DayNum}) provides the temporal context.
 
 ---
 
@@ -297,27 +303,120 @@ Phase 0 — Foundations ✅ COMPLETE
     - [x] Timezone offset handling validated
     - [x] Rollover boundary edge cases validated
 
-Phase 1 — Models and keys
-- [ ] Define ModelDuration and TimeAnchor types.
-- [ ] Define QuestDefinition, RecurrenceRule.
-- [ ] Define LiveQuest with key dy/{DayNum}/lv/{LiveKey}.
-- [ ] Define QuestCompleted, QuestFailed, QuestCanceled, QuestSkipped with respective dy/{DayNum}/{type}/{LiveKey}.
-- [ ] Define ScheduleTemplate and ChildRef (MVP fields).
+Phase 1 — Models and keys ✅ COMPLETE
+- [x] Define ModelDuration and TimeAnchor types.
+    - Implemented as `ModelDuration` + `DurationUnit` and `TimeAnchor` + `TimeAnchorKind` under `net.wti.time.api`.
+    - Utility: `ModelDurationUtil` for applying durations to `DayIndex`.
+- [x] Define QuestDefinition, RecurrenceRule.
+    - Implemented as `QuestDefinition` and `RecurrenceRule` under `net.wti.quest.api`.
+    - `RecurrenceRule` uses `ModelDuration` (cadence) and `TimeAnchor` (anchor within a `ModelDay` window).
+- [x] Define LiveQuest with key dy/{DayNum}/lv/{LiveKey}.
+    - Implemented as `LiveQuest` under `net.wti.quest.api`.
+    - Keys:
+        - Parent: `ModelDay.newKey(dayNum)` (model type `"day"`, id = `DayIndex.dayNum`).
+        - Child: `"lv"` model type with id = LiveKey string `{definitionId}[/{ruleId}]`.
+- [x] Define QuestCompleted, QuestFailed, QuestCanceled, QuestSkipped with respective dy/{DayNum}/{type}/{LiveKey}.
+    - Implemented as `QuestCompleted` (`"dn"`), `QuestFailed` (`"fld"`), `QuestCanceled` (`"cncl"`), `QuestSkipped` (`"skp"`).
+    - All extend `QuestHistoryRecord` and carry a `QuestSnapshot` for immutable rendering.
+    - All keys are parented under `ModelDay` to preserve the `dy/{DayNum}/{type}/{LiveKey}` splaying scheme.
+- [x] Define ScheduleTemplate and ChildRef (MVP fields).
+    - Implemented as `ScheduleTemplate` (with `OffDaySkipBehavior`) and `ChildRef` (with `ChildRole`, `ChildStartPolicy`, `ParentCompletionPolicy`).
 
-Phase 2 — Materialization & rollover (MVP)
-- [ ] DayService: compute DayIndex, getOrCreateModelDay (compute-only ok).
-- [ ] Planner.ensureToday(user):
-    - [ ] For each active (Definition × Rule), if autoMaterialize, create-if-missing LiveQuest under today.
-    - [ ] Compute deadlineMillis from TimeAnchor within ModelDay window.
-    - [ ] Apply ScheduleTemplate: set skip flag.
-- [ ] RolloverJob:
-    - [ ] Fail overdue (deadline + grace) unless skip==true; write fld; remove lv.
-    - [ ] Ensure materialization for new DayIndex.
+Phase 2 — Materialization & rollover (MVP) ✅ COMPLETE (MVP)
+- [x] DayService: compute DayIndex, getOrCreateModelDay (compute-only ok).
+    - Implemented via `DayIndexService` and `ModelDayService`.
+    - `ModelDay` encapsulates start/end timestamps, duration, day-of-week/month/year, localized day name, and per-day zone/rollover configuration.
+- [x] Planner.ensureToday(user):
+    - Implemented as:
+        - `PlannerService.ensureLiveQuestForDay(ModelDay, QuestDefinition, RecurrenceRule, skipFlag)`.
+        - `TodayPlannerService.ensureToday(userKey)` / `ensureDay(userKey, ModelDay)`.
+    - Uses:
+        - `QuestDefinitionSource` to enumerate relevant `QuestDefinition` instances for a user.
+        - `ScheduleTemplateService.shouldSkip(day, definition, rule)` to compute `skip` flags.
+        - `LiveQuestStore` abstraction to find and create `LiveQuest` instances.
+    - Behavior:
+        - For each active `(QuestDefinition × RecurrenceRule)` with `autoMaterialize == true`:
+            - Build LiveKey and ensure a `LiveQuest` exists under `ModelDay`.
+            - Compute `deadlineMillis` from `RecurrenceRule.anchor` + `ModelDay` via `TimeAnchorUtil`.
+            - Apply `skip` flag from schedule templates.
+        - Idempotent: repeated calls do not create duplicates.
+- [x] RolloverJob:
+    - Implemented as `RolloverService` with:
+        - `runRollover(userKey, fromDay, nowMillis)` and `runRolloverForYesterday(userKey, nowMillis)`.
+    - Uses `RolloverStore` abstraction:
+        - `findActiveLiveQuests(ModelDay)` to enumerate active `LiveQuest` instances.
+        - `createFailureRecord(LiveQuest, RolloverContext, reason)` to append `QuestFailed` history.
+        - `deleteLiveQuest(LiveQuest)` to shrink the active set.
+    - Behavior:
+        - For each `LiveQuest` with `deadlineMillis > 0` and `skip == false`:
+            - Compute grace period in millis from `LiveQuest.gracePeriodMinutes` (0 if null/≤0).
+            - If `nowMillis > deadlineMillis + graceMillis`:
+                - Write a `QuestFailed` record under the `ModelDay` parent for `fromDay`.
+                - Delete the `LiveQuest` instance.
+        - `skip == true` and `deadlineMillis == 0` are treated as non-failing at rollover.
+        - After processing `fromDay`, always calls `TodayPlannerService.ensureDay(userKey, toDay)` to materialize the new day (`toDay = fromDay.DayIndex + 1`).
 
-Phase 3 — Single-day view switch
-- [ ] Switch day view to read LiveQuest under dy/{DayNum}/lv/*.
-- [ ] Render skip and tags; add simple filters.
-- [ ] Start action creates/activates LiveQuest.
+Phase 3 — Single-day view switch (MVP UI)
+
+Goals:
+- Move from legacy task views to a LifeQuest-specific single-day view based on `LiveQuest` under `dy/{DayNum}/lv/*`.
+- Keep UI code modular and reusable across demos, future apps, and platforms using LibGDX + wti-ui abstractions.
+
+Modules:
+- `wti-ui-view` — core view abstractions (package `net.wti.view`).
+    - Shared base classes for LibGDX-based views (composition helpers, refresh lifecycle, common styles).
+- `quest-view` — quest-specific view implementations (package `net.wti.quest.view`).
+    - `LiveQuestView`: per-day LiveQuest visualization (replacement for older `DayView` usage).
+    - Additional quest-focused components (filters, status badges, etc.) layered on top of core view primitives.
+- `quest-view-sample` — simple launcher/main to preview individual components.
+    - A tiny demo app that:
+        - Seeds in-memory data (e.g. sample `ModelDay` + `LiveQuest` instances).
+        - Creates a `LiveQuestView` for “today” and optionally adjacent days.
+        - Allows manual refresh to validate layout/behavior during development.
+- `quest-view-test` — minimal automated tests around view behavior.
+    - Focus initially on:
+        - Basic construction and non-crashing refresh cycles.
+        - Simple state transitions (e.g. toggling skip flag, status changes).
+    - Defer pixel-perfect or snapshot-based validation to a future “UI integration test” phase once the view hierarchy is stable.
+
+Planned work items:
+- [ ] Establish `wti-ui-view` core abstractions:
+    - [ ] Define `net.wti.view.IsView` or reuse existing equivalent with a clear `refresh()` contract.
+    - [ ] Provide simple layout helpers and base classes for table-based views (`AbstractViewTable`-style) that integrate with LibGDX `Skin`.
+    - [ ] Document conventions for:
+        - Refresh lifecycle (when to call `refresh()` vs. incremental updates).
+        - Dependency boundaries (no direct persistence; views consume already-loaded models).
+- [ ] Implement `quest-view` for LifeQuest:
+    - [ ] Define `LiveQuestView` in `net.wti.quest.view`:
+        - [ ] Accepts a `ModelDay` (or `DayIndex`) and a collection of `LiveQuest` instances (already loaded from storage).
+        - [ ] Renders items grouped or sorted by:
+            - `deadlineMillis` (non-zero first, earliest first).
+            - Then `effectivePriority`.
+        - [ ] Shows:
+            - Name/title (from `QuestDefinition` snapshot or live definition, as available).
+            - Deadline time (formatted using `ModelDay`’s zone and rollover).
+            - Status (active/paused/etc.) and `skip` flag.
+            - Tags and schedule template key for simple visual filtering.
+        - [ ] Avoid binding to legacy `DayView` or `Schedule` types; work directly with `LiveQuest` and time APIs.
+    - [ ] Add simple filter controls (for later wiring into controllers):
+        - [ ] Filter by `skip` (show/hide skipped).
+        - [ ] Filter by tags and schedule template key (MVP: basic multiselect/UI affordances; filtering logic can be client-side).
+    - [ ] Provide hooks for actions (to be wired in Phase 4):
+        - [ ] “Start” / “Activate” a quest instance.
+        - [ ] “Finish”, “Cancel”, “Skip” actions (will later call completion flows that write `dn/cncl/skp` records).
+- [ ] `quest-view-sample` demo:
+    - [ ] Minimal launcher that:
+        - [ ] Boots LibGDX with a simple stage/skin.
+        - [ ] Uses fake or seeded `ModelDay` + `LiveQuest` data (no real backend dependency).
+        - [ ] Places a `LiveQuestView` on screen with Today/Yesterday/Tomorrow toggles.
+    - [ ] Ensure the sample is easy to run from Gradle/IDE for rapid UI iteration.
+- [ ] `quest-view-test`:
+    - [ ] Add very lightweight tests verifying:
+        - [ ] `LiveQuestView` construction and `refresh()` do not throw with empty or simple data.
+        - [ ] Sorting by `deadlineMillis` and `effectivePriority` behaves as expected for a small set of sample `LiveQuest` instances.
+    - [ ] Defer “GUI is good” tests:
+        - [ ] No snapshot or pixel-diff tests until the view hierarchy is closer to stable.
+        - [ ] Track this as a future enhancement (UI integration tests that render and validate behavior and layout).
 
 Phase 4 — Completion flows and history
 - [ ] Finish flow -> write dn; remove lv.
@@ -352,22 +451,26 @@ Time and DayIndex ✅ COMPLETE
 - [x] Concurrent access safety.
 - [x] Cache behavior and consistency.
 
-Materialization
-- [ ] One LiveQuest per (def, rule, day) uniqueness.
-- [ ] AutoMaterialize on today; manual start creates/activates lv.
-- [ ] Deadline computed from TimeAnchor within ModelDay bounds.
+Materialization ✅ MVP COMPLETE
+- [x] One LiveQuest per (def, rule, day) uniqueness.
+    - Enforced by `LiveQuestStore.findByDayAndLiveKey(day, liveKey)` + `PlannerService.ensureLiveQuestForDay(...)`.
+- [x] AutoMaterialize on today; manual start creates/activates lv (manual start still to be wired from UI).
+- [x] Deadline computed from TimeAnchor within ModelDay bounds for DAILY anchors.
+    - WEEKLY/MONTHLY/YEARLY anchors are structurally defined but currently throw `UnsupportedOperationException` until semantics are finalized.
 
-Rollover
-- [ ] Overdue + grace -> fld record; lv removed.
-- [ ] skip==true -> never fails; can write skp on action.
+Rollover ✅ MVP COMPLETE
+- [x] Overdue + grace -> `fld` record; `lv` removed.
+- [x] `skip==true` -> never fails; can write `skp` on explicit skip action (planned in Phase 4).
 
 History
-- [ ] dn/fld/cncl/skp records with correct snapshots; immutable.
-- [ ] Removal of lv on terminal transitions.
+- [ ] `dn`/`fld`/`cncl`/`skp` records with correct snapshots; immutable.
+    - `QuestFailed` path is implemented via `RolloverService` and `RolloverStore`.
+    - `QuestCompleted`, `QuestCanceled`, `QuestSkipped` flows will be wired from UI actions in Phase 4.
+- [ ] Removal of `lv` on terminal transitions.
 
 Tags and templates
 - [ ] Definition tag changes propagate to live; history snapshots unaffected.
-- [ ] Template toggle sets skip flags correctly; no attempt to chase next valid day.
+- [ ] Template toggle sets skip flags correctly via ScheduleTemplateService; no attempt to chase next valid day.
 
 Composition
 - [ ] Parent all-of completion computed from children; start policy parallel for MVP.
@@ -379,8 +482,9 @@ Querying
 - [ ] RuleKey filters applied client-side (empty => all).
 
 Concurrency and idempotency
-- [ ] Planner is safe under concurrent executions; uniqueness enforced by key scheme.
-- [ ] Rollover is safe to retry.
+- [x] Planner is safe under repeated executions; uniqueness enforced by (day, LiveKey) lookup in `LiveQuestStore`.
+- [x] Rollover is safe to retry within a process; overdue detection is purely time-based (`deadline + grace` vs `now`).
+    - Cross-process idempotency will depend on underlying storage semantics (X_Model/backend) and may require additional guards once wired to multi-node deployments.
 
 ---
 

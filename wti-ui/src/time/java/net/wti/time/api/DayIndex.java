@@ -24,15 +24,15 @@ public final class DayIndex implements Serializable, Comparable<DayIndex> {
     /// Epoch millis for 2025-10-10 00:00:00 UTC
     public static final long EPOCH_MILLIS = 1760140800000L;
 
-    private final long dayNum;
+    private final int dayNum;
 
-    private DayIndex(long dayNum) {
+    private DayIndex(int dayNum) {
         this.dayNum = dayNum;
     }
 
     /// Creates a DayIndex from a day number.
     /// @param dayNum number of days since epoch (can be negative)
-    public static DayIndex of(long dayNum) {
+    public static DayIndex of(int dayNum) {
         return new DayIndex(dayNum);
     }
 
@@ -41,18 +41,18 @@ public final class DayIndex implements Serializable, Comparable<DayIndex> {
         return new DayIndex(0);
     }
 
-    /// Returns the day number (signed long).
-    public long getDayNum() {
+    /// Returns the day number (signed int).
+    public int getDayNum() {
         return dayNum;
     }
 
     /// Returns a new DayIndex offset by the specified number of days.
-    public DayIndex plusDays(long days) {
+    public DayIndex plusDays(int days) {
         return new DayIndex(dayNum + days);
     }
 
     /// Returns a new DayIndex offset by the specified number of days (negative).
-    public DayIndex minusDays(long days) {
+    public DayIndex minusDays(int days) {
         return new DayIndex(dayNum - days);
     }
 

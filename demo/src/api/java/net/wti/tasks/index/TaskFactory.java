@@ -70,7 +70,7 @@ public class TaskFactory {
         final DayOfWeek day = recur.dayOfWeek();
         final double now = System.currentTimeMillis();
         final TimeComponents nowComponents = X_Time.breakdown(now, ModelSettings.timeZone());
-        final DayOfWeek today = DayOfWeek.values()[nowComponents.dayOfWeek()];
+        final DayOfWeek today = DayOfWeek.values()[nowComponents.getDayOfWeek()];
         final double startOfWeek = X_Time.toStartOfWeek(now, ModelSettings.timeZone());
 
         final long targetThisWeek = (long)(startOfWeek + (value * 60000L));
@@ -98,10 +98,10 @@ public class TaskFactory {
     /// Applies 4am rule to consider before-4am as previous day
     private static DayOfWeek dayOf(double nowMillis) {
         TimeComponents components = X_Time.breakdown(nowMillis, ModelSettings.timeZone());
-        if (components.hour() < 4) {
+        if (components.getHour() < 4) {
             nowMillis -= 4 * 60 * 60 * 1000; // subtract 4 hours
             components = X_Time.breakdown(nowMillis, ModelSettings.timeZone());
         }
-        return DayOfWeek.values()[components.dayOfWeek()];
+        return DayOfWeek.values()[components.getDayOfWeek()];
     }
 }

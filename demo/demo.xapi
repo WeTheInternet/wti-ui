@@ -45,7 +45,7 @@
                 project: ":gdx-themes-raeleus-sgx"
             }
         /main>,
-        <jre replaces=main
+        <jre replace=main
             requires = {
                 external : [
                     ( libs.xapi.model.jre ),

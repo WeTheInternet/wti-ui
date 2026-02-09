@@ -4,6 +4,7 @@
         <controls includes = api />,
         <time includes = api />,
         <event includes = api />,
+        <quest includes = [ time, event ] />,
         <view includes = [ controls, time ] />,
         <color includes = api />,
         <image includes = api />,
@@ -50,20 +51,16 @@
                 /controls>,
             ]
         /main>,
-        <impl replaces=main
-            modules = [
-                <time
-                    requires = {
-                        @transitive("test")
-                        external : [
-                            ( libs.spock ),
-                            ( libs.xapi.model.jre ),
-                        ]
-                    }
-                /time>
-            ]
+        <impl replace=main
+            requires = {
+                @transitive("test")
+                external : [
+                    ( libs.spock ),
+                    ( libs.xapi.model.jre ),
+                ],
+            }
         /impl>,
-        <jre replaces=impl
+        <jre replace=impl
             requires = {
                 external : [
                     ( libs.xapi.model.jre ),

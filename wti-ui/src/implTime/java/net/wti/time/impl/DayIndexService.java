@@ -2,8 +2,6 @@ package net.wti.time.impl;
 
 
 import net.wti.time.api.DayIndex;
-import net.wti.time.api.ModelDay;
-import xapi.model.X_Model;
 import xapi.time.api.TimeZoneInfo;
 
 /// DayIndexService
@@ -85,7 +83,7 @@ public class DayIndexService {
             daysSinceEpoch--;
         }
 
-        return DayIndex.of(daysSinceEpoch);
+        return DayIndex.of((int)daysSinceEpoch); // an integer number of day is >10million years.
     }
 
     /// Computes the current DayIndex using default zone and rolloverHour.
@@ -127,24 +125,6 @@ public class DayIndexService {
     public long computeDayEnd(DayIndex dayIndex, TimeZoneInfo zone, int rolloverHour) {
         long nextDayStart = computeDayStart(dayIndex.plusDays(1), zone, rolloverHour);
         return nextDayStart - 1;
-    }
-
-    /// Creates a new ModelDay instance with computed values.
-    public ModelDay createModelDay(DayIndex dayIndex, TimeZoneInfo zone, int rolloverHour) {
-        ModelDay day = X_Model.create(ModelDay.class);
-        day.setDayNum(dayIndex.getDayNum());
-        day.setZone(zone);
-        day.setRolloverHour(rolloverHour);
-
-        // Compute timestamps
-        long start = computeDayStart(dayIndex, zone, rolloverHour);
-        long end = computeDayEnd(dayIndex, zone, rolloverHour);
-
-        day.setStartTimestamp(start);
-        day.setEndTimestamp(end);
-        day.setDurationMillis(end - start + 1);
-
-        return day;
     }
 
     /// Returns the default timezone.

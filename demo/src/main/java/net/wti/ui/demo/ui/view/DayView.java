@@ -126,7 +126,7 @@ public class DayView extends Table implements IsView {
 
     private DateKey bucketDate(long millis) {
         TimeComponents tc = X_Time.breakdown(millis, ModelSettings.timeZone());
-        if (tc.hour() < rolloverHour) {
+        if (tc.getHour() < rolloverHour) {
             millis -= rolloverHour * 60 * 60 * 1000L; // subtract rollover hours
             tc = X_Time.breakdown(millis, ModelSettings.timeZone());
         }
@@ -139,7 +139,8 @@ public class DayView extends Table implements IsView {
     }
 
     private String dateTitle(DateKey d) {
-        DateKey today = DateKey.from(TimeComponents.now());
+        final TimeComponents now = X_Time.breakdown(X_Time.nowMillis(), ModelSettings.timeZone());
+        DateKey today = DateKey.from(now);
         if (d.equals(today)) return "Today";
         if (d.equals(today.minusDays(1))) return "Yesterday";
         if (d.equals(today.plusDays(1))) return "Tomorrow";
@@ -183,7 +184,7 @@ public class DayView extends Table implements IsView {
         final ModelTask t = s.getTask();
         // Minimal row: “h:mm — Task Name”
         Double d = t.getDeadline();
-        final TimeComponents timeData = X_Time.breakdown(d, ModelSettings.timeZone());
+        final ZoneId zone = ZoneId.of(ModelSettings.timeZone().getId());
         String time = d == null ? "" : Instant.ofEpochMilli(d.longValue()).atZone(zone).toLocalTime().format(timeFmt);
         String title = t.getName() == null ? "" : t.getName();
 

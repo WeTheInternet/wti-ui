@@ -18,17 +18,24 @@ test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 
 dependencies {
-    implementation libs.xapi.model.jre
-    implementation "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-    implementation "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
-    implementation "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-    implementation "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
+    api libs.xapi.model.jre
+    api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+    api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
+    api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
     api project(path: ":components-impl")
     api project(path: ":components-jreUi")
     api project(path: ":components-jreInventory")
 }
+
+repositories {
+    maven {
+        name = 'xapiLocal'
+        url = "/opt/xapi/repo"
+    }
+}
 // Setup publishing to coordinates: net.wti:components-jre
-project.extensions.add('xapi.mvn.repo', "$rootDir/repo")
+project.extensions.add('xapi.mvn.repo', "/opt/xapi/repo")
 Task xapiPublish = tasks.create('xapiPublish')
 xapiPublish.group = 'Publishing'
 xapiPublish.description = 'Publish jars to xapiLocal repository'
@@ -38,7 +45,7 @@ PublishingExtension ext = extensions.findByName(PublishingExtension.NAME) as Pub
 ext.repositories.maven {
     MavenArtifactRepository repo ->
         repo.name = 'xapiLocal'
-        repo.url = "file://$rootDir/repo"
+        repo.url = "file:///opt/xapi/repo"
 }
 // not really what we want, but it's good enough for right now
 java.withSourcesJar()

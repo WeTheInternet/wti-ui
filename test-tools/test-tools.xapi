@@ -1,0 +1,42 @@
+<xapi-schema
+    platforms = main
+    modules = [
+        <api
+            requires = {
+                @transitive
+                external: [
+                    ( libs.gdx.core ),
+                ]
+            }
+        /api>,
+        <spi includes = api />,
+        <main
+            includes = [ api, spi ]
+            requires = {
+                @transitive
+                external: "com.badlogicgames.gdx:gdx:$gdxVersion",
+                @transitive
+                external: ( libs.xapi.fu ),
+                @transitive
+                project: { "wti-ui" : view },
+            }
+        /main>,
+        <headless includes = main
+            requires = {
+                @transitive
+                external : ( libs.gdx.backend.headless ),
+                // getting the 'natives-desktop' classifier from toml dependencies is a little hairy:
+                @transitive @closure("artifact { classifier = 'natives-desktop' }")
+                external : ( libs.gdx.platform ),
+            }
+        /headless>,
+        <desktop includes = main
+            requires = {
+                @transitive @closure("artifact { classifier = 'natives-desktop' }")
+                external : ( libs.gdx.platform ),
+                @transitive
+                external : ( libs.gdx.backend.lwjgl3 ),
+            }
+        /desktop>,
+    ]
+/xapi-schema>
