@@ -1,6 +1,7 @@
 package net.wti.quest.api;
 
 
+import net.wti.time.api.ModelDuration;
 import xapi.annotation.model.IsModel;
 import xapi.annotation.model.PersistenceStrategy;
 import xapi.annotation.model.Persistent;
@@ -67,8 +68,11 @@ public interface LiveQuest extends Model {
     LiveQuest setStatus(QuestStatus status);
 
     /// Per-instance alarm override (minutes before deadline).
-    Integer getAlarmMinutes();
-    LiveQuest setAlarmMinutes(Integer mins);
+    ModelDuration getAlarmDuration();
+    LiveQuest setAlarmDuration(ModelDuration delay);
+
+    ModelDuration getEstimatedDuration();
+    LiveQuest setEstimatedDuration(ModelDuration mins);
 
     /// Absolute snooze-until timestamp (epoch millis), optional.
     Long getSnoozeUntilMillis();
@@ -98,8 +102,8 @@ public interface LiveQuest extends Model {
     LiveQuest setSkip(Boolean skip);
 
     /// Per-instance override; may fall back to definition or user default.
-    Integer getGracePeriodMinutes();
-    LiveQuest setGracePeriodMinutes(Integer mins);
+    ModelDuration getGracePeriodDuration();
+    LiveQuest setGracePeriodDuration(ModelDuration mins);
 
     /// For filtering by template at instance level.
     String getScheduleTemplateKey();

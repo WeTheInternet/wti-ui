@@ -7,7 +7,7 @@ import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 ///
 /// Desktop launcher for the LiveQuest sample view.
 /// Uses AbstractSampleApp (LiveQuestDemoApp) to build a Stage with
-/// a DefaultLiveQuestView populated by seeded LiveQuest instances.
+/// a DayPlanView populated by seeded LiveQuest instances.
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 08/12/2025 @ 03:36
 public final class LiveQuestDemo {

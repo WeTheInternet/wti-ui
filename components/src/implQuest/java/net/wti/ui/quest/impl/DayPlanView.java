@@ -4,25 +4,23 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import net.wti.quest.api.LiveQuest;
-import net.wti.time.api.ModelDay;
 import net.wti.time.api.DayIndex;
+import net.wti.time.api.ModelDay;
 import net.wti.ui.quest.api.LiveQuestRowFactory;
-import net.wti.ui.quest.api.LiveQuestView;
+import net.wti.ui.quest.api.QuestDayView;
 import net.wti.ui.view.api.BaseViewTable;
 import xapi.string.X_String;
 import xapi.time.X_Time;
 import xapi.time.api.TimeComponents;
 import xapi.time.api.TimeZoneInfo;
 
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/// LiveQuestView
+/// DefaultQuestDayView
 ///
 /// Renders a single day's LiveQuest instances grouped by hour and sorted by:
 ///  - deadlineMillis (non-zero first, earliest first),
@@ -40,9 +38,7 @@ import java.util.Map;
 ///  - Caller is responsible for providing an up-to-date list of LiveQuests.
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 08/12/2025 @ 03:07
-public class DefaultLiveQuestView extends BaseViewTable implements LiveQuestView {
-
-    private final DateTimeFormatter hourFormatter = DateTimeFormatter.ofPattern("h a");
+public class DayPlanView extends BaseViewTable implements QuestDayView {
 
     private ModelDay modelDay;
     private List<LiveQuest> liveQuests = new ArrayList<>();
@@ -51,11 +47,11 @@ public class DefaultLiveQuestView extends BaseViewTable implements LiveQuestView
     private int rolloverHour = 4;
     private boolean hasItems;
 
-    public DefaultLiveQuestView(final Skin skin, final ModelDay day, final Iterable<LiveQuest> quests) {
+    public DayPlanView(final Skin skin, final ModelDay day, final Iterable<LiveQuest> quests) {
         this(skin, day, quests, null);
     }
 
-    public DefaultLiveQuestView(
+    public DayPlanView(
             final Skin skin,
             final ModelDay day,
             final Iterable<LiveQuest> quests,
@@ -113,11 +109,13 @@ public class DefaultLiveQuestView extends BaseViewTable implements LiveQuestView
         final Map<Integer, List<LiveQuest>> byHour = bucketByHour(sorted, modelDay);
         hasItems = !byHour.isEmpty();
 
+        final int maxHourExclusive = 24 + Math.max(0, Math.min(23, rolloverHour));
+
         int hour = 0;
-        while (hour < 24) {
+        while (hour < maxHourExclusive) {
             if (!byHour.containsKey(hour)) {
                 final int start = hour;
-                while (hour < 24 && !byHour.containsKey(hour)) {
+                while (hour < maxHourExclusive && !byHour.containsKey(hour)) {
                     hour++;
                 }
                 final int end = hour - 1;
@@ -211,22 +209,24 @@ public class DefaultLiveQuestView extends BaseViewTable implements LiveQuestView
             if (!day.contains(millis)) {
                 continue;
             }
+
             final TimeComponents components = X_Time.breakdown(millis, zone);
             int hourLocal = components.getHour();
-            if (hourLocal < rolloverHour) {
-                /// Before rolloverHour, treat as previous calendar day; for this view we skip it.
-                continue;
-            }
+
             if (hourLocal < 0) {
                 hourLocal = 0;
             } else if (hourLocal > 23) {
                 hourLocal = 23;
             }
 
-            List<LiveQuest> bucket = result.get(hourLocal);
+            /// Policy C: hours before rolloverHour are still in this ModelDay,
+            /// but are rendered at the end of the day as 24+hour buckets.
+            final int bucketHour = hourLocal < rolloverHour ? 24 + hourLocal : hourLocal;
+
+            List<LiveQuest> bucket = result.get(bucketHour);
             if (bucket == null) {
                 bucket = new ArrayList<>();
-                result.put(hourLocal, bucket);
+                result.put(bucketHour, bucket);
             }
             bucket.add(quest);
         }
@@ -239,23 +239,14 @@ public class DefaultLiveQuestView extends BaseViewTable implements LiveQuestView
     // ---------------------------------------------------------------------
 
     protected String dayTitle(final ModelDay day) {
-        final DayIndex index = day.dayIndex();
-        final int dayNum = index.getDayNum();
-
-        final TimeComponents now = X_Time.breakdown(X_Time.nowMillis(), day.zone());
-        final DayIndex todayIndex = day.dayIndex();
-        final int todayNum = todayIndex.getDayNum();
-
-        if (dayNum == todayNum) {
+        final long nowMillis = X_Time.nowMillisLong();
+        if (day.contains(nowMillis)) {
             return "Today";
         }
-        if (dayNum == todayNum - 1) {
-            return "Yesterday";
-        }
-        if (dayNum == todayNum + 1) {
-            return "Tomorrow";
-        }
-        return X_String.formatDayOfWeekDate(now.getDayOfWeek(), now.getDayOfMonth());
+        final TimeComponents start = day.startComponents();
+        /// Avoid incorrect Yesterday/Tomorrow guesses inside a view.
+        /// If callers need relative naming, pass that in explicitly later.
+        return X_String.formatDayOfWeekDate(start.getDayOfWeek(), start.getDayOfMonth());
     }
 
     protected String collapseTitle(final int start, final int end) {
@@ -268,8 +259,14 @@ public class DefaultLiveQuestView extends BaseViewTable implements LiveQuestView
         return formatHour(start) + " – " + formatHour(end) + " (no items)";
     }
 
-    protected String formatHour(final int hour24) {
-        return LocalTime.of(hour24, 0).format(hourFormatter).toLowerCase();
+    protected String formatHour(final int hourIndex) {
+        /// For planner-style views we support rollover-extension hours (24..24+rolloverHour-1).
+        /// Policy C requires literal 25:00-style labels for those late buckets.
+        if (hourIndex >= 24) {
+            return hourIndex + ":00";
+        }
+        final String t = X_String.formatTime(hourIndex, 0);
+        return t == null ? "" : t.toLowerCase();
     }
 
     protected Label headerLabel(final String text) {
@@ -294,5 +291,4 @@ public class DefaultLiveQuestView extends BaseViewTable implements LiveQuestView
         label.setFontScale(0.92f);
         return label;
     }
-
 }

@@ -256,7 +256,7 @@ class RolloverServiceSpec extends Specification {
         final LiveQuest liveQuest = newLiveQuest(fromDay, fromDay.endTimestamp(), false, minutes)
 
         when:
-        final long graceMillis = rolloverService.computeGraceMillis(liveQuest, fromDay)
+        final long graceMillis = rolloverService.computeGraceMillis(liveQuest)
 
         then:
         graceMillis == expectedMillis

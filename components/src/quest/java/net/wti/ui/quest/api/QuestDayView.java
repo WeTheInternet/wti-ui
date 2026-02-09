@@ -8,7 +8,7 @@ import net.wti.ui.view.api.IsView;
 
 import java.util.List;
 
-/// LiveQuestView
+/// QuestDayView
 ///
 /// Interface for a LibGDX view that renders a single day's LiveQuest instances.
 /// Concrete implementations provide layout and rendering; callers provide:
@@ -21,19 +21,10 @@ import java.util.List;
 ///  - Expose an Actor that can be added to a Stage.
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 08/12/2025 @ 03:29
-public interface LiveQuestView extends IsView {
+public interface QuestDayView extends IsQuestContainer {
 
     /// Sets the ModelDay being rendered. Does not auto-refresh.
     void setModelDay(ModelDay day);
-
-    /// Replaces the LiveQuest instances rendered for the current day.
-    /// Call refresh() afterward to rebuild the layout.
-    void setLiveQuests(Iterable<LiveQuest> quests);
-
-    /// Convenience overload to accept a List directly.
-    default void setLiveQuestsList(final List<LiveQuest> quests) {
-        setLiveQuests(quests);
-    }
 
     /// Adjust the “rollover” hour used for day bucketing (default 4).
     /// This value is only used when inferring buckets; ModelDay already
@@ -42,9 +33,6 @@ public interface LiveQuestView extends IsView {
 
     /// Sets the row factory used to build individual LiveQuest rows.
     void setRowFactory(LiveQuestRowFactory factory);
-
-    /// Returns true if this view currently has any renderable items.
-    boolean hasItems();
 
     /// Underlying LibGDX Actor for this view (usually a Table or ScrollPane).
     Actor asActor();

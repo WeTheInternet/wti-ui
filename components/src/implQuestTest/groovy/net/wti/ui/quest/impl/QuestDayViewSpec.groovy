@@ -21,7 +21,7 @@ import xapi.time.X_Time
 import xapi.time.api.TimeZoneInfo
 
 /// Created by James X. Nelson (James@WeTheInter.net) on 08/12/2025 @ 22:06
-class LiveQuestViewSpec extends Specification {
+class QuestDayViewSpec extends Specification {
 
     @Shared
     boolean gdxInitialized = false
@@ -74,7 +74,7 @@ class LiveQuestViewSpec extends Specification {
         final Skin skin = theme.skin
 
         when: "parser will build the view and refresh it"
-        final DefaultLiveQuestView view = new DefaultLiveQuestView(skin, today, quests)
+        final DayPlanView view = new DayPlanView(skin, today, quests)
         view.refresh()
 
         then: "at least one row is rendered (basic smoke test)"

@@ -3,12 +3,15 @@ package net.wti.quest.impl;
 import net.wti.quest.api.*;
 import net.wti.time.api.DayIndex;
 import net.wti.time.api.ModelDay;
+import net.wti.time.api.ModelDuration;
 import net.wti.time.impl.DayIndexService;
 import net.wti.time.impl.ModelDayService;
 import xapi.model.api.ModelKey;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static xapi.time.X_Time.*;
 
 /// RolloverService
 ///
@@ -116,7 +119,7 @@ public class RolloverService {
                 continue;
             }
 
-            long graceMillis = computeGraceMillis(liveQuest, fromDay);
+            long graceMillis = computeGraceMillis(liveQuest);
             long failThreshold = deadlineValue + graceMillis;
 
             if (nowMillis > failThreshold) {
@@ -140,16 +143,9 @@ public class RolloverService {
     ///  - Otherwise, 0 (no grace).
     ///
     /// TODO: Integrate user/definition defaults when those policies are defined.
-    protected long computeGraceMillis(LiveQuest liveQuest, ModelDay fromDay) {
-        Integer graceMinutes = liveQuest.getGracePeriodMinutes();
-        if (graceMinutes == null) {
-            /// Future: inspect QuestDefinition or user settings for default grace.
-            return 0L;
-        }
-        if (graceMinutes <= 0) {
-            return 0L;
-        }
-        return graceMinutes.longValue() * 60_000L;
+    protected long computeGraceMillis(LiveQuest liveQuest) {
+        return liveQuest.getGracePeriodDuration().toMillis();
+
     }
 
     /// Helper for callers that do not have a ModelDay instance and want to run

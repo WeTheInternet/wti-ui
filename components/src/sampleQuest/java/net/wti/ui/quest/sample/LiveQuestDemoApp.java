@@ -8,7 +8,7 @@ import net.wti.quest.api.QuestStatus;
 import net.wti.time.api.ModelDay;
 import net.wti.time.impl.DayIndexService;
 import net.wti.time.impl.ModelDayService;
-import net.wti.ui.quest.impl.DefaultLiveQuestView;
+import net.wti.ui.quest.impl.DayPlanView;
 import net.wti.ui.sample.AbstractSampleApp;
 import net.wti.ui.demo.theme.TaskUiTheme;
 import xapi.model.X_Model;
@@ -24,7 +24,7 @@ import java.util.List;
 ///  - Creates a synthetic ModelDay for "today" in system zone.
 ///  - Seeds a handful of LiveQuest instances with different deadlines,
 ///    priorities, and skip/status flags.
-///  - Renders them using DefaultLiveQuestView inside a ScrollPane.
+///  - Renders them using DayPlanView inside a ScrollPane.
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 08/12/2025 @ 03:43
 public class LiveQuestDemoApp extends AbstractSampleApp {
@@ -43,7 +43,7 @@ public class LiveQuestDemoApp extends AbstractSampleApp {
         final ModelDay today = createTodayModelDay();
         final List<LiveQuest> quests = seedSampleQuests(today);
 
-        final DefaultLiveQuestView view = new DefaultLiveQuestView(skin, today, quests);
+        final DayPlanView view = new DayPlanView(skin, today, quests);
         view.refresh();
 
         final ScrollPane scroller = new ScrollPane(view, skin);

@@ -6,7 +6,7 @@ import net.wti.time.api.ModelDay;
 
 /// LiveQuestRowFactory
 ///
-/// Strategy interface used by LiveQuestView to build per-row tables.
+/// Strategy interface used by QuestDayView to build per-row tables.
 /// This allows callers to customize how individual LiveQuest instances
 /// are rendered without changing the core grouping/sorting logic.
 ///

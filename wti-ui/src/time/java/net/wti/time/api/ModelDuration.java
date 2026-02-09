@@ -3,6 +3,7 @@ package net.wti.time.api;
 import xapi.annotation.model.IsModel;
 import xapi.annotation.model.PersistenceStrategy;
 import xapi.annotation.model.Persistent;
+import xapi.fu.api.Ignore;
 import xapi.model.api.Model;
 
 ///
@@ -25,4 +26,12 @@ public interface ModelDuration extends Model {
     DurationUnit getUnit();
     ModelDuration setUnit(DurationUnit unit);
 
+    @Ignore("model")
+    default long toMillis() {
+        final Integer amt = getAmount();
+        if (amt == null) {
+            return 0;
+        }
+        return getUnit().toMillis(amt);
+    }
 }

@@ -59,7 +59,7 @@ import java.util.List;
 /// - Layout switches between landscape/portrait in `layout()` based on size
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) and chatgpt on 27/08/2025 @ 04:59
-public class TodayView extends Table implements HasScrollPane {
+public class OldTodayView extends Table implements HasScrollPane {
 
     // ---- task data ----
     private final TaskIndex index;
@@ -86,14 +86,14 @@ public class TodayView extends Table implements HasScrollPane {
     private boolean disposed;
     private Do cleanup;
 
-    public TodayView(final TaskUiTheme theme, final TaskController controller) {
+    public OldTodayView(final TaskUiTheme theme, final TaskController controller) {
         super(theme.getSkin());
         this.taskCache = new TaskViewCacheActive(theme.getSkin(), controller);
         this.index = controller.getIndex();
         final Skin skin = theme.getSkin();
 
         index.subscribeActiveTasks(task -> {
-            Log.tryLog(TodayView.class, this, "Subscribed to task", task.getName());
+            Log.tryLog(OldTodayView.class, this, "Subscribed to task", task.getName());
         });
 
         setBackground(optionalDrawable(skin, "panel-actionbar", "button"));

@@ -8,16 +8,14 @@ import net.wti.quest.api.QuestStatus;
 import net.wti.time.api.ModelDay;
 import net.wti.ui.quest.api.LiveQuestRowFactory;
 import xapi.string.X_String;
-import xapi.time.api.TimeZoneInfo;
+import xapi.time.X_Time;
+import xapi.time.api.TimeComponents;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
 /// DefaultLiveQuestRowFactory
 ///
-/// Basic row implementation for LiveQuestView:
+/// Basic row implementation for QuestDayView:
 ///  - Left column: formatted time (or blank if no deadline).
 ///  - Middle column: title / name (currently best-effort from LiveKey).
 ///  - Right column: status, skip flag, tags.
@@ -29,15 +27,9 @@ import java.util.Arrays;
 public class DefaultLiveQuestRowFactory implements LiveQuestRowFactory {
 
     private final Skin skin;
-    private final DateTimeFormatter timeFormatter;
 
     public DefaultLiveQuestRowFactory(final Skin skin) {
-        this(skin, DateTimeFormatter.ofPattern("h:mm a"));
-    }
-
-    public DefaultLiveQuestRowFactory(final Skin skin, final DateTimeFormatter formatter) {
         this.skin = skin;
-        this.timeFormatter = formatter;
     }
 
     @Override
@@ -66,17 +58,14 @@ public class DefaultLiveQuestRowFactory implements LiveQuestRowFactory {
 
     protected String formatTime(final ModelDay day, final LiveQuest quest) {
         final Long deadline = quest.getDeadlineMillis();
-        if (deadline == null || deadline.longValue() <= 0L) {
+        if (deadline == null || deadline <= 0L) {
             return "";
         }
-        final long millis = deadline.longValue();
-        final TimeZoneInfo zoneInfo = day.zone();
-        final ZoneId zoneId = ZoneId.of(zoneInfo.getId());
-        return Instant.ofEpochMilli(millis)
-                .atZone(zoneId)
-                .toLocalTime()
-                .format(timeFormatter)
-                .toLowerCase();
+        final long millis = deadline;
+        final TimeComponents tc = X_Time.breakdown(millis, day.zone());
+        // this is currently 24-hour format
+        final String t = X_String.formatTime(tc.getHour(), tc.getMinute());
+        return t.toLowerCase();
     }
 
     protected String computeTitle(final LiveQuest quest) {

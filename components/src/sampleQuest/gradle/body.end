@@ -1,0 +1,4 @@
+tasks.withType(JavaExec).configureEach {
+    final JavaExec exe ->
+    jvmArgs '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED'
+}

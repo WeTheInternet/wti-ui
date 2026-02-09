@@ -2,9 +2,12 @@
 
 Author: James X. Nelson and AI Assistant (both chatGPT and claude engines)
 Created: 2025-10-10
-Last updated: 2025-12-08
+Last updated: 2026-02-09
 
 This roadmap defines the LifeQuest data model, daily windowing model, key splaying scheme, materialization/rollover behavior, indexing/querying approach, and an implementation plan with checklists. It is intended to be a living document; update, annotate, and check items as progress is made.
+
+Current focus
+- Phase 3 (Single-day LiveQuest UI): finish tests + create a sample app + wire new view(s) into navigation
 
 Contents
 - Goals and principles
@@ -89,8 +92,10 @@ Key formats
 
 - Future (optional, likely unnecessary; synthetic preferred)
     - dy/{DayNum}/ftr/{LiveKey}
-      LiveKey
-      A LiveKey uniquely identifies a quest instance within a given day by combining:
+
+LiveKey
+
+A LiveKey uniquely identifies a quest instance within a given day by combining:
 
 1. The DefinitionKey (ID of the original QuestDefinition)
 2. An optional RuleKey that specifies which RecurrenceRule created this instance (defaults to "default")
@@ -137,13 +142,18 @@ High-level types (names are conceptual; actual interface/class names may vary):
     - parentKey: dy/{DayNum}
     - sourceDefinitionKey, sourceRuleKey (nullable for manual)
     - deadlineMillis (absolute; 0 => no deadline)
-    - status: active | paused | finished | cancelled | failed | archived
-    - alarmMinutes (override), snoozeUntil (absolute, optional)
+    - status: enum QuestStatus
+        - render order is enum order (OVERDUE first, then ACTIVE, ...; see QuestStatus)
+        - TodayView does not render PARKED or ARCHIVED
+    - alarmDuration: ModelDuration (optional)
+    - estimatedDuration: ModelDuration (optional; used for urgency/planning)
+    - gracePeriodDuration: ModelDuration (optional; used for overdue/fail boundary)
+    - snoozeUntil (absolute, optional) [MVP: snooze results in updated deadline elsewhere; view just sees updated deadline]
     - createdAt, updatedAt, startedAt, finishedAt
     - effectivePriority
     - tags: copied from definition on creation; updates propagate to live instances
     - skip: boolean (true when day is off via schedule template or ad-hoc)
-    - gracePeriod (optional; falls back to system/user default)
+    - scheduleTemplateKey (for filtering)
 
 - QuestCompleted
     - key: dy/{DayNum}/dn/{LiveKey}
@@ -203,9 +213,11 @@ High-level types (names are conceptual; actual interface/class names may vary):
 
 - Rollover job (post-rollover tick)
     - For each LiveQuest:
-        - If deadlineMillis > 0 and now > (deadlineMillis + gracePeriod) and skip==false:
+        - If deadlineMillis > 0 and now > (deadlineMillis + gracePeriodDuration) and skip==false:
             - Write QuestFailed record; remove LiveQuest.
         - If skip==true: do not fail.
+        - If now > deadlineMillis and now <= deadlineMillis + gracePeriodDuration:
+            - Status is OVERDUE (rendered above ACTIVE in TodayView)
     - Materialize for the new DayIndex (autoMaterialize rules).
 
 - Placeholders
@@ -216,20 +228,37 @@ High-level types (names are conceptual; actual interface/class names may vary):
 
 ## Views and filtering
 
-- Single-day view (first target)
-    - Query: dy/{DayNum}/lv/* (active), optionally include skipped=on/off.
-    - Sort: deadlineMillis (non-zero first, soonest first) then priority.
-    - Show tags and schedule template; user toggles to filter quickly.
+Single-day view family (Phase 3)
 
-- Weekly/Monthly/Yearly views (later)
-    - Range queries over DayIndex.
-    - Combine lv/dn/fld/cncl/skp types as needed (one request per type).
-    - Fill gaps with synthetic placeholders if desired.
+- TodayView (new)
+    - LiveQuest-based “what should I work on right now?”
+    - Opinionated and noise-reduced:
+        - prioritize actionable items, de-emphasize routine chores
+        - intended to be usable on mobile (low noise) while taking advantage of desktop space when available
+    - Key behaviors (MVP)
+        - ranking priority: “deadlines within next hour” first
+        - then blended score (deadline optional) + effectivePriority (+ later: estimatedDuration contribution)
+        - status order: QuestStatus enum order (OVERDUE first)
+        - do not render PARKED / ARCHIVED
+        - skip==true: reduced to a note area (planned restore affordance)
 
-- Filters
-    - Schedule template (each quest belongs to exactly one template).
-    - Tags: typeahead, multi-select. Definition tags copied to instances; updates push to live.
-    - Context-aware defaults (work hours vs off hours/weekends), overridable at runtime.
+- DayPlanView (new / renamed)
+    - Generic planner-style “view a given day” baseline day viewer (used by TomorrowView later)
+    - Shows explicit timed quests along a day axis, with hour bucketing and empty-range collapse
+    - Rollover display semantics: Policy C (see decision below)
+    - Future: will gain day-by-day scrolling to browse adjacent days (TomorrowView concept)
+
+Later views (deferred; naming can stay simple until implemented)
+- TomorrowView: browsing shell over DayPlanView (day-by-day forward/back)
+- WeekView / MonthView: calendar overviews (de-prioritize routine chores)
+- FutureView: long-term/unbounded quests only
+
+Filtering (early)
+- Query active live quests for a day: dy/{DayNum}/lv/*
+- Client-side filter in early phases:
+  - tags
+  - scheduleTemplate
+  - skip/status suppression
 
 ---
 
@@ -358,65 +387,90 @@ Phase 2 — Materialization & rollover (MVP) ✅ COMPLETE (MVP)
 
 Phase 3 — Single-day view switch (MVP UI)
 
-Goals:
-- Move from legacy task views to a LifeQuest-specific single-day view based on `LiveQuest` under `dy/{DayNum}/lv/*`.
-- Keep UI code modular and reusable across demos, future apps, and platforms using LibGDX + wti-ui abstractions.
+Goals
+- Move from legacy task views to LifeQuest-specific single-day views.
+- Build new views (do not reuse legacy task schedule widgets) to avoid repeating prior architectural coupling.
+- Keep UI modular:
+  - containers render lists/days of quests
+  - quest views render a single quest (UI component)
+- Keep views “pure” with respect to data loading:
+  - view classes do not perform persistence calls
+  - view classes do not own async subscriptions (binders/controllers can)
 
-Modules:
-- `wti-ui-view` — core view abstractions (package `net.wti.view`).
-    - Shared base classes for LibGDX-based views (composition helpers, refresh lifecycle, common styles).
-- `quest-view` — quest-specific view implementations (package `net.wti.quest.view`).
-    - `LiveQuestView`: per-day LiveQuest visualization (replacement for older `DayView` usage).
-    - Additional quest-focused components (filters, status badges, etc.) layered on top of core view primitives.
-- `quest-view-sample` — simple launcher/main to preview individual components.
-    - A tiny demo app that:
-        - Seeds in-memory data (e.g. sample `ModelDay` + `LiveQuest` instances).
-        - Creates a `LiveQuestView` for “today” and optionally adjacent days.
-        - Allows manual refresh to validate layout/behavior during development.
-- `quest-view-test` — minimal automated tests around view behavior.
-    - Focus initially on:
-        - Basic construction and non-crashing refresh cycles.
-        - Simple state transitions (e.g. toggling skip flag, status changes).
-    - Defer pixel-perfect or snapshot-based validation to a future “UI integration test” phase once the view hierarchy is stable.
+Phase 3A — Core UI building blocks ✅ MOSTLY COMPLETE
+- [x] Base view abstractions exist (`IsView`, `BaseViewTable`)
+- [x] GDX-view abstraction exists (`IsGdxView`) for views that expose an Actor
+- [x] Quest container contracts exist (names stabilized)
+  - [x] `IsQuestContainer extends IsView` (owns `setLiveQuests(Iterable<LiveQuest>)`)
+  - [x] `QuestDayView extends IsQuestContainer` (day-level container contract)
+- [x] Quest component contract exists
+  - [x] `QuestView` (single-quest component base; will extend IsGdxView)
+  - [x] `IsViewState` exists (UI-only state; collapsed/expanded etc.)
+- [x] Planner-style day container exists
+  - [x] `DayPlanView` (planner/day viewer that buckets by hour and collapses empty ranges)
+  - [ ] Time formatting selection (12h vs 24h) not yet wired to shared settings
+  - [ ] Relative labels (Yesterday/Tomorrow) not yet wired to DayIndexService/AppContext
+- [x] Basic per-row rendering exists (temporary)
+  - [x] `LiveQuestRowFactory` + `DefaultLiveQuestRowFactory` (returns Table)
+  - Note: this will be replaced by QuestView-based rendering (QuestViewFactory) once `QuestPlanView` exists
+- [x] Desktop test harness exists for GL-backed Scene2D tests (`GdxDesktopTestHarness`, LWJGL3)
 
-Planned work items:
-- [ ] Establish `wti-ui-view` core abstractions:
-    - [ ] Define `net.wti.view.IsView` or reuse existing equivalent with a clear `refresh()` contract.
-    - [ ] Provide simple layout helpers and base classes for table-based views (`AbstractViewTable`-style) that integrate with LibGDX `Skin`.
-    - [ ] Document conventions for:
-        - Refresh lifecycle (when to call `refresh()` vs. incremental updates).
-        - Dependency boundaries (no direct persistence; views consume already-loaded models).
-- [ ] Implement `quest-view` for LifeQuest:
-    - [ ] Define `LiveQuestView` in `net.wti.quest.view`:
-        - [ ] Accepts a `ModelDay` (or `DayIndex`) and a collection of `LiveQuest` instances (already loaded from storage).
-        - [ ] Renders items grouped or sorted by:
-            - `deadlineMillis` (non-zero first, earliest first).
-            - Then `effectivePriority`.
-        - [ ] Shows:
-            - Name/title (from `QuestDefinition` snapshot or live definition, as available).
-            - Deadline time (formatted using `ModelDay`’s zone and rollover).
-            - Status (active/paused/etc.) and `skip` flag.
-            - Tags and schedule template key for simple visual filtering.
-        - [ ] Avoid binding to legacy `DayView` or `Schedule` types; work directly with `LiveQuest` and time APIs.
-    - [ ] Add simple filter controls (for later wiring into controllers):
-        - [ ] Filter by `skip` (show/hide skipped).
-        - [ ] Filter by tags and schedule template key (MVP: basic multiselect/UI affordances; filtering logic can be client-side).
-    - [ ] Provide hooks for actions (to be wired in Phase 4):
-        - [ ] “Start” / “Activate” a quest instance.
-        - [ ] “Finish”, “Cancel”, “Skip” actions (will later call completion flows that write `dn/cncl/skp` records).
-- [ ] `quest-view-sample` demo:
-    - [ ] Minimal launcher that:
-        - [ ] Boots LibGDX with a simple stage/skin.
-        - [ ] Uses fake or seeded `ModelDay` + `LiveQuest` data (no real backend dependency).
-        - [ ] Places a `LiveQuestView` on screen with Today/Yesterday/Tomorrow toggles.
-    - [ ] Ensure the sample is easy to run from Gradle/IDE for rapid UI iteration.
-- [ ] `quest-view-test`:
-    - [ ] Add very lightweight tests verifying:
-        - [ ] `LiveQuestView` construction and `refresh()` do not throw with empty or simple data.
-        - [ ] Sorting by `deadlineMillis` and `effectivePriority` behaves as expected for a small set of sample `LiveQuest` instances.
-    - [ ] Defer “GUI is good” tests:
-        - [ ] No snapshot or pixel-diff tests until the view hierarchy is closer to stable.
-        - [ ] Track this as a future enhancement (UI integration tests that render and validate behavior and layout).
+Phase 3B — Adoption (wiring + confidence) ⏳ IN PROGRESS
+- [ ] Implement quest-level views (single quest components)
+  - [ ] `QuestPlanView` (QuestView implementation used by DayPlanView)
+    - more informative, less “do the task now”
+  - [ ] `ActiveQuestView` (QuestView implementation used by TodayView)
+    - concise “doing the task” focused rendering (low noise)
+  - [ ] QuestView v1 contract confirmed:
+    - [ ] `getQuest()` / `setQuest(LiveQuest)`
+    - [ ] `asActor()` (via IsGdxView)
+    - [ ] `getViewState()` returning `IsViewState` with `isCollapsed()` at minimum
+
+- [ ] Implement the new TodayView (NEW container; no legacy reuse)
+  - [ ] Accepts ModelDay + Iterable<LiveQuest> (provided by caller)
+  - [ ] Defines “actionable now” ordering (MVP)
+    - [ ] “deadlines within next hour” first
+    - [ ] then blended score: optional deadline + effectivePriority + (later) estimatedDuration
+    - [ ] status ordering: enum order (OVERDUE first)
+    - [ ] do not render PARKED/ARCHIVED
+    - [ ] skip==true summarized at bottom with planned restore affordance
+  - [ ] Provide a “jump to now” control (explicit; do not auto-scroll on refresh)
+  - [ ] Later: expand/contract, edit/reschedule, and time tracking controls
+
+- [ ] Update / replace sample app(s)
+  - [ ] Keep current sample as a day-plan demo (DayPlanView)
+  - [ ] Add a minimal TodayView sample:
+    - seeds a ModelDay + sample LiveQuest
+    - shows TodayView
+    - provides manual refresh and jump-to-now
+
+- [ ] Tests
+  - Headless (fast):
+    - [ ] DayPlanView construction + refresh is stable (empty/simple)
+    - [ ] Sorting and bucketing logic correctness (deadline, priority, ties)
+    - [ ] Rollover Policy C bucketing logic correctness
+  - Desktop harness (GL-backed; only when needed):
+    - [ ] rebuild stability with real Skin/theme assets
+    - [ ] interaction smoke tests (construction, expand/collapse, etc.)
+
+- [ ] Navigation wiring
+  - [ ] Integrate TodayView into main navigation (replacing legacy OldTodayView)
+  - [ ] Link to day-plan browsing (TomorrowView shell) from TodayView footer
+
+Decision settled (ties to tests): Rollover-hour display semantics for planner/day-plan views
+- [x] Policy C:
+  - When an item’s deadline is inside ModelDay but local hour `< rolloverHour`,
+    it appears in the current day, rendered at end-of-day in extended buckets:
+      - bucketHour = 24 + hourLocal
+- [ ] Labeling/format decision (needs shared settings):
+  - In 12-hour mode: label extended buckets as natural “1am” while ordering them after 11pm
+  - In 24-hour mode: label extended buckets as “25:00” etc.
+
+Decision deferred (documented; not blocking MVP)
+- [ ] Relative day labels (“Yesterday” / “Tomorrow”) in day-plan views:
+  - Needs DayIndexService and a stable “now” source.
+  - Likely solved via injection (AppContext / services bundle).
+  - For now, day title can be “Today” when day.contains(now) else explicit date.
 
 Phase 4 — Completion flows and history
 - [ ] Finish flow -> write dn; remove lv.
@@ -462,6 +516,14 @@ Rollover ✅ MVP COMPLETE
 - [x] Overdue + grace -> `fld` record; `lv` removed.
 - [x] `skip==true` -> never fails; can write `skp` on explicit skip action (planned in Phase 4).
 
+Phase 3 UI tests ⏳ IN PROGRESS
+- [ ] DayPlanView.refresh() is stable (no throws) across empty/simple/large inputs.
+- [ ] Sorting correctness tests (deadline / priority / tie-breaks).
+- [ ] Bucketing correctness tests (zone + window boundaries).
+- [ ] Rollover Policy C semantics test (enforce via tests).
+- [ ] TodayView ranking tests (deadlines next hour, blended scoring, status ordering).
+- [ ] No snapshot/pixel tests until view hierarchy is stable.
+
 History
 - [ ] `dn`/`fld`/`cncl`/`skp` records with correct snapshots; immutable.
     - `QuestFailed` path is implemented via `RolloverService` and `RolloverStore`.
@@ -489,6 +551,25 @@ Concurrency and idempotency
 ---
 
 ## Open questions and decisions
+
+- Settings location and ownership:
+  - Need shared settings for:
+    - time format selection (12h vs 24h)
+    - timezone defaults (already exist in demo ModelSettings; may move to core)
+  - Candidate approach:
+    - AppContext / services bundle for safe shared services (DayIndexService, formatting policy, etc.)
+
+- QuestView factory migration:
+  - Replace LiveQuestRowFactory (Table rows) with a QuestViewFactory producing QuestView components.
+  - DayPlanView uses QuestPlanView; TodayView uses ActiveQuestView.
+
+- Index subscriptions:
+  - Views remain pure and accept current snapshot via setLiveQuests().
+  - Binder/controller can subscribe to an index/store and call setLiveQuests()+refresh() as data arrives.
+
+- TomorrowView naming:
+  - TomorrowView is a browsing shell over DayPlanView; it can scroll forward/back by day.
+  - Week/Month/Year browsing to be decided after TodayView is stable.
 
 - Keep Skipped as a record (dy/{DayNum}/skp/{LiveKey}) vs. leaving only skip=true on LiveQuest?
     - Current plan: write skp on explicit skip, remove lv to minimize active set; implicit "off day" = lv skip=true without skp record.

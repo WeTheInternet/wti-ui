@@ -68,4 +68,9 @@ ext.publications.create("xapi", MavenPublication, {
         pub.groupId = "net.wti"
 })
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
+// GenInclude body.end from file:///opt/wti-ui/components/src/sampleQuest/gradle/body.end
+tasks.withType(JavaExec).configureEach {
+    final JavaExec exe ->
+    jvmArgs '--add-opens', 'java.base/java.lang.invoke=ALL-UNNAMED'
+}
 // Done generating buildfile for :components at file://$rootDir/components/src/sampleQuest/componentsSampleQuest.gradle

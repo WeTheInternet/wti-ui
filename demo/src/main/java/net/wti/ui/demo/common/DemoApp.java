@@ -20,7 +20,7 @@ import net.wti.ui.demo.ui.controller.TaskRegistry;
 import net.wti.ui.demo.ui.view.TaskTableActive;
 import net.wti.ui.demo.ui.view.TaskTableComplete;
 import net.wti.ui.demo.ui.view.TaskTableDefinitions;
-import net.wti.ui.demo.ui.view.TodayView;
+import net.wti.ui.demo.ui.view.OldTodayView;
 import xapi.fu.Do;
 import xapi.fu.Pointer;
 import xapi.fu.log.Log;
@@ -94,7 +94,7 @@ public final class DemoApp extends ApplicationAdapter {
     private Stage stage;
     private TaskRegistry registry;
     private TaskController controller;
-    private TodayView today; // main interface for completing tasks
+    private OldTodayView today; // main interface for completing tasks
     private TaskTableDefinitions library; // tasks definitions
     private TaskTableActive active; // active tasks
     private TaskTableComplete complete;   // completed tasks
@@ -151,7 +151,7 @@ public final class DemoApp extends ApplicationAdapter {
 
         // Task views
 
-        today = new TodayView(theme, controller);
+        today = new OldTodayView(theme, controller);
         library = new TaskTableDefinitions(theme, controller);
         active = new TaskTableActive(theme, controller);
         complete = new TaskTableComplete(theme, controller);
