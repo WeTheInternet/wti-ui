@@ -18,6 +18,11 @@ test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 main.java.srcDir("$rootDir/wti-ui/src/api/java")
 
+dependencies {
+    api libs.xapi.model
+    api libs.xapi.util
+}
+
 repositories {
     maven {
         name = 'xapiLocal'

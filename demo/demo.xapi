@@ -16,7 +16,8 @@
                             ( libs.xapi.util ),
                             ( libs.xapi.inject ),
                         ],
-                        project : ":xapi-ui",
+                        @transitive
+                        project : { ":wti-ui" : implForm },
                         @transitive
                         project : { ":gdx-themes" : main },
                         project : { ":components" : main },
@@ -32,7 +33,6 @@
                     requires = {
                         @transitive
                         project : { ":components" : main },
-                        project : ":xapi-ui",
                         @transitive(test)
                         external : ( libs.spock ),
                         @transitive(test)

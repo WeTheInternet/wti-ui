@@ -4,7 +4,7 @@ package net.wti.tasks.index;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.utils.Timer;
 import net.wti.tasks.event.*;
-import net.wti.ui.demo.api.ModelSettings;
+import net.wti.ui.api.ModelSettings;
 import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.api.Schedule;
 import xapi.fu.Do;

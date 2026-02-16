@@ -1,7 +1,7 @@
 package net.wti.tasks.index
 
 import net.wti.ui.demo.api.ModelRecurrence
-import net.wti.ui.demo.api.ModelSettings
+import net.wti.ui.api.ModelSettings
 import net.wti.ui.demo.api.ModelTask
 import net.wti.ui.demo.api.ModelTaskCompletion
 import net.wti.ui.demo.api.ModelTaskDescription

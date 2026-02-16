@@ -6,7 +6,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import net.wti.ui.components.SizingTextTooltip;
 import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.api.Schedule;
-import net.wti.ui.view.DeadlineView;
 import xapi.time.X_Time;
 
 /// RecurrenceSummary

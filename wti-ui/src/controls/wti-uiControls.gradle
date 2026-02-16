@@ -19,7 +19,6 @@ test.resources.setSrcDirs([]);
 main.java.srcDir("$rootDir/wti-ui/src/controls/java")
 
 dependencies {
-    testImplementation project(path: ":xapi-ui-main")
     api libs.gdx.core
     api project(path: ":wti-ui-api")
 }

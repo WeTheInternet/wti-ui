@@ -19,6 +19,7 @@ test.resources.setSrcDirs([]);
 
 dependencies {
     api project(path: ":wti-ui-implModelbind")
+    api project(path: ":wti-ui-jreForm")
 }
 
 repositories {

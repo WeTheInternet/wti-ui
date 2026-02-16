@@ -20,7 +20,7 @@ main.java.srcDir("$rootDir/components/src/ui/java")
 
 dependencies {
     api project(path: ":wti-ui-view")
-    implementation project(path: ":xapi-ui-main")
+    implementation project(path: ":wti-ui-implForm")
     api project(path: ":wti-ui-controls")
 }
 

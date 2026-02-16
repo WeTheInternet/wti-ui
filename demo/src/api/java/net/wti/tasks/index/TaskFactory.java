@@ -1,5 +1,6 @@
 package net.wti.tasks.index;
 
+import net.wti.ui.api.ModelSettings;
 import net.wti.ui.demo.api.*;
 import xapi.model.X_Model;
 import xapi.model.api.ModelList;

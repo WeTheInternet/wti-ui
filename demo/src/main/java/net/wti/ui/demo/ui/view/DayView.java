@@ -5,7 +5,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import net.wti.tasks.index.DateKey;
-import net.wti.ui.demo.api.ModelSettings;
+import net.wti.ui.api.ModelSettings;
 import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.api.Schedule;
 import net.wti.ui.view.api.IsView;

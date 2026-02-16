@@ -13,7 +13,7 @@ import net.wti.quest.api.QuestStatus
 import net.wti.time.api.ModelDay
 import net.wti.time.impl.DayIndexService
 import net.wti.time.impl.ModelDayService
-import net.wti.ui.demo.theme.TaskUiTheme
+import net.wti.ui.demo.theme.LifeQuestTheme
 import spock.lang.Shared
 import spock.lang.Specification
 import xapi.model.X_Model
@@ -69,7 +69,7 @@ class QuestDayViewSpec extends Specification {
 
         and: "a skin from the same theme the real app uses"
 
-        final TaskUiTheme theme = new TaskUiTheme()
+        final LifeQuestTheme theme = new LifeQuestTheme()
         theme.applyTooltipDefaults()
         final Skin skin = theme.skin
 

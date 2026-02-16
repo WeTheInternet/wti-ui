@@ -9,7 +9,7 @@ import net.wti.tasks.event.RefreshFinishedEvent;
 import net.wti.tasks.index.DateKey;
 import net.wti.tasks.index.TaskIndex;
 import net.wti.ui.controls.focus.HoverScrollFocus;
-import net.wti.ui.demo.api.ModelSettings;
+import net.wti.ui.api.ModelSettings;
 import net.wti.ui.view.api.IsView;
 import xapi.fu.Do;
 import xapi.fu.log.Log;

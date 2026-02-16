@@ -8,9 +8,9 @@ import net.wti.quest.api.QuestStatus;
 import net.wti.time.api.ModelDay;
 import net.wti.time.impl.DayIndexService;
 import net.wti.time.impl.ModelDayService;
+import net.wti.ui.demo.theme.LifeQuestTheme;
 import net.wti.ui.quest.impl.DayPlanView;
 import net.wti.ui.sample.AbstractSampleApp;
-import net.wti.ui.demo.theme.TaskUiTheme;
 import xapi.model.X_Model;
 import xapi.time.X_Time;
 import xapi.time.api.TimeZoneInfo;
@@ -29,11 +29,11 @@ import java.util.List;
 /// Created by James X. Nelson (James@WeTheInter.net) on 08/12/2025 @ 03:43
 public class LiveQuestDemoApp extends AbstractSampleApp {
 
-    private TaskUiTheme theme;
+    private LifeQuestTheme theme;
 
     @Override
     protected Skin createSkin() {
-        theme = new TaskUiTheme();
+        theme = new LifeQuestTheme();
         theme.applyTooltipDefaults();
         return theme.getSkin();
     }

@@ -19,8 +19,6 @@ test.resources.setSrcDirs([]);
 main.java.srcDir("$rootDir/wti-ui/src/time/java")
 
 dependencies {
-    api libs.xapi.model
-    api libs.xapi.util
     api project(path: ":wti-ui-api")
 }
 

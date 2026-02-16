@@ -1,5 +1,6 @@
 package net.wti.ui.demo.api;
 
+import net.wti.ui.api.ModelSettings;
 import xapi.annotation.model.*;
 import xapi.model.X_Model;
 import xapi.model.api.Model;

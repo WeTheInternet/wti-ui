@@ -18,7 +18,11 @@ test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 
 dependencies {
+    implementation project(path: ":wti-ui-form")
+    testImplementation libs.spock
+    testImplementation libs.xapi.model.jre
     api project(path: ":wti-ui-modelbind")
+    api project(path: ":wti-ui-implForm")
 }
 
 repositories {

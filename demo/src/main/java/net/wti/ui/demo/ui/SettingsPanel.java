@@ -1,8 +1,8 @@
 package net.wti.ui.demo.ui;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import net.wti.ui.demo.api.ModelSettings;
-import net.wti.ui.form.WtiForm;
+import net.wti.ui.api.ModelSettings;
+import net.wti.ui.form.impl.WtiForm;
 import net.wti.ui.gdx.theme.GdxTheme;
 
 /// SettingsPanel:

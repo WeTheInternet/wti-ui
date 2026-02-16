@@ -11,15 +11,11 @@
         virtual : [
             // a set of test-specific modules and abstract spock specifications
             test-tools,
-            // interfaces and implementations for accessing libgdx resources
-            wti-ui,
             // media assets and interfaces; each platform is a theme implementing the media interfaces
             gdx-themes,
-            // cross-platform xapi ui implementations
-            xapi-ui,
-            // some build tools for assembling finalized xapi-ui implementation binaries
-            xapi-ui-tools,
-            // implementations of specialized components
+            // core interfaces and implementations for all common aspects of libgdx apps
+            wti-ui,
+            // implementations of specialized lifequest components
             components,
             // a complete demo of all functionality, showcasing all supported UI elements
             demo,

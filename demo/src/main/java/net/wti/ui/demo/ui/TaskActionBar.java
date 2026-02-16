@@ -17,7 +17,7 @@ import net.wti.ui.demo.ui.view.AbstractTaskView;
 import net.wti.ui.demo.view.api.IsTaskView;
 import xapi.time.X_Time;
 
-import static net.wti.ui.api.TimeConstants.ONE_DAY;
+import static net.wti.time.api.TimeConstants.ONE_DAY;
 
 /// TaskActionBar
 ///

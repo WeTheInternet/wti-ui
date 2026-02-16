@@ -12,7 +12,7 @@ import net.wti.tasks.event.RefreshFinishedEvent;
 import net.wti.tasks.index.TaskIndex;
 import net.wti.ui.demo.api.ModelTask;
 import net.wti.ui.demo.api.Schedule;
-import net.wti.ui.demo.theme.TaskUiTheme;
+import net.wti.ui.demo.theme.LifeQuestTheme;
 import net.wti.ui.demo.ui.controller.TaskController;
 import net.wti.ui.gdx.view.AccordionPane;
 import net.wti.ui.view.api.HasScrollPane;
@@ -86,7 +86,7 @@ public class OldTodayView extends Table implements HasScrollPane {
     private boolean disposed;
     private Do cleanup;
 
-    public OldTodayView(final TaskUiTheme theme, final TaskController controller) {
+    public OldTodayView(final LifeQuestTheme theme, final TaskController controller) {
         super(theme.getSkin());
         this.taskCache = new TaskViewCacheActive(theme.getSkin(), controller);
         this.index = controller.getIndex();

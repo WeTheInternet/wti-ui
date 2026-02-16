@@ -24,7 +24,6 @@ test.groovy.srcDir("$rootDir/demo/src/test/groovy")
 dependencies {
     api project(path: ":gdx-themes-raeleus-sgx")
     api project(path: ":components-main")
-    implementation project(path: ":xapi-ui-main")
     testImplementation libs.spock
     testImplementation libs.xapi.model.jre
     api project(path: ":demo-api")

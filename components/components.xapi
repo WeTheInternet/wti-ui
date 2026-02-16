@@ -35,7 +35,7 @@
                     requires = {
                         @transitive
                         project : { ":wti-ui" : view },
-                        project : { ":xapi-ui" : main },
+                        project : { ":wti-ui" : implForm },
                         @transitive
                         project: { ":wti-ui" : controls }
                     }

@@ -13,7 +13,7 @@ import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import net.wti.gdx.theme.raeleus.sgx.TabbedPane;
 import net.wti.tasks.event.RefreshFinishedEvent;
 import net.wti.tasks.index.TaskIndex;
-import net.wti.ui.demo.theme.TaskUiTheme;
+import net.wti.ui.demo.theme.LifeQuestTheme;
 import net.wti.ui.demo.ui.SettingsPanel;
 import net.wti.ui.demo.ui.controller.TaskController;
 import net.wti.ui.demo.ui.controller.TaskRegistry;
@@ -100,7 +100,7 @@ public final class DemoApp extends ApplicationAdapter {
     private TaskTableComplete complete;   // completed tasks
     private TabbedPane tabs;
     private boolean doInvalidate;
-    private TaskUiTheme theme;
+    private LifeQuestTheme theme;
     private Do cleanup = Do.NOTHING;
     private TaskIndex index;
     private long lastRendered;
@@ -115,7 +115,7 @@ public final class DemoApp extends ApplicationAdapter {
     public void create() {
         // Theme & Skin
         index = new TaskIndex();
-        theme = new TaskUiTheme();
+        theme = new LifeQuestTheme();
         skin = theme.getSkin();
         theme.applyTooltipDefaults();
 

@@ -1,6 +1,7 @@
 package net.wti.ui.demo.api;
 
 import net.wti.tasks.index.TaskFactory;
+import net.wti.ui.api.ModelSettings;
 import xapi.model.api.ModelKey;
 import xapi.model.api.ModelList;
 import xapi.string.X_String;
