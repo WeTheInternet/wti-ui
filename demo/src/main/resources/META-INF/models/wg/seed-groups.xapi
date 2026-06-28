@@ -1,0 +1,9 @@
+<WtiGroup
+    id = "admin"
+/WtiGroup>
+<WtiGroup
+    id = "parent"
+/WtiGroup>
+<WtiGroup
+    id = "kid"
+/WtiGroup>

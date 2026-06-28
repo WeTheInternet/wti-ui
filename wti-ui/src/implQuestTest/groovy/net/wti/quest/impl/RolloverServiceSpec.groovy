@@ -71,7 +71,7 @@ class RolloverServiceSpec extends Specification {
     private static QuestDefinition newQuestDefinition(final String id) {
         final QuestDefinition questDefinition = X_Model.create(QuestDefinition)
         questDefinition.setKey(QuestDefinition.KEY_BUILDER_DEF.buildKey(id))
-        questDefinition.setName("Quest " + id)
+        questDefinition.setTitle("Quest " + id)
         questDefinition.setActive(true)
         return questDefinition
     }
@@ -310,55 +310,4 @@ class RolloverServiceSpec extends Specification {
         }
     }
 
-    static class InMemoryQuestDefinitionSource implements QuestDefinitionSource {
-        Iterable<QuestDefinition> definitions = Collections.emptyList()
-
-        @Override
-        Iterable<QuestDefinition> findDefinitionsForUser(final ModelKey userKey) {
-            return definitions
-        }
-    }
-
-    static class InMemoryScheduleTemplateService implements ScheduleTemplateService {
-        @Override
-        boolean shouldSkip(final ModelDay day, final QuestDefinition questDefinition, final RecurrenceRule rule) {
-            return false
-        }
-    }
-
-    static class InMemoryLiveQuestStore implements LiveQuestStore {
-
-        final List<LiveQuest> all = new ArrayList<>()
-
-        @Override
-        LiveQuest findByDayAndLiveKey(final ModelDay day, final String liveKey) {
-            return all.find { it.dayIndex == day.dayNum && liveKey == it.liveKey }
-        }
-
-        @Override
-        LiveQuest createLiveQuest(final ModelDay day, final QuestDefinition questDefinition, final RecurrenceRule rule, final long deadlineMillis, final boolean skip) {
-            final LiveQuest liveQuest = X_Model.create(LiveQuest)
-            liveQuest.setParentDayKey(ModelDay.newKey(day.dayNum))
-            liveQuest.setDayIndex(day.dayNum)
-            liveQuest.setLiveKey(QuestKeyUtil.liveKeyFor(questDefinition, rule))
-            liveQuest.setSourceDefinitionKey(questDefinition.key)
-            if (rule != null) {
-                liveQuest.setSourceRuleKey(rule.key)
-            }
-            liveQuest.setDeadlineMillis(deadlineMillis)
-            liveQuest.setSkip(skip)
-            liveQuest.setStatus(QuestStatus.ACTIVE)
-            final long now = System.currentTimeMillis()
-            liveQuest.setCreatedAtMillis(now)
-            liveQuest.setUpdatedAtMillis(now)
-
-            all.add(liveQuest)
-            return liveQuest
-        }
-
-        @Override
-        LiveQuest save(final LiveQuest quest) {
-            return quest
-        }
-    }
 }

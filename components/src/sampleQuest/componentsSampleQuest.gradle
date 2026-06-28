@@ -17,9 +17,11 @@ main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 main.java.srcDir("$rootDir/components/src/sampleQuest/java")
+main.resources.srcDir("$rootDir/components/src/sampleQuest/resources")
 
 dependencies {
     implementation project(path: ":wti-ui-implTime")
+    implementation project(path: ":wti-ui-implQuest")
     implementation project(path: ":gdx-themes-raeleus-sgx")
     implementation project(path: ":demo-main")
     implementation project(path: ":components-sample")

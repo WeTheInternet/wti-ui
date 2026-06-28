@@ -131,6 +131,7 @@
                         internal : sample,
                         project : {
                             ":wti-ui" : implTime,
+                            ":wti-ui" : implQuest,
                             ":gdx-themes-raeleus-sgx" : main,
                             ":demo" : main
                         },

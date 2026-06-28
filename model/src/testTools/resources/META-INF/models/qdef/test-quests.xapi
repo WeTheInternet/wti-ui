@@ -1,0 +1,2 @@
+<QuestDefinition id = "test-root-a" name = "Test Root A" active = true auto = true /QuestDefinition>
+<QuestDefinition id = "test-root-b" name = "Test Root B" active = true /QuestDefinition>

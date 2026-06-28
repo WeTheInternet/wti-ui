@@ -1,0 +1,12 @@
+<WtiUser
+    id = "dad"
+    groups = [ "admin", "parent" ]
+/WtiUser>
+<WtiUser
+    id = "alyx"
+    groups = [ "kid" ]
+/WtiUser>
+<WtiUser
+    id = "mia"
+    groups = [ "kid" ]
+/WtiUser>

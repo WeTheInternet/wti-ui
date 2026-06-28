@@ -1,0 +1,73 @@
+<Quest
+    id = "day/1/lv/morning-routine"
+    liveKey = "morning-routine"
+    dayIndex = 1
+    title = "Morning Routine"
+    description = "Composite quest with nested subtasks"
+    status = "ACTIVE"
+    effectivePriority = 6
+    deadlineMillis = 1760004000000
+    skip = false
+    scheduleTemplateKey = "workday"
+    tags = [ "daily", "routine" ]
+>
+    <Quest
+        id = "day/1/lv/morning-routine/body-activation"
+        liveKey = "morning-routine/body-activation"
+        title = "Body Activation"
+        description = "Wake up body systems"
+        status = "ACTIVE"
+        effectivePriority = 5
+        deadlineMillis = 1760002200000
+        tags = [ "health" ]
+    >
+        <Quest
+            id = "day/1/lv/morning-routine/body-activation/stretch"
+            liveKey = "morning-routine/body-activation/stretch"
+            title = "Stretch 10 minutes"
+            status = "ACTIVE"
+            effectivePriority = 4
+            deadlineMillis = 1760001600000
+            tags = [ "mobility" ]
+        /Quest>
+        <Quest
+            id = "day/1/lv/morning-routine/body-activation/breathing"
+            liveKey = "morning-routine/body-activation/breathing"
+            title = "Breathing reset"
+            status = "ACTIVE"
+            effectivePriority = 4
+            deadlineMillis = 1760001800000
+            tags = [ "focus", "calm" ]
+        /Quest>
+    </Quest>
+
+    <Quest
+        id = "day/1/lv/morning-routine/day-planning"
+        liveKey = "morning-routine/day-planning"
+        title = "Day Planning"
+        description = "Set top outcomes"
+        status = "ACTIVE"
+        effectivePriority = 7
+        deadlineMillis = 1760003200000
+        tags = [ "planning" ]
+    >
+        <Quest
+            id = "day/1/lv/morning-routine/day-planning/top-3"
+            liveKey = "morning-routine/day-planning/top-3"
+            title = "Write top 3 priorities"
+            status = "ACTIVE"
+            effectivePriority = 7
+            deadlineMillis = 1760002600000
+            tags = [ "planning", "focus" ]
+        /Quest>
+        <Quest
+            id = "day/1/lv/morning-routine/day-planning/first-block"
+            liveKey = "morning-routine/day-planning/first-block"
+            title = "Schedule first deep-work block"
+            status = "ACTIVE"
+            effectivePriority = 6
+            deadlineMillis = 1760003000000
+            tags = [ "calendar" ]
+        /Quest>
+    </Quest>
+</Quest>

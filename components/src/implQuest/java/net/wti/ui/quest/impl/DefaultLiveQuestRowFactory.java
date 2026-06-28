@@ -1,17 +1,25 @@
 package net.wti.ui.quest.impl;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Align;
 import net.wti.quest.api.LiveQuest;
 import net.wti.quest.api.QuestStatus;
 import net.wti.time.api.ModelDay;
 import net.wti.ui.quest.api.LiveQuestRowFactory;
+import net.wti.ui.quest.api.QuestActionHandler;
 import xapi.string.X_String;
 import xapi.time.X_Time;
 import xapi.time.api.TimeComponents;
 
 import java.util.Arrays;
+
+import static com.badlogic.gdx.utils.Align.*;
 
 /// DefaultLiveQuestRowFactory
 ///
@@ -27,9 +35,11 @@ import java.util.Arrays;
 public class DefaultLiveQuestRowFactory implements LiveQuestRowFactory {
 
     private final Skin skin;
+    private final QuestActionHandler handler;
 
-    public DefaultLiveQuestRowFactory(final Skin skin) {
+    public DefaultLiveQuestRowFactory(final Skin skin, final QuestActionHandler handler) {
         this.skin = skin;
+        this.handler = handler;
     }
 
     @Override
@@ -38,20 +48,35 @@ public class DefaultLiveQuestRowFactory implements LiveQuestRowFactory {
         row.defaults().pad(1, 4, 1, 4).left();
 
         final String timeText = formatTime(day, quest);
-        final String titleText = computeTitle(quest);
-        final String metaText = computeMeta(quest);
+        final String titleText = quest.title();
+        final String descriptionText = quest.description();
 
         final Label timeLabel = new Label(timeText, skin.get(Label.LabelStyle.class));
         final Label titleLabel = new Label(titleText, skin.get(Label.LabelStyle.class));
-        final Label metaLabel = new Label(metaText, skin.get(Label.LabelStyle.class));
+        final Label descriptionLabel = new Label(descriptionText, skin.get(Label.LabelStyle.class));
 
-        timeLabel.setAlignment(com.badlogic.gdx.utils.Align.left);
-        titleLabel.setAlignment(com.badlogic.gdx.utils.Align.left);
-        metaLabel.setAlignment(com.badlogic.gdx.utils.Align.right);
+        timeLabel.setAlignment(left);
+        titleLabel.setAlignment(left);
+        descriptionLabel.setAlignment(center);
 
         row.add(timeLabel).width(80).left().padRight(8);
         row.add(titleLabel).growX().left();
-        row.add(metaLabel).width(140).right();
+
+        if (handler != null) {
+            final TextButton complete = new TextButton("Complete", skin);
+            complete.addListener(new ClickListener() {
+                @Override
+                public void clicked(final InputEvent event, final float x, final float y) {
+                    row.remove();
+                    handler.complete(day, quest);
+                }
+            });
+            row.add(complete).right().padLeft(8);
+        }
+        row.row().colspan(3);
+        row.add(descriptionLabel);
+//        row.background(skin.newDrawable("white", com.badlogic.gdx.graphics.Color.RED));
+//        descriptionLabel.getStyle().background = skin.newDrawable("white", Color.GREEN);
 
         return row;
     }
@@ -66,23 +91,6 @@ public class DefaultLiveQuestRowFactory implements LiveQuestRowFactory {
         // this is currently 24-hour format
         final String t = X_String.formatTime(tc.getHour(), tc.getMinute());
         return t.toLowerCase();
-    }
-
-    protected String computeTitle(final LiveQuest quest) {
-        /// Placeholder: derive something human-friendly from LiveKey.
-        final String liveKey = quest.getLiveKey();
-        if (liveKey == null) {
-            return "";
-        }
-        final String[] parts = liveKey.split("/", 2);
-        final String definitionId = parts.length > 0 ? parts[0] : liveKey;
-        final String ruleId = parts.length > 1 ? parts[1] : "";
-
-        final String base = definitionId.replace('_', ' ');
-        if (ruleId.isEmpty()) {
-            return X_String.toTitleCase(base);
-        }
-        return X_String.toTitleCase(base) + " [" + ruleId + "]";
     }
 
     protected String computeMeta(final LiveQuest quest) {

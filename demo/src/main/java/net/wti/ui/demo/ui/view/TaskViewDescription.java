@@ -14,6 +14,7 @@ import net.wti.ui.demo.api.ModelTaskDescription;
 import net.wti.ui.demo.common.DemoConstants;
 import net.wti.ui.demo.i18n.Messages;
 import net.wti.ui.demo.ui.controller.TaskController;
+import net.wti.ui.api.GlyphConstants;
 import xapi.model.X_Model;
 
 /// TaskViewDescription
@@ -53,9 +54,9 @@ public final class TaskViewDescription extends AbstractTaskView<ModelTaskDescrip
     private Table buttonBar() {
         Table t = new Table(skin);
         Messages msg = DemoConstants.MESSAGES;
-        t.add(icon(DemoConstants.GLYPH_START, this::startTask, msg.buttonStart())).padRight(4);
-        t.add(icon(DemoConstants.GLYPH_EDIT, this::editTask, msg.buttonEdit())).padRight(4);
-        t.add(icon(DemoConstants.GLYPH_CANCEL, this::deleteTask, msg.buttonDelete()));
+        t.add(icon(GlyphConstants.GLYPH_START, this::startTask, msg.buttonStart())).padRight(4);
+        t.add(icon(GlyphConstants.GLYPH_EDIT, this::editTask, msg.buttonEdit())).padRight(4);
+        t.add(icon(GlyphConstants.GLYPH_CANCEL, this::deleteTask, msg.buttonDelete()));
         return t;
     }
 

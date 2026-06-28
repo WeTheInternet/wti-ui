@@ -91,13 +91,15 @@ public abstract class AbstractTaskView<M extends BasicModelTask<M>>
     @Override public M getTask() { return model; }
     @Override public void rerender() { rebuild(); }
 
-    // ------------------------------------------------------------------ //
-    // Helpers                                                             //
-    // ------------------------------------------------------------------ //
+    @Override
     public void toggleExpanded() {
         expanded = !expanded;
         rebuild();
     }
+
+    // ------------------------------------------------------------------ //
+    // Helpers                                                             //
+    // ------------------------------------------------------------------ //
 
     protected void rebuild() {
         clear();

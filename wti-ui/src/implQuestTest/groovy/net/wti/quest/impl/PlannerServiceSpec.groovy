@@ -44,7 +44,7 @@ class PlannerServiceSpec extends Specification {
     private static QuestDefinition newDefinition(final String id = "def1", final boolean active = true) {
         final QuestDefinition qdef = X_Model.create(QuestDefinition)
         qdef.setKey(QuestDefinition.KEY_BUILDER_DEF.buildKey(id))
-        qdef.setName("Test Quest " + id)
+        qdef.setTitle("Test Quest " + id)
         qdef.setActive(active)
         return qdef
     }

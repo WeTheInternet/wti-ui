@@ -19,6 +19,7 @@ test.resources.setSrcDirs([]);
 main.java.srcDir("$rootDir/wti-ui/src/time/java")
 
 dependencies {
+    api project(path: ":model-time")
     api project(path: ":wti-ui-api")
 }
 

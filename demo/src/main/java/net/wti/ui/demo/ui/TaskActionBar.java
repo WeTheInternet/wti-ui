@@ -14,6 +14,7 @@ import net.wti.ui.demo.i18n.Messages;
 import net.wti.ui.demo.ui.controller.TaskController;
 import net.wti.ui.demo.ui.dialog.TaskCancelDialog;
 import net.wti.ui.demo.ui.view.AbstractTaskView;
+import net.wti.ui.api.GlyphConstants;
 import net.wti.ui.demo.view.api.IsTaskView;
 import xapi.time.X_Time;
 
@@ -84,13 +85,13 @@ public final class TaskActionBar extends Table {
 
 
         /* expand / collapse button (initial state follows view) */
-        edit = new SymbolButton(DemoConstants.GLYPH_EDIT, SymbolButton.STYLE_NORMAL, skin, msgs.buttonEdit());
-        defer = new SymbolButton(DemoConstants.GLYPH_DEFER, SymbolButton.STYLE_NORMAL, skin, msgs.buttonReschedule());
-        cancel = new SymbolButton(DemoConstants.GLYPH_CANCEL, SymbolButton.STYLE_NORMAL, skin, msgs.buttonCancel());
-        finish = new SymbolButton(DemoConstants.GLYPH_FINISH, SymbolButton.STYLE_PRIMARY, skin, msgs.buttonFinish());
+        edit = new SymbolButton(GlyphConstants.GLYPH_EDIT, SymbolButton.STYLE_NORMAL, skin, msgs.buttonEdit());
+        defer = new SymbolButton(GlyphConstants.GLYPH_DEFER, SymbolButton.STYLE_NORMAL, skin, msgs.buttonReschedule());
+        cancel = new SymbolButton(GlyphConstants.GLYPH_CANCEL, SymbolButton.STYLE_NORMAL, skin, msgs.buttonCancel());
+        finish = new SymbolButton(GlyphConstants.GLYPH_FINISH, SymbolButton.STYLE_PRIMARY, skin, msgs.buttonFinish());
 
         toggleButton = new SymbolButton(
-                view.isExpanded() ? DemoConstants.GLYPH_COLLAPSE : DemoConstants.GLYPH_EXPAND,
+                view.isExpanded() ? GlyphConstants.GLYPH_COLLAPSE : GlyphConstants.GLYPH_EXPAND,
                 SymbolButton.STYLE_NORMAL,
                 skin,
                 view.isExpanded() ? msgs.buttonMinimize() : msgs.buttonMaximize()
@@ -173,7 +174,7 @@ public final class TaskActionBar extends Table {
     private void toggleExpand() {
         parentView.toggleExpanded();
         toggleButton.setText(
-                parentView.isExpanded() ? DemoConstants.GLYPH_COLLAPSE : DemoConstants.GLYPH_EXPAND
+                parentView.isExpanded() ? GlyphConstants.GLYPH_COLLAPSE : GlyphConstants.GLYPH_EXPAND
         );
     }
 

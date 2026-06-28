@@ -3,15 +3,12 @@ package net.wti.quest.impl;
 import net.wti.quest.api.*;
 import net.wti.time.api.DayIndex;
 import net.wti.time.api.ModelDay;
-import net.wti.time.api.ModelDuration;
 import net.wti.time.impl.DayIndexService;
 import net.wti.time.impl.ModelDayService;
 import xapi.model.api.ModelKey;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static xapi.time.X_Time.*;
 
 /// RolloverService
 ///

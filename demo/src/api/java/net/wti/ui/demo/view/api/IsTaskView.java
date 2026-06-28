@@ -1,7 +1,7 @@
 package net.wti.ui.demo.view.api;
 
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import net.wti.ui.components.IsSkinnable;
 import net.wti.ui.demo.api.BasicModelTask;
 
 /// IsTaskView
@@ -22,29 +22,13 @@ import net.wti.ui.demo.api.BasicModelTask;
 /// 『   』 Optional: keyboard/focus support
 ///
 /// Created by ChatGPT 4o and James X. Nelson (James@WeTheInter.net) on 2025-04-16 @ 22:52:00 CST
-public interface IsTaskView<Model extends BasicModelTask<Model>> {
-
-    /// Toggle expanded/collapsed and rebuild layout  void toggleExpanded();
-
-    void toggleExpanded();
+public interface IsTaskView<Model extends BasicModelTask<Model>> extends net.wti.ui.api.IsExpandable, IsSkinnable {
 
     /// @return The underlying task model being rendered
     Model getTask();
 
-    /// Expand this task view (e.g. show recurrence, notes, etc.)
-    void expand();
-
-    /// Collapse this task view (e.g. hide extra UI)
-    void collapse();
-
     /// Trigger a full refresh / rerender of the visual layout
     void rerender();
-
-    /// Allow querying the expanded state
-    boolean isExpanded();
-
-    /// Supply the Skin object, so we have fewer references to pass around
-    Skin getSkin();
 
     /// Supply the Stage, so we don't have to pass it around in methods
     Stage getStage();

@@ -19,6 +19,7 @@ test.resources.setSrcDirs([]);
 
 dependencies {
     api libs.gdx.core
+    api libs.spock
 }
 
 repositories {
