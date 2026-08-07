@@ -23,6 +23,7 @@ public final class FloatingPanel extends Table {
     private final FloatingPanelStyle style;
     private final Vector2 dragOffset = new Vector2();
     private final Vector2 resizePoint = new Vector2();
+    private final Vector2 resizeStartParent = new Vector2();
     private final Table resizeHandle = new Table();
     private final Cell<Table> resizeCell;
     private boolean resizable;
@@ -30,6 +31,8 @@ public final class FloatingPanel extends Table {
     private boolean minimized;
     private float expandedWidth;
     private float expandedHeight;
+    private float resizeStartWidth;
+    private float resizeStartHeight;
     private Runnable redockAction;
 
     public FloatingPanel(
@@ -239,6 +242,13 @@ public final class FloatingPanel extends Table {
                     return false;
                 }
                 resizePoint.set(event.getStageX(), event.getStageY());
+                resizeStartParent.set(
+                        getParent().stageToLocalCoordinates(
+                                new Vector2(event.getStageX(), event.getStageY())
+                        )
+                );
+                resizeStartWidth = getWidth();
+                resizeStartHeight = getHeight();
                 return true;
             }
 
@@ -252,13 +262,14 @@ public final class FloatingPanel extends Table {
                 if (!resizable || minimized || pointer != 0) {
                     return;
                 }
-                final Vector2 localPoint = stageToLocalCoordinates(
+                final Vector2 parentPoint = getParent().stageToLocalCoordinates(
                         new Vector2(event.getStageX(), event.getStageY())
                 );
                 setSize(
-                        Math.max(getMinWidth(), localPoint.x),
-                        Math.max(getMinHeight(), localPoint.y)
+                        Math.max(getMinWidth(), resizeStartWidth + parentPoint.x - resizeStartParent.x),
+                        Math.max(getMinHeight(), resizeStartHeight + parentPoint.y - resizeStartParent.y)
                 );
+                invalidateHierarchy();
                 resizePoint.set(event.getStageX(), event.getStageY());
                 if (lockedInsideParent && getParent() instanceof FloatingPanelLayer) {
                     ((FloatingPanelLayer) getParent()).clampPanels();
