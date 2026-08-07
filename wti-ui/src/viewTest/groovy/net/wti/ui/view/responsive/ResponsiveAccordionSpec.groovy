@@ -115,6 +115,42 @@ class ResponsiveAccordionSpec extends Specification {
         header.listeners.any { it instanceof com.badlogic.gdx.scenes.scene2d.utils.ClickListener }
     }
 
+    def "detached body remains caller-owned while later accordion rebuilds"() {
+        given:
+        def accordion = new ResponsiveAccordion()
+        def detached = body(80f)
+        def retained = body(120f)
+        accordion.addSection("detached", new Actor(), detached)
+        accordion.addSection("retained", new Actor(), retained)
+        accordion.expand("detached")
+
+        when:
+        accordion.detachBody("detached")
+        detached.setVisible(true)
+        detached.setTouchable(Touchable.enabled)
+        accordion.expand("retained")
+        validateTree(accordion)
+
+        then:
+        accordion.isBodyDetached("detached")
+        !accordion.isExpanded("detached")
+        detached.parent == null
+        detached.visible
+        detached.getTouchable() == Touchable.enabled
+        retained.parent.is(accordion)
+        retained.visible
+
+        when:
+        accordion.attachBody("detached")
+        accordion.expand("detached")
+        validateTree(accordion)
+
+        then:
+        !accordion.isBodyDetached("detached")
+        detached.parent.is(accordion)
+        detached.visible
+    }
+
     def "accordion remains a normal actor inside a floating panel and content viewport"() {
         given:
         def accordion = new ResponsiveAccordion()

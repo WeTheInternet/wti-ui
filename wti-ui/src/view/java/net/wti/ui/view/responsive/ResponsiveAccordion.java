@@ -144,6 +144,42 @@ public class ResponsiveAccordion extends Table {
         return section(key).expanded;
     }
 
+    /**
+     * Releases a body to a caller-owned host without cloning it. Detached bodies remain
+     * outside future accordion rebuilds, so opening another section cannot hide or
+     * disable the caller's floating content.
+     *
+     * @param key the registered section key whose body transfers to the caller
+     */
+    public void detachBody(final String key) {
+        final Section target = section(key);
+        if (target.detached) return;
+        target.detached = true;
+        target.expanded = false;
+        target.bodyActor.remove();
+        rebuild();
+    }
+
+    /**
+     * Returns a previously detached caller-owned body to normal accordion ownership.
+     *
+     * @param key the registered section key whose body returns to this accordion
+     */
+    public void attachBody(final String key) {
+        final Section target = section(key);
+        if (!target.detached) return;
+        target.detached = false;
+        rebuild();
+    }
+
+    /**
+     * @param key the registered section key to query
+     * @return true when that body has been intentionally released to another Scene2D host
+     */
+    public boolean isBodyDetached(final String key) {
+        return section(key).detached;
+    }
+
     public void expandAll() {
         for (final Section section : sections.values()) {
             section.expanded = true;
@@ -200,6 +236,9 @@ public class ResponsiveAccordion extends Table {
             }
             add(headerRow).growX().fillX().minWidth(0f).row();
 
+            if (section.detached) {
+                continue;
+            }
             section.bodyActor.setVisible(section.expanded);
             section.bodyActor.setTouchable(
                     section.expanded ? Touchable.enabled : Touchable.disabled
@@ -240,6 +279,7 @@ public class ResponsiveAccordion extends Table {
         private final Actor bodyActor;
         private Actor headerAction;
         private boolean expanded;
+        private boolean detached;
 
         private Section(
                 final String key,
