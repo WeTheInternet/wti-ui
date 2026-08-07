@@ -352,10 +352,10 @@ public class SgxSample extends ApplicationAdapter {
     /// Adds an interactive showcase for the reusable WTI floating-panel host.
     private void addFloatingPanelShowcase() {
         final FloatingPanelStyle panelStyle = new FloatingPanelStyle();
-        panelStyle.edgePadding = 12f;
+        panelStyle.edgePadding = 16f;
         panelStyle.cascadeGap = 22f;
         panelStyle.minimumWidth = 250f;
-        panelStyle.minimumHeight = 180f;
+        panelStyle.minimumHeight = 96f;
         panelStyle.titleContentGap = 4f;
 
         floatingPanels = new FloatingPanelLayer(panelStyle);
