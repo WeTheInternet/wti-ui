@@ -1,0 +1,6 @@
+tasks.register("runSgxSample", JavaExec) {
+    group = "application"
+    description = "Run the SGX UI gallery and floating-panel showcase"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("com.ray3k.sgx.SgxSample")
+}
