@@ -469,7 +469,7 @@ public class SgxSample extends ApplicationAdapter {
         content.add(new Label("More content demonstrates scrolling.", skin, "small"))
                 .colspan(2).left();
         content.row();
-        content.add(floatingAccordion()).colspan(2).growX().left();
+        content.add(floatingAccordion()).colspan(2).growX().fillX().left();
         content.row();
         for (int i = 0; i < 8; i++) {
             content.add(new CheckBox("Option " + (i + 1), skin)).colspan(2).left();
