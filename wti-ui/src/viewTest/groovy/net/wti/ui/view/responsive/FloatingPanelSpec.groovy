@@ -161,7 +161,7 @@ class FloatingPanelSpec extends Specification {
         down.stageX = start.x
         down.stageY = start.y
         def drag = new InputEvent()
-        def target = panel.localToStageCoordinates(new com.badlogic.gdx.math.Vector2(220f, 170f))
+        def target = panel.localToStageCoordinates(new com.badlogic.gdx.math.Vector2(220f, 10f))
         drag.stageX = target.x
         drag.stageY = target.y
 

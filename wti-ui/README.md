@@ -127,6 +127,10 @@ region, while `setResizeHandleBackground(drawable)` supplies its visible styling
 game skin should style the handle explicitly; the generic view module does not assume a
 particular skin or resize glyph.
 
+The handle is the panel’s bottom-right corner in Scene2D coordinates: vertical drag
+direction is interpreted from the parent-local delta, so dragging down grows the panel and
+keeps its top edge anchored while dragging up shrinks it toward the configured minimum.
+
 ## Runnable demos
 
 From the repository root, run the existing desktop showcases with:

@@ -33,6 +33,7 @@ public final class FloatingPanel extends Table {
     private float expandedHeight;
     private float resizeStartWidth;
     private float resizeStartHeight;
+    private float resizeStartY;
     private Runnable redockAction;
 
     public FloatingPanel(
@@ -249,6 +250,7 @@ public final class FloatingPanel extends Table {
                 );
                 resizeStartWidth = getWidth();
                 resizeStartHeight = getHeight();
+                resizeStartY = getY();
                 return true;
             }
 
@@ -265,9 +267,14 @@ public final class FloatingPanel extends Table {
                 final Vector2 parentPoint = getParent().stageToLocalCoordinates(
                         new Vector2(event.getStageX(), event.getStageY())
                 );
+                final float height = Math.max(
+                        getMinHeight(),
+                        resizeStartHeight - parentPoint.y + resizeStartParent.y
+                );
+                setPosition(getX(), resizeStartY + resizeStartHeight - height);
                 setSize(
                         Math.max(getMinWidth(), resizeStartWidth + parentPoint.x - resizeStartParent.x),
-                        Math.max(getMinHeight(), resizeStartHeight + parentPoint.y - resizeStartParent.y)
+                        height
                 );
                 invalidateHierarchy();
                 resizePoint.set(event.getStageX(), event.getStageY());
