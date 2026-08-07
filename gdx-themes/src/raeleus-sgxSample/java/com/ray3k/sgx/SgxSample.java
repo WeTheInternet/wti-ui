@@ -531,7 +531,7 @@ public class SgxSample extends ApplicationAdapter {
 
         final Table header = new Table(skin);
         header.setBackground(skin.getDrawable("file-menu-bar"));
-        header.add(new Label(title, skin, "white")).growX().center();
+        header.add(new Label(title, skin, "white")).growX().center().padLeft(4f);
         header.add(toggle).size(29f, 27f).right().padRight(0f);
         header.setHeight(31f);
         return header;
