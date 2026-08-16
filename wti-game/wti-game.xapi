@@ -1,0 +1,50 @@
+<xapi-schema
+    modules = [
+        <api />,
+        <spi />,
+        <impl />,
+        <main />
+    ]
+
+    platforms = [
+        <main
+            requires = {
+                @transitive("test")
+                external : [
+                    ( libs.spock ),
+                    ( libs.xapi.model.jre ),
+                ],
+            }
+            modules = [
+                <api
+                    requires = {
+                        @transitive
+                        external : [
+                            ( libs.xapi.model ),
+                            ( libs.xapi.fu ),
+                        ],
+                    }
+                /api>,
+                <spi
+                    requires = {
+                        @transitive
+                        project : {
+                            "wti-game" : api,
+                        },
+                    }
+                /spi>,
+                <impl
+                    requires = {
+                        internal : [ spi ],
+                    }
+                /impl>,
+                <main
+                    requires = {
+                        @transitive
+                        internal : [ impl ],
+                    }
+                /main>,
+            ]
+        /main>,
+    ]
+/xapi-schema>

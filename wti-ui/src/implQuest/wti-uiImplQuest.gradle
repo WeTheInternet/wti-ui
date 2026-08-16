@@ -4,6 +4,7 @@ plugins {
 }
 // GenStart net.wti.gradle.settings.plugin.XapiSettingsPlugin
 ext.xapiModern = 'true'
+version = '0.51'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 repositories.mavenCentral()
@@ -17,7 +18,6 @@ main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 main.java.srcDir("$rootDir/wti-ui/src/implQuest/java")
-test.java.srcDir("$rootDir/wti-ui/src/implQuestTest/java")
 test.groovy.srcDir("$rootDir/wti-ui/src/implQuestTest/groovy")
 
 dependencies {
@@ -37,7 +37,7 @@ repositories {
     }
 }
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
-// GenInclude body.end from file:///opt/wti-ui/wti-ui/src/implQuest/gradle/body.end
+// GenInclude body.end from file://$rootDir/wti-ui/src/implQuest/gradle/body.end
 tasks.named('test').configure {
     useJUnitPlatform()
     testLogging {
