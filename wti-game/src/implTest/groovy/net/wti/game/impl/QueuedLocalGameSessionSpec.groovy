@@ -85,6 +85,80 @@ class QueuedLocalGameSessionSpec extends Specification {
         notified*.resultingRevision == [9L, 9L]
     }
 
+    def "handler failure leaves command pending and allows retry without duplicate mutation"() {
+        given:
+        def handled = []
+        def failedOnce = true
+        def session = session(
+                { context -> null },
+                { context ->
+                    handled << context.command.commandId
+                    if (failedOnce) {
+                        failedOnce = false
+                        throw new IllegalStateException("temporary handler failure")
+                    }
+                    accepted(context, 99)
+                }
+        )
+        session.addResultListener({ result -> } as In1<TestGameResult>)
+
+        when:
+        session.submit(command("retry", 1))
+        session.pump()
+
+        then:
+        def ex = thrown(IllegalStateException)
+        ex.message == "temporary handler failure"
+        handled == ["retry"]
+        session.pendingCommands() == 1
+
+        when:
+        session.pump()
+
+        then:
+        session.pendingCommands() == 0
+        handled == ["retry", "retry"]
+    }
+
+    def "listener failure does not consume command and retry reuses retained result"() {
+        given:
+        int handled = 0
+        int notified = 0
+        def session = session(
+                { context -> null },
+                { context ->
+                    handled++
+                    accepted(context, 7)
+                }
+        )
+        session.addResultListener({ result ->
+            if (notified == 0) {
+                notified++
+                throw new IllegalStateException("temporary listener failure")
+            }
+            notified++
+        } as In1<TestGameResult>)
+
+        when:
+        session.submit(command("listener", 3))
+        session.pump()
+
+        then:
+        def ex = thrown(IllegalStateException)
+        ex.message == "temporary listener failure"
+        handled == 1
+        notified == 1
+        session.pendingCommands() == 1
+
+        when:
+        session.pump()
+
+        then:
+        session.pendingCommands() == 0
+        handled == 1
+        notified == 2
+    }
+
     def "explicit authorization rejection bypasses the game handler"() {
         given:
         int mutations = 0

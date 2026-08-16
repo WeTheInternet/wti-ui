@@ -103,7 +103,13 @@ public final class QueuedLocalGameSession<
         try {
             final int boundary = commands.size();
             for (int i = 0; i < boundary; i++) {
-                process(commands.removeFirst());
+                final C command = commands.removeFirst();
+                try {
+                    process(command);
+                } catch (RuntimeException e) {
+                    commands.addFirst(command);
+                    throw e;
+                }
             }
             return boundary;
         } finally {

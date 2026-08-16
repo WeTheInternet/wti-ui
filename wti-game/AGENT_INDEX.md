@@ -1,6 +1,6 @@
 # wti-game Agent Index
 
-See `../AGENTS.md` for repository-wide guidance and `README.md` in this directory for the
+See `../README.md` for repository-wide guidance and `README.md` in this directory for the
 public contract, model roles, queue semantics, coordinates, and verification commands.
 
 ## Boundary

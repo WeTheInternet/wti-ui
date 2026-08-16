@@ -1,9 +1,9 @@
 <xapi-schema
     modules = [
         <api />,
-        <spi includes = api />,
-        <impl includes = spi />,
-        <main includes = impl />
+        <spi />,
+        <impl />,
+        <main />
     ]
 
     platforms = [
@@ -25,6 +25,25 @@
                         ],
                     }
                 /api>,
+                <spi
+                    requires = {
+                        @transitive
+                        project : {
+                            "wti-game" : api,
+                        },
+                    }
+                /spi>,
+                <impl
+                    requires = {
+                        internal : [ spi ],
+                    }
+                /impl>,
+                <main
+                    requires = {
+                        @transitive
+                        internal : [ impl ],
+                    }
+                /main>,
             ]
         /main>,
     ]
