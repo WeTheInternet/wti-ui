@@ -4,23 +4,24 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import net.wti.quest.api.LiveQuest;
-import net.wti.time.api.DayIndex;
+import net.wti.quest.api.QuestStatus;
+import net.wti.time.api.DurationUnit;
 import net.wti.time.api.ModelDay;
+import net.wti.time.api.ModelDuration;
 import net.wti.ui.quest.api.LiveQuestRowFactory;
+import net.wti.ui.quest.api.QuestActionHandler;
 import net.wti.ui.quest.api.QuestDayView;
 import net.wti.ui.view.api.BaseViewTable;
+import xapi.fu.log.Log;
 import xapi.string.X_String;
 import xapi.time.X_Time;
 import xapi.time.api.TimeComponents;
 import xapi.time.api.TimeZoneInfo;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
-/// DefaultQuestDayView
+/// DayPlanView
 ///
 /// Renders a single day's LiveQuest instances grouped by hour and sorted by:
 ///  - deadlineMillis (non-zero first, earliest first),
@@ -60,7 +61,12 @@ public class DayPlanView extends BaseViewTable implements QuestDayView {
         super(skin);
         this.modelDay = day;
         setLiveQuests(quests);
-        this.rowFactory = factory != null ? factory : new DefaultLiveQuestRowFactory(skin);
+        this.rowFactory = factory != null ? factory : new DefaultLiveQuestRowFactory(skin, new QuestActionHandler() {
+            @Override
+            public void complete(final ModelDay day, final LiveQuest quest) {
+                Log.tryLog(DayPlanView.class, DayPlanView.this, "Completed quest", quest);
+            }
+        });
     }
 
     /// Replace the data source for this day (call refresh() afterward).
@@ -103,11 +109,21 @@ public class DayPlanView extends BaseViewTable implements QuestDayView {
 
         add(headerLabel(dayTitle(modelDay))).left().row();
 
-        final List<LiveQuest> sorted = new ArrayList<>(liveQuests);
+        final List<LiveQuest> sorted = new ArrayList<>();
+        for (final LiveQuest q : liveQuests) {
+            if (q == null) {
+                continue;
+            }
+            if (q.getStatus() == net.wti.quest.api.QuestStatus.FINISHED) {
+                continue;
+            }
+            sorted.add(q);
+        }
         sorted.sort(liveQuestComparator());
 
         final Map<Integer, List<LiveQuest>> byHour = bucketByHour(sorted, modelDay);
         hasItems = !byHour.isEmpty();
+        final List<LiveQuest> noDeadline = byHour.remove(-1);
 
         final int maxHourExclusive = 24 + Math.max(0, Math.min(23, rolloverHour));
 
@@ -120,6 +136,12 @@ public class DayPlanView extends BaseViewTable implements QuestDayView {
                 }
                 final int end = hour - 1;
                 add(emptyHourLabel(collapseTitle(start, end))).left().row();
+                final List<LiveQuest> toShow = selectNoDeadlines(noDeadline, start, end);
+                for (final LiveQuest quest : toShow) {
+                    add(rowFactory.buildRow(modelDay, quest)).left().row();
+                    // TODO: detect when lots of items added and a new hour is needed
+                }
+
             } else {
                 final List<LiveQuest> items = byHour.get(hour);
                 add(hourLabel(formatHour(hour))).left().row();
@@ -129,8 +151,38 @@ public class DayPlanView extends BaseViewTable implements QuestDayView {
                 hour++;
             }
         }
+        // TODO: consider the no-deadline items _somewhere_
 
         invalidateHierarchy();
+    }
+
+    private List<LiveQuest> selectNoDeadlines(final List<LiveQuest> noDeadline, final int start, final int end) {
+        final List<LiveQuest> selected = noDeadline.stream()
+                .filter(lq -> {
+                    if (lq.skipped()) {
+                        return false;
+                    }
+                    return lq.status() == QuestStatus.ACTIVE;
+                })
+                .sorted(LiveQuest::comparePriority)
+                .collect(Collectors.toList());
+        final List<LiveQuest> results = new ArrayList<>();
+        double allowed = (1 + end - start) * X_Time.ONE_HOUR;
+        for (LiveQuest lq : selected) {
+            ModelDuration duration = lq.getEstimatedDuration();
+            if (duration == null) {
+                duration = ModelDuration.duration(1, DurationUnit.HOUR);
+            }
+            final long millis = duration.toMillis();
+            if (allowed >= millis) {
+                results.add(lq);
+                allowed -= millis;
+            }
+            if (allowed <= 0) {
+                break;
+            }
+        }
+        return results;
     }
 
     /// @return true if this day currently contains any renderable items.
@@ -152,48 +204,8 @@ public class DayPlanView extends BaseViewTable implements QuestDayView {
     // Grouping / sorting helpers
     // ---------------------------------------------------------------------
 
-    protected Comparator<LiveQuest> liveQuestComparator() {
-        return (a, b) -> {
-            final long da = a.getDeadlineMillis() == null ? 0L : a.getDeadlineMillis();
-            final long db = b.getDeadlineMillis() == null ? 0L : b.getDeadlineMillis();
-
-            final boolean aHasDeadline = da > 0L;
-            final boolean bHasDeadline = db > 0L;
-
-            if (aHasDeadline && !bHasDeadline) {
-                return -1;
-            }
-            if (!aHasDeadline && bHasDeadline) {
-                return 1;
-            }
-            if (aHasDeadline && bHasDeadline) {
-                final int cmpDeadline = Long.compare(da, db);
-                if (cmpDeadline != 0) {
-                    return cmpDeadline;
-                }
-            }
-
-            final Integer pa = a.getEffectivePriority();
-            final Integer pb = b.getEffectivePriority();
-            final int priorityA = pa == null ? 0 : pa;
-            final int priorityB = pb == null ? 0 : pb;
-            final int cmpPriority = Integer.compare(priorityB, priorityA);
-            if (cmpPriority != 0) {
-                return cmpPriority;
-            }
-
-            final String titleA = safeTitle(a);
-            final String titleB = safeTitle(b);
-            return titleA.compareToIgnoreCase(titleB);
-        };
-    }
-
-    protected String safeTitle(final LiveQuest quest) {
-        final String liveKey = quest.getLiveKey();
-        if (liveKey == null) {
-            return "";
-        }
-        return liveKey;
+    protected static Comparator<LiveQuest> liveQuestComparator() {
+        return LiveQuest::comparePriority;
     }
 
     protected Map<Integer, List<LiveQuest>> bucketByHour(final List<LiveQuest> quests, final ModelDay day) {
@@ -203,6 +215,8 @@ public class DayPlanView extends BaseViewTable implements QuestDayView {
         for (final LiveQuest quest : quests) {
             final Long deadline = quest.getDeadlineMillis();
             if (deadline == null || deadline.longValue() <= 0L) {
+                List<LiveQuest> bucket = result.computeIfAbsent(-1, k -> new ArrayList<>());
+                bucket.add(quest);
                 continue;
             }
             final long millis = deadline.longValue();
@@ -223,11 +237,7 @@ public class DayPlanView extends BaseViewTable implements QuestDayView {
             /// but are rendered at the end of the day as 24+hour buckets.
             final int bucketHour = hourLocal < rolloverHour ? 24 + hourLocal : hourLocal;
 
-            List<LiveQuest> bucket = result.get(bucketHour);
-            if (bucket == null) {
-                bucket = new ArrayList<>();
-                result.put(bucketHour, bucket);
-            }
+            List<LiveQuest> bucket = result.computeIfAbsent(bucketHour, k -> new ArrayList<>());
             bucket.add(quest);
         }
 
@@ -256,7 +266,7 @@ public class DayPlanView extends BaseViewTable implements QuestDayView {
         if (start == end) {
             return formatHour(start);
         }
-        return formatHour(start) + " – " + formatHour(end) + " (no items)";
+        return formatHour(start) + " – " + formatHour(end);
     }
 
     protected String formatHour(final int hourIndex) {

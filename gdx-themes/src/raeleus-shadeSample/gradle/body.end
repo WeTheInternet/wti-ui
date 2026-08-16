@@ -1,0 +1,6 @@
+tasks.register("runShadeSample", JavaExec) {
+    group = "application"
+    description = "Run the Shade UI control gallery"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("com.ray3k.shade.ShadeSample")
+}

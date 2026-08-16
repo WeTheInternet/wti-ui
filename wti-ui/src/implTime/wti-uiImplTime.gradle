@@ -20,6 +20,7 @@ test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 main.java.srcDir("$rootDir/wti-ui/src/implTime/java")
 test.groovy.srcDir("$rootDir/wti-ui/src/implTimeTest/groovy")
+test.java.srcDir("$rootDir/wti-ui/src/implTimeTest/java")
 
 dependencies {
     implementation project(path: ":wti-ui-api")

@@ -29,7 +29,7 @@ public interface LiveQuestStore {
      * @param day            Parent ModelDay.
      * @param definition     Source QuestDefinition.
      * @param rule           Source RecurrenceRule (may be null for manual).
-     * @param deadlineMillis Absolute deadline (0 => no deadline).
+     * @param deadlineMillis Absolute deadline, where 0 means no deadline.
      * @param skip           Whether this instance should be created as skipped.
      * @return the created LiveQuest.
      */

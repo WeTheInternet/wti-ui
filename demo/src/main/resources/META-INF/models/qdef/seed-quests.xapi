@@ -1,0 +1,86 @@
+<QuestDefinition
+    id = "seed-all-other-data"
+    name = "Seed all other LifeQuest data"
+    description = "Master bootstrap definition for the sample app"
+    priority = 10
+    scheduleTemplateKey = "daily"
+    active = true
+    auto = true
+    tags = [ "seed", "bootstrap", "planning" ]
+/QuestDefinition>
+
+<QuestDefinition
+    id = "morning-routine"
+    name = "Morning routine"
+    description = "Wake-up flow, hygiene, hydration, movement, planning"
+    priority = 8
+    scheduleTemplateKey = "daily"
+    active = true
+    auto = true
+    tags = [ "daily", "routine", "morning" ]
+/QuestDefinition>
+
+<QuestDefinition
+    id = "play-with-the-cats"
+    name = "Play with the cats"
+    description = "Play with the cats"
+    rewards = [ { type: "bronze", amount: 5 } ]
+    priority = 6
+    scheduleTemplateKey = "daily"
+    active = true
+    auto = true
+    tags = [ "kids", "daily", "pets" ]
+/QuestDefinition>
+
+<QuestDefinition
+    id = "clean-cat-box"
+    name = "Clean the cat box"
+    description = "Clean out the litter boxes"
+    rewards = [ { type: "silver", amount: 2 } ]
+    priority = 6
+    scheduleTemplateKey = "daily"
+    active = true
+    auto = true
+    tags = [ "kids", "daily", "pets" ]
+/QuestDefinition>
+
+<QuestDefinition
+    id = "bedtime-routine"
+    name = "Bedtime routine"
+    priority = 7
+    scheduleTemplateKey = "daily"
+    active = true
+    auto = true
+    tags = [ "daily", "routine", "night" ]
+>
+    <QuestDefinition
+        name = "Take Shower"
+        description = "Get clean!"
+        steps = [
+            "Pick out pajamas",
+            "Get a towel",
+            "Warm up shower",
+            "Use shampoo",
+            "Use conditioner",
+            "Use body wash",
+            "Rinse",
+            "Dry",
+            "Dress",
+            "Clean up clothes / floor"
+        ]
+    /QuestDefinition>
+
+    <QuestDefinition
+        name = "Brush Teeth"
+        steps = [
+            "Floss teeth",
+            "Wet toothbrush",
+            "Add toothpaste",
+            "Brush for 2 minutes",
+            "Rinse with water",
+            "Rinse with mouthwash",
+            "Clean up toothbrush",
+        ]
+    /QuestDefinition>
+
+</QuestDefinition>

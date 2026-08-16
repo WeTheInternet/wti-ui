@@ -1,0 +1,13 @@
+<Quest
+    id = "day/1/lv/simple-task"
+    liveKey = "simple-task"
+    dayIndex = 1
+    title = "Drink water"
+    description = "Single simple task for loader smoke tests"
+    status = "ACTIVE"
+    effectivePriority = 3
+    deadlineMillis = 1760000400000
+    skip = false
+    scheduleTemplateKey = "daily"
+    tags = [ "health" ]
+/Quest>

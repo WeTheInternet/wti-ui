@@ -1,0 +1,181 @@
+<Quest
+    id = "day/179/lv/seed-all-other-data"
+    liveKey = "seed-all-other-data"
+    dayIndex = 179
+    title = "Seed all other LifeQuest data"
+    description = "Master bootstrap quest. Use child quest descriptions as your working notes and checklist while building out real schedule data."
+    status = "ACTIVE"
+    effectivePriority = 10
+    deadlineMillis = 1775685600000
+    skip = false
+    scheduleTemplateKey = "daily"
+    tags = [ "seed", "bootstrap", "planning" ]
+>
+    <Quest
+        id = "day/179/lv/seed-all-other-data/morning-routine"
+        liveKey = "seed-all-other-data/morning-routine"
+        dayIndex = 179
+        title = "Morning routine"
+        description = "Notes: checklist for wake-up flow, hygiene, hydration, movement, planning. Add exact steps and preferred order."
+        status = "ACTIVE"
+        effectivePriority = 8
+        deadlineMillis = 1775631600000
+        skip = false
+        scheduleTemplateKey = "daily"
+        tags = [ "daily", "routine", "morning" ]
+    /Quest>
+
+    <Quest
+        id = "day/179/lv/seed-all-other-data/nighttime-routine"
+        liveKey = "seed-all-other-data/nighttime-routine"
+        dayIndex = 179
+        title = "Nighttime routine"
+        description = "Notes: wind-down steps, prep-for-tomorrow checklist, hygiene, shutdown sequence."
+        status = "ACTIVE"
+        effectivePriority = 7
+        deadlineMillis = 1775682000000
+        skip = false
+        scheduleTemplateKey = "daily"
+        tags = [ "daily", "routine", "night" ]
+    /Quest>
+
+    <Quest
+        id = "day/179/lv/seed-all-other-data/meals"
+        liveKey = "seed-all-other-data/meals"
+        dayIndex = 179
+        title = "Meals"
+        description = "Notes: meal planning / prep flow; add breakfast/lunch/dinner expectations and constraints."
+        status = "ACTIVE"
+        effectivePriority = 6
+        deadlineMillis = 1775649600000
+        skip = false
+        scheduleTemplateKey = "daily"
+        tags = [ "daily", "health", "food" ]
+    /Quest>
+
+    <Quest
+        id = "day/179/lv/seed-all-other-data/work"
+        liveKey = "seed-all-other-data/work"
+        dayIndex = 179
+        title = "Work"
+        description = "Notes: define daily work startup ritual, top priorities, and shutdown handoff."
+        status = "ACTIVE"
+        effectivePriority = 9
+        deadlineMillis = 1775660400000
+        skip = false
+        scheduleTemplateKey = "workday"
+        tags = [ "daily", "work", "focus" ]
+    /Quest>
+
+    <Quest
+        id = "day/183/lv/seed-all-other-data/cats-groomer-stoked"
+        liveKey = "seed-all-other-data/cats-groomer-stoked"
+        dayIndex = 183
+        title = "Take cats to groomer at Stoked"
+        description = "Notes: confirm appointment time, carrier prep, pickup time, and any grooming requests."
+        status = "ACTIVE"
+        effectivePriority = 8
+        deadlineMillis = 1775980800000
+        skip = false
+        scheduleTemplateKey = "oneoff"
+        tags = [ "oneoff", "pets", "errand" ]
+    /Quest>
+
+    <Quest
+        id = "day/186/lv/seed-all-other-data/email-kristina"
+        liveKey = "seed-all-other-data/email-kristina"
+        dayIndex = 186
+        title = "Email Kristina"
+        description = "Notes: draft objective, key asks, and follow-up date."
+        status = "ACTIVE"
+        effectivePriority = 7
+        deadlineMillis = 1776247200000
+        skip = false
+        scheduleTemplateKey = "oneoff"
+        tags = [ "oneoff", "email" ]
+    /Quest>
+
+    <Quest
+        id = "day/193/lv/seed-all-other-data/email-garry"
+        liveKey = "seed-all-other-data/email-garry"
+        dayIndex = 193
+        title = "Email Garry"
+        description = "Notes: include context, decision needed, and deadline."
+        status = "ACTIVE"
+        effectivePriority = 7
+        deadlineMillis = 1776859200000
+        skip = false
+        scheduleTemplateKey = "oneoff"
+        tags = [ "oneoff", "email" ]
+    /Quest>
+
+    <Quest
+        id = "day/200/lv/seed-all-other-data/bookkeeping"
+        liveKey = "seed-all-other-data/bookkeeping"
+        dayIndex = 200
+        title = "Bookkeeping"
+        description = "Notes: reconcile accounts, categorize transactions, and verify outstanding items."
+        status = "ACTIVE"
+        effectivePriority = 8
+        deadlineMillis = 1777471200000
+        skip = false
+        scheduleTemplateKey = "oneoff"
+        tags = [ "oneoff", "finance", "admin" ]
+    /Quest>
+
+    <Quest
+        id = "day/207/lv/seed-all-other-data/email-pete"
+        liveKey = "seed-all-other-data/email-pete"
+        dayIndex = 207
+        title = "Email Pete"
+        description = "Notes: provide update, request response, and track next action."
+        status = "ACTIVE"
+        effectivePriority = 6
+        deadlineMillis = 1778083200000
+        skip = false
+        scheduleTemplateKey = "oneoff"
+        tags = [ "oneoff", "email" ]
+    /Quest>
+
+    <Quest
+        id = "day/214/lv/seed-all-other-data/clean-basement"
+        liveKey = "seed-all-other-data/clean-basement"
+        dayIndex = 214
+        title = "Clean basement"
+        description = "Notes: define zones, sort/keep/discard plan, supplies needed."
+        status = "ACTIVE"
+        effectivePriority = 5
+        deadlineMillis = 1778695200000
+        skip = false
+        scheduleTemplateKey = "oneoff"
+        tags = [ "oneoff", "home", "cleanup" ]
+    /Quest>
+
+    <Quest
+        id = "day/221/lv/seed-all-other-data/clean-garage"
+        liveKey = "seed-all-other-data/clean-garage"
+        dayIndex = 221
+        title = "Clean garage"
+        description = "Notes: tool wall, storage bins, disposal run, final sweep."
+        status = "ACTIVE"
+        effectivePriority = 5
+        deadlineMillis = 1779307200000
+        skip = false
+        scheduleTemplateKey = "oneoff"
+        tags = [ "oneoff", "home", "cleanup" ]
+    /Quest>
+
+    <Quest
+        id = "day/228/lv/seed-all-other-data/clean-library"
+        liveKey = "seed-all-other-data/clean-library"
+        dayIndex = 228
+        title = "Clean library"
+        description = "Notes: shelf organization, backlog sorting, reading queue refresh."
+        status = "ACTIVE"
+        effectivePriority = 5
+        deadlineMillis = 1779919200000
+        skip = false
+        scheduleTemplateKey = "oneoff"
+        tags = [ "oneoff", "home", "organization" ]
+    /Quest>
+</Quest>

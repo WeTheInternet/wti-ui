@@ -1,6 +1,6 @@
 package net.wti.quest.impl
 
-
+import net.wti.model.api.WtiUser
 import net.wti.quest.api.*
 import net.wti.time.api.DayIndex
 import net.wti.time.api.DurationUnit
@@ -59,13 +59,13 @@ class TodayPlannerServiceSpec extends Specification {
         )
 
         /// Simple synthetic user key
-        userKey = X_Model.newKey("user", "u1")
+        userKey = WtiUser.newKey( "u1")
     }
 
     private static QuestDefinition newQuestDefinition(final String id, final boolean active = true) {
         final QuestDefinition questDefinition = X_Model.create(QuestDefinition)
         questDefinition.setKey(QuestDefinition.KEY_BUILDER_DEF.buildKey(id))
-        questDefinition.setName("Quest " + id)
+        questDefinition.setTitle("Quest " + id)
         questDefinition.setActive(active)
         return questDefinition
     }
@@ -208,68 +208,4 @@ class TodayPlannerServiceSpec extends Specification {
         dayNum << [0, 1, -1, 36525, -36525]
     }
 
-    /// ----------------------------------------------------------------------
-    /// Test fakes
-    /// ----------------------------------------------------------------------
-
-    static class InMemoryQuestDefinitionSource implements QuestDefinitionSource {
-        Iterable<QuestDefinition> definitions = Collections.emptyList()
-
-        @Override
-        Iterable<QuestDefinition> findDefinitionsForUser(final ModelKey userKey) {
-            return definitions
-        }
-    }
-
-    static class InMemoryScheduleTemplateService implements ScheduleTemplateService {
-        /// key format: defId:ruleId
-        final Set<String> skippedPairs = new HashSet<>()
-
-        @Override
-        boolean shouldSkip(final ModelDay day, final QuestDefinition questDefinition, final RecurrenceRule rule) {
-            if (questDefinition == null || rule == null) {
-                return false
-            }
-            final String defId = questDefinition.key.id.toString()
-            final String key = defId + ":" + rule.ruleId
-            return skippedPairs.contains(key)
-        }
-    }
-
-    static class InMemoryLiveQuestStore implements LiveQuestStore {
-
-        final List<LiveQuest> all = new ArrayList<>()
-
-        @Override
-        LiveQuest findByDayAndLiveKey(final ModelDay day, final String liveKey) {
-            return all.find { it.dayIndex == day.dayNum && liveKey == it.liveKey }
-        }
-
-        @Override
-        LiveQuest createLiveQuest(final ModelDay day, final QuestDefinition questDefinition, final RecurrenceRule rule, final long deadlineMillis, final boolean skip) {
-            final LiveQuest liveQuest = X_Model.create(LiveQuest)
-            liveQuest.setParentDayKey(ModelDay.newKey(day.dayNum))
-            liveQuest.setDayIndex(day.dayNum)
-            liveQuest.setLiveKey(QuestKeyUtil.liveKeyFor(questDefinition, rule))
-            liveQuest.setSourceDefinitionKey(questDefinition.key)
-            if (rule != null) {
-                liveQuest.setSourceRuleKey(rule.key)
-            }
-            liveQuest.setDeadlineMillis(deadlineMillis)
-            liveQuest.setSkip(skip)
-            liveQuest.setStatus(QuestStatus.ACTIVE)
-            final long now = System.currentTimeMillis()
-            liveQuest.setCreatedAtMillis(now)
-            liveQuest.setUpdatedAtMillis(now)
-
-            all.add(liveQuest)
-            return liveQuest
-        }
-
-        @Override
-        LiveQuest save(final LiveQuest quest) {
-            /// In-memory: already in list
-            return quest
-        }
-    }
 }

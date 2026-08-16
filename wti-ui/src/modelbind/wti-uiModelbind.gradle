@@ -17,6 +17,7 @@ main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
+main.java.srcDir("$rootDir/wti-ui/src/modelbind/java")
 
 dependencies {
     api project(path: ":wti-ui-form")

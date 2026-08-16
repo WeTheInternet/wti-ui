@@ -1,0 +1,14 @@
+<Quest
+    id = "day/1/lv/minimal-composite"
+>
+    <Quest
+        id = "day/1/lv/minimal-composite/child-a"
+    /Quest>
+    <Quest
+        id = "day/1/lv/minimal-composite/child-b"
+    >
+        <Quest
+            id = "day/1/lv/minimal-composite/child-b/grandchild-b1"
+        /Quest>
+    </Quest>
+</Quest>

@@ -17,6 +17,7 @@ main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
+main.java.srcDir("$rootDir/model/src/main/java")
 
 dependencies {
     testImplementation project(path: ":model-testTools")

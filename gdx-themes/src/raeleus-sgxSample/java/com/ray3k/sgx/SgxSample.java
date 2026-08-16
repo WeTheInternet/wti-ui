@@ -10,11 +10,19 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import net.wti.gdx.theme.raeleus.sgx.*;
+import net.wti.ui.gdx.theme.CompositeGdxTheme;
 import net.wti.ui.gdx.theme.GdxTheme;
+import net.wti.ui.gdx.theme.UiDataBundle;
+import net.wti.ui.view.responsive.FloatingPanel;
+import net.wti.ui.view.responsive.FloatingPanelLayer;
+import net.wti.ui.view.responsive.FloatingPanelStyle;
+import net.wti.ui.view.responsive.ResponsiveAccordion;
 
 /// SgxSample:
 ///
@@ -24,6 +32,7 @@ import net.wti.ui.gdx.theme.GdxTheme;
 public class SgxSample extends ApplicationAdapter {
     private Skin skin;
     private Stage stage;
+    private FloatingPanelLayer floatingPanels;
 
     public static void main (String[] arg) {
         Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
@@ -33,7 +42,19 @@ public class SgxSample extends ApplicationAdapter {
 
     @Override
     public void create() {
-        final GdxTheme theme = new GdxThemeSgx();
+        final GdxTheme theme = new CompositeGdxTheme(
+                "cc-by-4/raeleus/sgx",
+                new UiDataBundle(null, "cc-by-4/wti/common/wti-fonts.atlas"),
+                new UiDataBundle(
+                        "cc-by-4/wti/common/wti-common-ui.json",
+                        "cc-by-4/wti/common/wti-common-ui.atlas"
+                ),
+                new UiDataBundle(
+                        "cc-by-4/raeleus/sgx/sgx-ui.json",
+                        "cc-by-4/raeleus/sgx/sgx-ui.atlas"
+                ),
+                new UiDataBundle(null, "cc-by-4/raeleus/sgx/sgx-fonts.atlas")
+        );
         skin = theme.getSkin();
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -325,7 +346,195 @@ public class SgxSample extends ApplicationAdapter {
         slider.setDisabled(true);
         window.add(slider).padTop(5.0f);
 
+        addFloatingPanelShowcase();
+    }
 
+    /// Adds an interactive showcase for the reusable WTI floating-panel host.
+    private void addFloatingPanelShowcase() {
+        final FloatingPanelStyle panelStyle = new FloatingPanelStyle();
+        panelStyle.edgePadding = 16f;
+        panelStyle.cascadeGap = 22f;
+        panelStyle.minimumWidth = 250f;
+        panelStyle.minimumHeight = 96f;
+        panelStyle.titleContentGap = 4f;
+
+        floatingPanels = new FloatingPanelLayer(panelStyle);
+        floatingPanels.setBounds(0f, 0f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        stage.addActor(floatingPanels);
+        addFloatingPanel("Floating Controls", floatingControls(), panelStyle);
+        addFloatingPanel("Floating Options", floatingOptions(), panelStyle);
+    }
+
+    private void addFloatingPanel(
+            final String title,
+            final Table content,
+            final FloatingPanelStyle panelStyle
+    ) {
+        final Table titleBar = new Table(skin);
+        titleBar.setBackground("file-menu-bar");
+        titleBar.padTop(4f).padBottom(4f);
+        titleBar.add(new Label(title, skin, "white")).growX().left().padLeft(8f);
+        final TextButton minimize = new TextButton("-", panelStateButtonStyle(false));
+        titleBar.add(minimize).size(34f, 35f).padRight(2f);
+        final Button redock = new Button(skin, "close");
+        titleBar.add(redock).size(28f).padRight(4f);
+
+        final FloatingPanel panel = new FloatingPanel(
+                titleBar,
+                content,
+                skin.get(ScrollPane.ScrollPaneStyle.class),
+                panelStyle
+        );
+        panel.setResizable(true);
+        panel.setResizeHandleBackground(skin.getDrawable("button-small"));
+        panel.setPanelBackground(skin.get("tool", Window.WindowStyle.class).background);
+        panel.setRedockAction(new Runnable() {
+            @Override
+            public void run() {
+                floatingPanels.removePanel(panel);
+            }
+        });
+        minimize.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                panel.setMinimized(!panel.isMinimized());
+                minimize.setText(panel.isMinimized() ? "+" : "-");
+                minimize.setStyle(panelStateButtonStyle(panel.isMinimized()));
+            }
+        });
+        redock.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                panel.redock();
+            }
+        });
+        floatingPanels.addPanel(panel);
+    }
+
+    /// Binds the title state control directly to the registered SGX plus/minus regions.
+    private TextButton.TextButtonStyle panelStateButtonStyle(final boolean minimized) {
+        final TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+        style.font = skin.getFont("font");
+        style.fontColor = skin.getColor("font");
+        style.overFontColor = skin.getColor("font-over");
+        style.downFontColor = skin.getColor("font");
+        style.disabledFontColor = skin.getColor("font-disabled");
+        style.up = skin.getDrawable("button-small");
+        style.down = skin.getDrawable("button-small-pressed");
+        style.over = skin.getDrawable("button-small-over");
+        style.disabled = skin.getDrawable("button-small-disabled");
+        return style;
+    }
+
+    private Table floatingControls() {
+        final Table content = new Table(skin);
+        content.defaults().left().pad(5f);
+        content.add(new Label("Normal SGX controls inside a reusable viewport.", skin, "small"))
+                .colspan(2).growX().left();
+        content.row();
+        content.add(new CheckBox("Show grid", skin)).colspan(2).left();
+        content.row();
+        content.add(new CheckBox("Snap to tiles", skin)).colspan(2).left();
+        content.row();
+        content.add(new Label("Brush size", skin, "small"));
+        Slider brush = new Slider(1f, 100f, 1f, false, skin);
+        brush.setValue(40f);
+        content.add(brush).width(180f);
+        content.row();
+        content.add(new Label("Opacity", skin, "small"));
+        Slider opacity = new Slider(1f, 100f, 1f, false, skin);
+        opacity.setValue(75f);
+        content.add(opacity).width(180f);
+        return content;
+    }
+
+    private Table floatingOptions() {
+        final Table content = new Table(skin);
+        content.defaults().left().pad(5f);
+        content.add(new Label("Drag title bars; resize to test clamping.", skin, "small"))
+                .colspan(2).growX().left();
+        content.row();
+        ButtonGroup group = new ButtonGroup();
+        ImageTextButton normal = new ImageTextButton("Normal mode", skin, "radio");
+        ImageTextButton preview = new ImageTextButton("Preview mode", skin, "radio");
+        ImageTextButton disabled = new ImageTextButton("Unavailable mode", skin, "radio");
+        disabled.setDisabled(true);
+        group.add(normal, preview, disabled);
+        content.add(normal).colspan(2).left();
+        content.row();
+        content.add(preview).colspan(2).left();
+        content.row();
+        content.add(disabled).colspan(2).left();
+        content.row();
+        content.add(new Label("More content demonstrates scrolling.", skin, "small"))
+                .colspan(2).left();
+        content.row();
+        content.add(floatingAccordion()).colspan(2).growX().fillX().left();
+        content.row();
+        for (int i = 0; i < 8; i++) {
+            content.add(new CheckBox("Option " + (i + 1), skin)).colspan(2).left();
+            content.row();
+        }
+        return content;
+    }
+
+    /// Demonstrates the reusable multi-open accordion using the active SGX Skin.
+    private ResponsiveAccordion floatingAccordion() {
+        final ResponsiveAccordion accordion = new ResponsiveAccordion(skin);
+
+        final Table display = new Table(skin);
+        display.defaults().left().pad(3f);
+        display.add(new CheckBox("Show grid", skin)).left().row();
+        display.add(new CheckBox("Snap to tiles", skin)).left().row();
+        final Table displayHeader = accordionHeader(accordion, "Display", "Display", true);
+        accordion.addSection("Display", displayHeader, display);
+
+        final Table tools = new Table(skin);
+        tools.defaults().left().pad(3f);
+        tools.add(new CheckBox("Live preview", skin)).left().row();
+        tools.add(new CheckBox("Highlight selection", skin)).left().row();
+        final Table toolsHeader = accordionHeader(accordion, "Tools", "Tools", false);
+        accordion.addSection("Tools", toolsHeader, tools);
+        accordion.expand("Display");
+        return accordion;
+    }
+
+    /// Keeps the section state control inside the same styled header as its title.
+    private Table accordionHeader(
+            final ResponsiveAccordion accordion,
+            final String key,
+            final String title,
+            final boolean expanded
+    ) {
+        final TextButton toggle = new TextButton(expanded ? "-" : "+", panelStateButtonStyle(expanded));
+        toggle.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                accordion.toggle(key);
+                final boolean nowExpanded = accordion.isExpanded(key);
+                toggle.setText(nowExpanded ? "-" : "+");
+                toggle.setStyle(panelStateButtonStyle(nowExpanded));
+            }
+        });
+        toggle.addListener(new InputListener() {
+            @Override
+            public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+                event.stop();
+                return true;
+            }
+
+            @Override
+            public void touchUp(InputEvent event, float x, float y, int pointer, int button) {
+                event.stop();
+            }
+        });
+
+        final Table header = new Table(skin);
+        header.setBackground(skin.getDrawable("file-menu-bar"));
+        header.add(new Label(title, skin, "white")).growX().center().padLeft(4f);
+        header.add(toggle).size(29f, 27f).right().padRight(0f);
+        header.setHeight(31f);
+        return header;
     }
 
     @Override
@@ -347,11 +556,16 @@ public class SgxSample extends ApplicationAdapter {
         super.resize(width, height);
 
         stage.getViewport().update(width, height, true);
+        if (floatingPanels != null) {
+            floatingPanels.setBounds(0f, 0f, width, height);
+            floatingPanels.clampPanels();
+        }
     }
 
     @Override
     public void dispose() {
         skin.dispose();
         stage.dispose();
+        floatingPanels = null;
     }
 }

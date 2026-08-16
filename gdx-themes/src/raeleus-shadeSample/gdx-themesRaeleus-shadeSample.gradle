@@ -30,4 +30,11 @@ repositories {
     }
 }
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
+// GenInclude body.end from file://$rootDir/gdx-themes/src/raeleus-shadeSample/gradle/body.end
+tasks.register("runShadeSample", JavaExec) {
+    group = "application"
+    description = "Run the Shade UI control gallery"
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass.set("com.ray3k.shade.ShadeSample")
+}
 // Done generating buildfile for :gdx-themes at file://$rootDir/gdx-themes/src/raeleus-shadeSample/gdx-themesRaeleus-shadeSample.gradle

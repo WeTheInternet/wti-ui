@@ -4,16 +4,24 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import net.wti.quest.api.LiveQuest;
+import net.wti.quest.api.QuestDefinition;
 import net.wti.quest.api.QuestStatus;
+import net.wti.quest.impl.DefaultQuestCompletionStore;
+import net.wti.quest.impl.QuestCompletionService;
+import net.wti.quest.model.impl.LiveQuestLoaderImpl;
 import net.wti.time.api.ModelDay;
 import net.wti.time.impl.DayIndexService;
 import net.wti.time.impl.ModelDayService;
 import net.wti.ui.demo.theme.LifeQuestTheme;
+import net.wti.ui.quest.api.QuestActionHandler;
 import net.wti.ui.quest.impl.DayPlanView;
+import net.wti.ui.quest.impl.DefaultLiveQuestRowFactory;
 import net.wti.ui.sample.AbstractSampleApp;
+import xapi.jre.model.ModelServiceJre;
 import xapi.model.X_Model;
 import xapi.time.X_Time;
 import xapi.time.api.TimeZoneInfo;
+import xapi.util.api.SuccessHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,10 +48,21 @@ public class LiveQuestDemoApp extends AbstractSampleApp {
 
     @Override
     protected void createContent(final Stage stage, final Skin skin) {
-        final ModelDay today = createTodayModelDay();
-        final List<LiveQuest> quests = seedSampleQuests(today);
 
-        final DayPlanView view = new DayPlanView(skin, today, quests);
+        final ModelDay today = createTodayModelDay();
+        final DemoBootstrapService setup = new DemoBootstrapService();
+        final List<LiveQuest> quests = setup.loadForToday(today);
+
+        final QuestCompletionService completionService = new QuestCompletionService(new DefaultQuestCompletionStore());
+
+        final DefaultLiveQuestRowFactory rows = new DefaultLiveQuestRowFactory(skin, new QuestActionHandler() {
+            @Override
+            public void complete(final ModelDay day, final LiveQuest quest) {
+                completionService.complete(day, quest);
+            }
+        });
+
+        final DayPlanView view = new DayPlanView(skin, today, quests, rows);
         view.refresh();
 
         final ScrollPane scroller = new ScrollPane(view, skin);
@@ -65,47 +84,5 @@ public class LiveQuestDemoApp extends AbstractSampleApp {
 
         final ModelDay day = dayService.getOrCreateModelDay(now, zone, rolloverHour);
         return day;
-    }
-
-    protected List<LiveQuest> seedSampleQuests(final ModelDay day) {
-        final List<LiveQuest> list = new ArrayList<>();
-
-        final long start = day.startTimestamp();
-        final long hourMillis = 60L * 60L * 1000L;
-
-        list.add(createSampleQuest(day, "questA/morning", start + 2L * hourMillis, 10, false, "work", "focus"));
-        list.add(createSampleQuest(day, "questB/afternoon", start + 8L * hourMillis, 5, false, "admin"));
-        list.add(createSampleQuest(day, "questC/evening", start + 13L * hourMillis, 7, false, "health"));
-        list.add(createSampleQuest(day, "questD/late", start + 20L * hourMillis, 1, true, "offday"));
-        list.add(createSampleQuest(day, "questE/no_deadline", 0L, 3, false, "flex"));
-
-        return list;
-    }
-
-    protected LiveQuest createSampleQuest(
-            final ModelDay day,
-            final String liveKey,
-            final long deadlineMillis,
-            final int priority,
-            final boolean skip,
-            final String... tags
-    ) {
-        final LiveQuest quest = X_Model.create(LiveQuest.class);
-        quest.setParentDayKey(ModelDay.newKey(day.getDayNum()));
-        quest.setDayIndex(day.getDayNum());
-        quest.setLiveKey(liveKey);
-        quest.setKey(LiveQuest.newKey(quest.getParentDayKey(), liveKey));
-
-        quest.setDeadlineMillis(deadlineMillis);
-        quest.setEffectivePriority(priority);
-        quest.setSkip(skip);
-        quest.setStatus(QuestStatus.ACTIVE);
-        quest.setTags(tags);
-
-        final long now = X_Time.nowMillisLong();
-        quest.setCreatedAtMillis(now);
-        quest.setUpdatedAtMillis(now);
-
-        return quest;
     }
 }

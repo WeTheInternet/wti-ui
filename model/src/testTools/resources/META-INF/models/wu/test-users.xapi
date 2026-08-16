@@ -1,0 +1,2 @@
+<WtiUser id = "test-dad" groups = [ "test-admin" ] /WtiUser>
+<WtiUser id = "test-kid-1" groups = [ "test-kid" ] /WtiUser>

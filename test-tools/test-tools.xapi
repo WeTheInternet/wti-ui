@@ -6,6 +6,7 @@
                 @transitive
                 external: [
                     ( libs.gdx.core ),
+                    ( libs.spock ),
                 ]
             }
         /api>,

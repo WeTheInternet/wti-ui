@@ -1,5 +1,6 @@
 plugins {
     id	"java-library"
+    id	"groovy"
     id	"maven-publish"
 }
 // GenStart net.wti.gradle.settings.plugin.XapiSettingsPlugin
@@ -17,6 +18,8 @@ main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
+main.java.srcDir("$rootDir/model/src/implUser/java")
+test.groovy.srcDir("$rootDir/model/src/implUserTest/groovy")
 
 dependencies {
     implementation project(path: ":model-main")

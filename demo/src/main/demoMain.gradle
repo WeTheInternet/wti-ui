@@ -20,6 +20,7 @@ main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 main.java.srcDir("$rootDir/demo/src/main/java")
+main.resources.srcDir("$rootDir/demo/src/main/resources")
 test.groovy.srcDir("$rootDir/demo/src/test/groovy")
 
 dependencies {

@@ -29,7 +29,7 @@ public final class QuestKeyUtil {
             throw new IllegalStateException("QuestDefinition.getKey() must not be null");
         }
 
-        final String defId = def.getKey().getId().toString();
+        final String defId = def.getKey().getId();
         final String ruleId = rule == null ? null : rule.getRuleId();
 
         if (ruleId == null || ruleId.isEmpty()) {
