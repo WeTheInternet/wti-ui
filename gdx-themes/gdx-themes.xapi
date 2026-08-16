@@ -18,6 +18,7 @@
         // themes from Raeleus (a libgdx theme producer) https://ray3k.wordpress.com/
 
         <raeleus replaces = main
+            published = true
             modules = [
                 <skin-composer
                 /skin-composer>,
