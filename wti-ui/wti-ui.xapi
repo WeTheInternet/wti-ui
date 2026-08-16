@@ -35,6 +35,8 @@
                         ],
                     }
                 /api>,
+                <view />,
+                <context />,
                 <style
                     requires = {
                         @transitive
