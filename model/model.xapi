@@ -1,0 +1,127 @@
+<xapi-schema
+    modules = [
+        <api />,
+        <spi />,
+        <time includes = [ api, spi ] />,
+        <inventory includes = [ api, spi ] />,
+        <user includes = [ api, spi, inventory ] />,
+        <quest includes = [ api, spi, time, inventory, user ] />,
+        <main includes = [ quest, inventory, user ] />,
+        <testTools includes = [ main ] />
+    ]
+
+    platforms = [
+        <main
+            requires = {
+                @transitive("test")
+                external : [
+                    ( libs.spock ),
+                    ( libs.xapi.model.jre ),
+                ],
+            }
+            modules = [
+                <api
+                    requires = {
+                        @transitive
+                        external : [
+                            ( libs.xapi.model ),
+                            ( libs.xapi.util ),
+                        ],
+                    }
+                /api>,
+                <spi
+                    requires = {
+                        @transitive
+                        external : [
+                            ( libs.xapi.model ),
+                            ( libs.xapi.util ),
+                        ],
+                    }
+                /spi>,
+                <quest
+                    requires = {
+                        @transitive
+                        external : ( libs.xapi.lang.core ),
+                    }
+                /quest>,
+                <main
+                    requires = {
+                        @transitive(test)
+                        internal: testTools
+                    }
+                /main>,
+                <testTools
+                    requires = {
+                        @transitive
+                        project : { "test-tools" : api }
+                    }
+                /testTools>,
+            ]
+        /main>,
+        <impl replace=main
+            requires = {
+                @transitive("test")
+                external : [
+                    ( libs.spock ),
+                    ( libs.xapi.model.jre ),
+                ],
+            }
+            modules = [
+                <inventory
+                    requires = {
+                    }
+                /inventory>,
+                <quest
+                    requires = {
+                        @transitive(test)
+                        internal : testTools,
+                        @transitive
+                        internal : [ main, time ],
+
+                        external : ( libs.xapi.lang.core )
+                    }
+                /quest>,
+                <user
+                    requires = {
+                        @transitive(test)
+                        internal : testTools,
+                        project : {
+                            model : main
+                        }
+                    }
+                /user>
+            ]
+        /impl>,
+        <jre replace=impl
+            requires = {
+                @transitive
+                external : [
+                    ( libs.xapi.model.jre ),
+                ],
+            }
+            modules = [
+                <inventory
+                    requires = {
+                    }
+                /inventory>
+            ]
+        /jre>,
+        <sample replace=jre
+            // the sample module is a place to dump "testing mains"
+            // which can launch java "playground" apps for individual components
+
+            modules = [
+                <quest
+                    requires = {
+                        project : {
+                            ":components" : sampleQuest,
+                        },
+                        external : [
+                            ( libs.xapi.model.jre ),
+                        ],
+                    }
+                /quest>
+            ]
+        /sample>
+    ]
+/xapi-schema>

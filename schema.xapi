@@ -1,7 +1,7 @@
 <xapi-schema
     name = "wti-ui"
     group = "net.wti"
-    version = "0.1.0"
+    version = "0.51"
 
     defaultRepoUrl = mavenCentral()
 
@@ -15,6 +15,10 @@
             gdx-themes,
             // core interfaces and implementations for all common aspects of libgdx apps
             wti-ui,
+            // utilities for creating / interacting with xapi data models
+            model,
+            // transport-neutral command/session contracts and deterministic local delivery
+            "wti-game",
             // implementations of specialized lifequest components
             components,
             // a complete demo of all functionality, showcasing all supported UI elements

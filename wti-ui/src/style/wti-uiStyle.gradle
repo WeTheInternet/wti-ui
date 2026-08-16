@@ -4,6 +4,7 @@ plugins {
 }
 // GenStart net.wti.gradle.settings.plugin.XapiSettingsPlugin
 ext.xapiModern = 'true'
+version = '0.51'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 repositories.mavenCentral()
@@ -16,7 +17,6 @@ main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
-main.java.srcDir("$rootDir/wti-ui/src/style/java")
 
 dependencies {
     api project(path: ":gdx-themes-main")

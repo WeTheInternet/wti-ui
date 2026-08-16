@@ -1,0 +1,31 @@
+<xapi-schema
+    modules = [
+        <api />,
+        <spi includes = api />,
+        <impl includes = spi />,
+        <main includes = impl />
+    ]
+
+    platforms = [
+        <main
+            requires = {
+                @transitive("test")
+                external : [
+                    ( libs.spock ),
+                    ( libs.xapi.model.jre ),
+                ],
+            }
+            modules = [
+                <api
+                    requires = {
+                        @transitive
+                        external : [
+                            ( libs.xapi.model ),
+                            ( libs.xapi.fu ),
+                        ],
+                    }
+                /api>,
+            ]
+        /main>,
+    ]
+/xapi-schema>

@@ -2,7 +2,7 @@ plugins {
     id	"java-library"
     id	"maven-publish"
 }
-// GenInclude body from file:///opt/wti-ui/src/main/gradle/body
+// GenInclude body from file://$rootDir/src/main/gradle/body
 gradle.beforeProject {
   Project p ->
     p.repositories.mavenLocal()
@@ -12,6 +12,7 @@ gradle.beforeProject {
 }
 // GenStart net.wti.gradle.settings.plugin.XapiSettingsPlugin
 ext.xapiModern = 'true'
+version = '0.51'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 repositories.mavenCentral()

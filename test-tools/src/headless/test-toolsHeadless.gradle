@@ -3,6 +3,7 @@ plugins {
 }
 // GenStart net.wti.gradle.settings.plugin.XapiSettingsPlugin
 ext.xapiModern = 'true'
+version = '0.51'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 repositories.mavenCentral()
@@ -15,7 +16,6 @@ main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
-main.resources.srcDir("$rootDir/test-tools/src/headless/resources")
 
 dependencies {
     implementation project(path: ":test-tools-main")
