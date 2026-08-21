@@ -20,6 +20,7 @@ test.resources.setSrcDirs([]);
 
 dependencies {
     implementation project(path: ":wti-ui-controls")
+    implementation project(path: ":wti-ui-browser")
     implementation project(path: ":wti-ui-time")
     implementation project(path: ":wti-ui-color")
     implementation project(path: ":wti-ui-image")
@@ -30,6 +31,7 @@ dependencies {
     testImplementation libs.xapi.model.jre
     api project(path: ":wti-ui-main")
     api project(path: ":wti-ui-implControls")
+    api project(path: ":wti-ui-implBrowser")
     api project(path: ":wti-ui-implTime")
     api project(path: ":wti-ui-implColor")
     api project(path: ":wti-ui-implImage")

@@ -2,6 +2,7 @@
     modules = [
         <api />,
         <controls includes = api />,
+        <browser includes = controls />,
         <time includes = api />,
         <event includes = api />,
         <style includes = api />,
@@ -13,7 +14,7 @@
         <scene includes = [ controls, event ] />,
         <form includes = [ style, controls, event ] />,
         <modelbind includes = form />,
-        <main includes=[ controls, time, color, image, scene, event, modelbind ]/>
+        <main includes=[ controls, browser, time, color, image, scene, event, modelbind ]/>
     ]
 
     platforms = [
@@ -49,6 +50,17 @@
                         external : ( libs.gdx.core ),
                     }
                 /controls>,
+                <browser
+                    requires = {
+                        @transitive("test")
+                        external : [
+                            ( libs.spock ),
+                            ( libs.gdx.backend.headless ),
+                        ],
+                        @transitive("test") @closure("artifact { classifier = 'natives-desktop' }")
+                        external : ( libs.gdx.platform ),
+                    }
+                /browser>,
                 <quest
                     requires = {
                         @transitive
