@@ -18,9 +18,12 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton
 import com.badlogic.gdx.scenes.scene2d.ui.TextField
 import com.badlogic.gdx.scenes.scene2d.ui.TextTooltip
 import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager
+import com.badlogic.gdx.scenes.scene2d.ui.Window
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
+import com.badlogic.gdx.utils.Align
 import com.badlogic.gdx.utils.viewport.ScreenViewport
+import net.wti.ui.controls.focus.HoverScrollFocus
 import net.wti.ui.gdx.theme.CompositeGdxTheme
 import net.wti.ui.gdx.theme.UiDataBundle
 import spock.lang.IgnoreIf
@@ -232,19 +235,19 @@ class EntityBrowserPresentationVisualSpec extends Specification {
                 }
             })
 
-            def host = new Table(skin)
-            host.background = skin.getDrawable("window")
-            host.pad(12f)
-            host.add(new Label("Thumbnail-heavy grid + optional details", skin))
-                    .growX().left().padBottom(8f).row()
-            host.add(search(model, "Search 13 gallery assets...")).growX().padBottom(8f).row()
+            def host = panel("Thumbnail-heavy grid + optional details")
+            host.add(search(model, "Search 13 gallery assets..."))
+                    .growX().padLeft(12f).padRight(12f).padTop(8f).padBottom(8f).row()
             def browserScroll = new ScrollPane(browser, skin)
             browserScroll.setScrollingDisabled(true, false)
             browserScroll.setOverscroll(false, false)
-            host.add(browserScroll).grow().padBottom(8f).row()
-            host.add(pager(model)).growX().row()
-            host.add(detail).growX().height(112f).padTop(8f).row()
-            host.add(activation).growX().left().padTop(6f)
+            HoverScrollFocus.attach(browserScroll)
+            host.add(browserScroll).grow().padLeft(12f).padRight(12f).padBottom(8f).row()
+            host.add(pager(model)).growX().padLeft(12f).padRight(12f).row()
+            host.add(detail).growX().height(112f)
+                    .padLeft(12f).padRight(12f).padTop(8f).row()
+            host.add(activation).growX().left()
+                    .padLeft(12f).padRight(12f).padTop(6f).padBottom(12f)
             host
         }
 
@@ -311,19 +314,26 @@ class EntityBrowserPresentationVisualSpec extends Specification {
                 }
             })
 
-            def host = new Table(skin)
-            host.background = skin.getDrawable("window")
-            host.pad(12f)
-            host.add(new Label("Metadata-heavy one-column list", skin))
-                    .growX().left().padBottom(8f).row()
-            host.add(search(model, "Search 9 document records...")).growX().padBottom(8f).row()
+            def host = panel("Metadata-heavy one-column list")
+            host.add(search(model, "Search 9 document records..."))
+                    .growX().padLeft(12f).padRight(12f).padTop(8f).padBottom(8f).row()
             def browserScroll = new ScrollPane(browser, skin)
             browserScroll.setScrollingDisabled(true, false)
             browserScroll.setOverscroll(false, false)
-            host.add(browserScroll).grow().padBottom(8f).row()
-            host.add(pager(model)).growX().row()
-            host.add(activation).growX().left().padTop(6f)
+            HoverScrollFocus.attach(browserScroll)
+            host.add(browserScroll).grow().padLeft(12f).padRight(12f).padBottom(8f).row()
+            host.add(pager(model)).growX().padLeft(12f).padRight(12f).row()
+            host.add(activation).growX().left()
+                    .padLeft(12f).padRight(12f).padTop(6f).padBottom(12f)
             host
+        }
+
+        private Window panel(String title) {
+            def window = new Window(title, skin)
+            window.movable = false
+            window.resizable = false
+            window.titleLabel.setAlignment(Align.center)
+            window
         }
 
         private TextField search(EntityBrowserModel model, String message) {
