@@ -1,5 +1,6 @@
 plugins {
     id	"java-library"
+    id	"groovy"
     id	"maven-publish"
 }
 // GenStart net.wti.gradle.settings.plugin.XapiSettingsPlugin
@@ -18,11 +19,17 @@ main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 main.java.srcDir("$rootDir/components/src/ui/java")
+test.groovy.srcDir("$rootDir/components/src/uiTest/groovy")
 
 dependencies {
     api project(path: ":wti-ui-view")
     implementation project(path: ":wti-ui-implForm")
     api project(path: ":wti-ui-controls")
+    testImplementation libs.spock
+    testImplementation libs.gdx.backend.headless
+    testImplementation( libs.gdx.platform ) {
+        artifact { classifier = 'natives-desktop' }
+    }
 }
 
 repositories {
