@@ -194,6 +194,7 @@ class EntityBrowserPresentationVisualSpec extends Specification {
                     }
             )
             def browser = new EntityBrowserActor<GalleryAsset>(model, renderer, 4)
+            browser.pad(3f)
             browser.doubleClickActivates = true
             browser.emptyActor = new EntityBrowserEmptyView(
                     skin,
@@ -233,16 +234,17 @@ class EntityBrowserPresentationVisualSpec extends Specification {
 
             def host = new Table(skin)
             host.background = skin.getDrawable("window")
-            host.pad(8f)
+            host.pad(12f)
             host.add(new Label("Thumbnail-heavy grid + optional details", skin))
-                    .growX().left().row()
-            host.add(search(model, "Search 13 gallery assets...")).growX().padBottom(6f).row()
+                    .growX().left().padBottom(8f).row()
+            host.add(search(model, "Search 13 gallery assets...")).growX().padBottom(8f).row()
             def browserScroll = new ScrollPane(browser, skin)
             browserScroll.setScrollingDisabled(true, false)
-            host.add(browserScroll).grow().row()
-            host.add(pager(model)).growX().padTop(6f).row()
-            host.add(detail).growX().height(112f).padTop(6f).row()
-            host.add(activation).growX().left().padTop(4f)
+            browserScroll.setOverscroll(false, false)
+            host.add(browserScroll).grow().padBottom(8f).row()
+            host.add(pager(model)).growX().row()
+            host.add(detail).growX().height(112f).padTop(8f).row()
+            host.add(activation).growX().left().padTop(6f)
             host
         }
 
@@ -290,6 +292,7 @@ class EntityBrowserPresentationVisualSpec extends Specification {
                     }
             )
             def browser = new EntityBrowserActor<DocumentRecord>(model, renderer, 1)
+            browser.pad(3f)
             browser.doubleClickActivates = true
             browser.emptyActor = new EntityBrowserEmptyView(
                     skin,
@@ -310,15 +313,16 @@ class EntityBrowserPresentationVisualSpec extends Specification {
 
             def host = new Table(skin)
             host.background = skin.getDrawable("window")
-            host.pad(8f)
+            host.pad(12f)
             host.add(new Label("Metadata-heavy one-column list", skin))
-                    .growX().left().row()
-            host.add(search(model, "Search 9 document records...")).growX().padBottom(6f).row()
+                    .growX().left().padBottom(8f).row()
+            host.add(search(model, "Search 9 document records...")).growX().padBottom(8f).row()
             def browserScroll = new ScrollPane(browser, skin)
             browserScroll.setScrollingDisabled(true, false)
-            host.add(browserScroll).grow().row()
-            host.add(pager(model)).growX().padTop(6f).row()
-            host.add(activation).growX().left().padTop(4f)
+            browserScroll.setOverscroll(false, false)
+            host.add(browserScroll).grow().padBottom(8f).row()
+            host.add(pager(model)).growX().row()
+            host.add(activation).growX().left().padTop(6f)
             host
         }
 
