@@ -19,15 +19,12 @@ test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
 
 dependencies {
-    api libs.xapi.model.jre
-    api "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
-    api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
-    api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
-    api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
-    api project(path: ":components-impl")
-    api project(path: ":components-jreUi")
-    api project(path: ":components-jreBrowser")
-    api project(path: ":components-jreInventory")
+    implementation project(path: ":components-ui")
+    testImplementation libs.spock
+    testImplementation libs.xapi.model.jre
+    testImplementation libs.gdx.backend.headless
+    api project(path: ":components-browser")
+    api project(path: ":components-implUi")
 }
 
 repositories {
@@ -36,7 +33,7 @@ repositories {
         url = "/opt/xapi/repo"
     }
 }
-// Setup publishing to coordinates: net.wti:components-jre
+// Setup publishing to coordinates: net.wti:components-browser-impl
 project.extensions.add('xapi.mvn.repo', "/opt/xapi/repo")
 Task xapiPublish = tasks.create('xapiPublish')
 xapiPublish.group = 'Publishing'
@@ -62,8 +59,8 @@ ext.publications.create("xapi", MavenPublication, {
                 pub.from(components.named('java').get())
             }
         }
-        pub.artifactId = "components-jre"
+        pub.artifactId = "components-browser-impl"
         pub.groupId = "net.wti"
 })
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
-// Done generating buildfile for :components at file://$rootDir/components/src/jre/componentsJre.gradle
+// Done generating buildfile for :components at file://$rootDir/components/src/implBrowser/componentsImplBrowser.gradle

@@ -20,12 +20,14 @@ test.resources.setSrcDirs([]);
 
 dependencies {
     implementation project(path: ":components-ui")
+    implementation project(path: ":components-browser")
     implementation project(path: ":components-inventory")
     testImplementation libs.spock
     testImplementation libs.xapi.model.jre
     testImplementation libs.gdx.backend.headless
     api project(path: ":components-main")
     api project(path: ":components-implUi")
+    api project(path: ":components-implBrowser")
     api project(path: ":components-implInventory")
 }
 

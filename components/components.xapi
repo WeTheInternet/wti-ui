@@ -1,9 +1,10 @@
 <xapi-schema
     modules = [
         <ui />,
+        <browser includes = [ ui ] />,
         <quest includes = [ ui ] />,
         <inventory includes = [ ui ] />,
-        <main includes = [ ui, inventory, ] />
+        <main includes = [ ui, browser, inventory, ] />
     ]
 
     platforms = [
@@ -40,6 +41,20 @@
                         project: { ":wti-ui" : controls }
                     }
                 /ui>,
+                <browser
+                    requires = {
+                        @transitive("test")
+                        external : [
+                            ( libs.spock ),
+                            ( libs.gdx.backend.headless ),
+                            ( libs.gdx.backend.lwjgl3 ),
+                        ],
+                        @transitive("test")
+                        project : { ":gdx-themes-raeleus-sgx" : main },
+                        @transitive("test") @closure("artifact { classifier = 'natives-desktop' }")
+                        external : ( libs.gdx.platform ),
+                    }
+                /browser>,
                 <quest
                     requires = {
                         @transitive
