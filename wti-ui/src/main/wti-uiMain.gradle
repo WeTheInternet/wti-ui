@@ -22,6 +22,7 @@ dependencies {
     testImplementation libs.spock
     testImplementation libs.xapi.model.jre
     api project(path: ":wti-ui-controls")
+    api project(path: ":wti-ui-browser")
     api project(path: ":wti-ui-time")
     api project(path: ":wti-ui-color")
     api project(path: ":wti-ui-image")

@@ -1,4 +1,4 @@
-package net.wti.ui.components.browser;
+package net.wti.ui.browser;
 
 /// Toolkit-neutral presentation state for one currently rendered browser cell.
 public final class EntityBrowserCellState {

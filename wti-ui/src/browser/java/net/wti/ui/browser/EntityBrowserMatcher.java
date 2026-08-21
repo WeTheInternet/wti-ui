@@ -1,4 +1,4 @@
-package net.wti.ui.components.browser;
+package net.wti.ui.browser;
 
 /// Owns application-specific query semantics for an entity browser.
 ///

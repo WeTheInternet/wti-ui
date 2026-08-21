@@ -37,15 +37,7 @@
                         project : { ":wti-ui" : view },
                         project : { ":wti-ui" : implForm },
                         @transitive
-                        project: { ":wti-ui" : controls },
-
-                        @transitive("test")
-                        external : [
-                            ( libs.spock ),
-                            ( libs.gdx.backend.headless ),
-                        ],
-                        @transitive("test") @closure("artifact { classifier = 'natives-desktop' }")
-                        external : ( libs.gdx.platform ),
+                        project: { ":wti-ui" : controls }
                     }
                 /ui>,
                 <quest

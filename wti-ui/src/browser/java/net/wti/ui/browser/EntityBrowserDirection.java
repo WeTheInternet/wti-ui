@@ -1,4 +1,4 @@
-package net.wti.ui.components.browser;
+package net.wti.ui.browser;
 
 /// Logical traversal directions supported by list and grid browsers.
 public enum EntityBrowserDirection {

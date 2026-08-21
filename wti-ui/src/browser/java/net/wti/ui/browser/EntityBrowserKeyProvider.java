@@ -1,4 +1,4 @@
-package net.wti.ui.components.browser;
+package net.wti.ui.browser;
 
 /// Supplies the stable identity used by an EntityBrowserModel.
 ///

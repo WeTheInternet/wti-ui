@@ -1,4 +1,4 @@
-package net.wti.ui.components.browser;
+package net.wti.ui.browser;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
 

@@ -1,4 +1,4 @@
-package net.wti.ui.components.browser;
+package net.wti.ui.browser;
 
 /// Receives intent-level browser state and activation events.
 ///

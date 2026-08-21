@@ -1,5 +1,6 @@
 plugins {
     id	"java-library"
+    id	"groovy"
     id	"maven-publish"
 }
 // GenStart net.wti.gradle.settings.plugin.XapiSettingsPlugin
@@ -17,11 +18,15 @@ main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
-main.java.srcDir("$rootDir/components/src/ui/java")
+main.java.srcDir("$rootDir/wti-ui/src/browser/java")
+test.groovy.srcDir("$rootDir/wti-ui/src/browserTest/groovy")
 
 dependencies {
-    api project(path: ":wti-ui-view")
-    implementation project(path: ":wti-ui-implForm")
+    testImplementation libs.spock
+    testImplementation libs.gdx.backend.headless
+    testImplementation( libs.gdx.platform ) {
+        artifact { classifier = 'natives-desktop' }
+    }
     api project(path: ":wti-ui-controls")
 }
 
@@ -31,7 +36,7 @@ repositories {
         url = "/opt/xapi/repo"
     }
 }
-// Setup publishing to coordinates: net.wti:components-ui
+// Setup publishing to coordinates: net.wti:wti-ui-browser
 project.extensions.add('xapi.mvn.repo', "/opt/xapi/repo")
 Task xapiPublish = tasks.create('xapiPublish')
 xapiPublish.group = 'Publishing'
@@ -57,8 +62,8 @@ ext.publications.create("xapi", MavenPublication, {
                 pub.from(components.named('java').get())
             }
         }
-        pub.artifactId = "components-ui"
+        pub.artifactId = "wti-ui-browser"
         pub.groupId = "net.wti"
 })
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
-// Done generating buildfile for :components at file://$rootDir/components/src/ui/componentsUi.gradle
+// Done generating buildfile for :wti-ui at file://$rootDir/wti-ui/src/browser/wti-uiBrowser.gradle
