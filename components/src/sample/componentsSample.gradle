@@ -22,6 +22,7 @@ main.java.srcDir("$rootDir/components/src/sample/java")
 dependencies {
     api project(path: ":components-jre")
     api project(path: ":components-sampleUi")
+    api project(path: ":components-sampleBrowser")
     api project(path: ":components-sampleInventory")
 }
 

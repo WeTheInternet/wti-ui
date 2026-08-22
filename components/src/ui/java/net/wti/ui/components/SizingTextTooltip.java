@@ -1,5 +1,6 @@
 package net.wti.ui.components;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
@@ -17,7 +18,7 @@ import com.badlogic.gdx.utils.Align;
 /// Usage:
 /// ```java
 /// TooltipManager tm = TooltipManager.getInstance();
-/// tm.maxWidth = 420f; // pick something sane (>= 360)
+/// tm.maxWidth = 280f; // optionally choose a narrower application limit
 /// actor.addListener(new SizingTextTooltip("Help text", tm,
 ///     skin.get("tooltip-default", TextTooltip.TextTooltipStyle.class)));
 /// ```
@@ -46,17 +47,36 @@ public class SizingTextTooltip extends TextTooltip {
         final GlyphLayout layout = new GlyphLayout(font, text);
         float natural = layout.width + PAD_LEFT + PAD_RIGHT;
 
-        // Choose width = clamp(natural, MIN_W, manager.maxWidth)
-        float maxW = (manager.maxWidth > 0f ? manager.maxWidth : MAX_W);
+        // TooltipManager defaults maxWidth to Integer.MAX_VALUE. Treat that as
+        // "no application limit" and retain this component's useful hard cap;
+        // otherwise the label never wraps unless every application remembers
+        // to configure the singleton first.
+        float maxW = manager.maxWidth > 0f
+                ? Math.min(manager.maxWidth, MAX_W)
+                : MAX_W;
+        // Choose width = clamp(natural, MIN_W, effective max width).
         float chosen = Math.max(MIN_W, Math.min(natural, maxW));
 
         // Apply chosen width to container; label wraps within container’s width
         c.minWidth(chosen);
         c.prefWidth(chosen);
         c.maxWidth(chosen);
+        // A wrapped Label reports no useful natural width. Fill the constrained
+        // container so layout assigns the chosen width before measuring height;
+        // otherwise multiple wrapped lines can collapse onto one another.
+        c.fill();
 
-        // Let the label know its available width (container minus padding)
-        lbl.setWidth(chosen - PAD_LEFT - PAD_RIGHT);
+        // Let the label know its available width (container minus padding),
+        // then measure the wrapped height from that concrete width. Label's
+        // natural preferred width is intentionally zero while wrapping, so a
+        // container cannot infer this height reliably on its own.
+        final float innerWidth = chosen - PAD_LEFT - PAD_RIGHT;
+        lbl.setWidth(innerWidth);
+        layout.setText(font, text, Color.WHITE, innerWidth, Align.left, true);
+        final float wrappedHeight = layout.height;
+        lbl.setHeight(wrappedHeight);
+        c.minHeight(wrappedHeight + PAD_TOP + PAD_BOTTOM);
+        c.prefHeight(wrappedHeight + PAD_TOP + PAD_BOTTOM);
 
         // Ensure the new constraints are honored before first show
         lbl.invalidateHierarchy();

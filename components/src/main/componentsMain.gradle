@@ -17,12 +17,12 @@ main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
-main.java.srcDir("$rootDir/components/src/main/java")
 
 dependencies {
     testImplementation libs.spock
     testImplementation libs.xapi.model.jre
     api project(path: ":components-ui")
+    api project(path: ":components-browser")
     api project(path: ":components-inventory")
 }
 
