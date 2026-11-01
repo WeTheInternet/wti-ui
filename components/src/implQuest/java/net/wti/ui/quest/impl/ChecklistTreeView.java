@@ -1,6 +1,7 @@
 package net.wti.ui.quest.impl;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -11,6 +12,10 @@ import net.wti.quest.api.ChecklistSnapshot;
 import net.wti.ui.controls.focus.KeyboardFocusScope;
 import net.wti.quest.api.QuestStatus;
 import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -19,7 +24,7 @@ import java.util.function.Consumer;
 public final class ChecklistTreeView extends Table {
     private final Map<String, Goal> goals = new LinkedHashMap<>();
     private final Consumer<String> complete;
-    private boolean loading;
+    private boolean loading, fixedOrder;
 
     public ChecklistTreeView(final Skin skin, final Consumer<String> complete) {
         super(skin);
@@ -33,9 +38,33 @@ public final class ChecklistTreeView extends Table {
         for (final Goal goal : goals.values()) goal.render();
     }
 
+    /** Reserve every configured row before async reads. Reapplying the same order is a no-op. */
+    public void setGoalOrder(final List<String> identities) {
+        final List<String> order = new ArrayList<>(identities);
+        if (order.contains(null) || order.contains("") || new LinkedHashSet<>(order).size() != order.size()) {
+            throw new IllegalArgumentException("Distinct goal identities required");
+        }
+        fixedOrder = true;
+        if (new ArrayList<>(goals.keySet()).equals(order)) return;
+        final Stage stage = getStage();
+        final Actor focused = stage == null ? null : stage.getKeyboardFocus();
+        final Map<String, Goal> arranged = new LinkedHashMap<>();
+        for (final String identity : order) {
+            Goal goal = goals.get(identity);
+            if (goal == null) { goal = new Goal(); goal.render(); }
+            arranged.put(identity, goal);
+        }
+        goals.clear(); goals.putAll(arranged); clearChildren();
+        for (final Goal goal : goals.values()) add(goal).growX().padBottom(16).row();
+        if (focused != null && focused.getStage() == stage) stage.setKeyboardFocus(focused);
+    }
+
+    public List<String> getGoalOrder() { return Collections.unmodifiableList(new ArrayList<>(goals.keySet())); }
+
     public void setGoal(final String identity, final ChecklistSnapshot snapshot) {
         Goal goal = goals.get(identity);
         if (goal == null) {
+            if (fixedOrder) throw new IllegalArgumentException("Goal is outside the configured order");
             goal = new Goal(); goals.put(identity, goal);
             add(goal).growX().padBottom(16).row();
         }
@@ -67,6 +96,15 @@ public final class ChecklistTreeView extends Table {
         void render() { KeyboardFocusScope.preserveFocus(this, this::renderContents); }
         void renderContents() {
             clearChildren(); body.clearChildren();
+            if (snapshot == null) {
+                final Label title = new Label(error == null ? "Loading goal..." : "Goal unavailable", getSkin());
+                title.setWrap(true);
+                add(title).growX().minWidth(0).minHeight(48).row();
+                status.setText(error == null ? "" : error);
+                status.setWrap(true);
+                add(status).growX().minWidth(0).minHeight(24).row();
+                return;
+            }
             final ChecklistSnapshot.Entry root = snapshot.getRoot();
             final boolean leaf = snapshot.getChildren().isEmpty();
             if (leaf) add(check(root)).growX().minWidth(0).minHeight(48).row();

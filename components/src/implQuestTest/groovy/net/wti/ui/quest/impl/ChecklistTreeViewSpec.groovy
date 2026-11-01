@@ -43,6 +43,46 @@ class ChecklistTreeViewSpec extends Specification {
     static java.util.List actors(Group group) { group.children.toList().collectMany { [it] + (it instanceof Group ? actors(it) : []) } }
     CheckBox checkbox(String key) { actors(view).find { it instanceof CheckBox && it.name == 'task:' + key + '-child' } }
 
+    def 'configured slots retain failed first root ahead of later arrivals and a successful retry'() {
+        when:
+        view.setGoalOrder(['morning', 'outing'])
+        def morningCard = view.children[0]
+        def outingCard = view.children[1]
+        view.setLoading(true)
+        view.setError('morning', 'Could not load. Refresh to retry.')
+        view.setGoal('outing', snapshot('outing'))
+        view.setLoading(false)
+        actors(view).find { it.name == 'goal:outing' }.fire(new ChangeListener.ChangeEvent())
+        then:
+        view.goalOrder == ['morning', 'outing']
+        view.hasGoal('morning')
+        !view.isExpanded('outing')
+        intents.empty
+        when:
+        view.setLoading(true); view.setGoalOrder(['morning', 'outing'])
+        view.setGoal('morning', snapshot('morning')); view.setError('morning', null)
+        view.setGoal('outing', snapshot('outing')); view.setLoading(false)
+        then:
+        view.goalOrder == ['morning', 'outing']
+        view.children[0].is(morningCard) && view.children[1].is(outingCard)
+        !view.isExpanded('outing')
+        intents.empty
+    }
+    def 'reapplying configured order preserves actors scroll and pending state'() {
+        given:
+        def order = (0..15).collect { 'g' + it }
+        view.setGoalOrder(order); order.each { view.setGoal(it, snapshot(it)) }
+        def scroll = new ScrollPane(view, skin); scroll.setScrollingDisabled(true, false)
+        scroll.setSize(320, 300); scroll.validate(); scroll.setScrollY(200)
+        def before = scroll.getScrollY(); def card = view.children[8]
+        when:
+        view.setPending('g8', true); view.setGoalOrder(order); scroll.validate()
+        then:
+        view.children[8].is(card)
+        checkbox('g8').disabled
+        scroll.getScrollY() == before
+        intents.empty
+    }
     def 'all goals begin expanded; toggling is view state and never a completion intent'() {
         when:
         view.setGoal('a', snapshot('a')); view.setGoal('b', snapshot('b'))
