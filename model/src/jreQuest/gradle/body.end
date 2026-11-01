@@ -1,0 +1,27 @@
+tasks.register('seedQuestDefinitions', JavaExec) {
+    group = 'application'
+    description = 'Seeds only missing XApi quest definitions and exports the shared ModelModule.'
+    mainClass.set('net.wti.quest.model.jre.QuestDefinitionSeedMain')
+    classpath = sourceSets.main.runtimeClasspath
+    if (JavaVersion.current().isJava9Compatible()) {
+        jvmArgs '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED'
+    }
+}
+
+tasks.withType(Test).configureEach {
+    dependsOn tasks.named('installDist')
+    final File packingFixture = rootProject.file('model/src/implQuestTest/resources/META-INF/models/qdef/packing-checklists.xapi')
+    inputs.file(packingFixture)
+    systemProperty 'quest.seed.fixture', packingFixture.absolutePath
+    doFirst {
+        systemProperty 'quest.seed.distribution', tasks.named('installDist').get().destinationDir.absolutePath
+    }
+}
+application {
+    mainClass = 'net.wti.quest.model.jre.QuestDefinitionSeedMain'
+    applicationName = 'lifequest-quest-seed'
+    if (JavaVersion.current().isJava9Compatible()) {
+        applicationDefaultJvmArgs = ['--add-opens=java.base/java.lang.invoke=ALL-UNNAMED']
+    }
+}
+

@@ -103,7 +103,15 @@
                 <inventory
                     requires = {
                     }
-                /inventory>
+                /inventory>,
+                <quest
+                    description = "JRE quest model manifest export and missing-only server seed tool"
+                    requires = {
+                        external : ( libs.xapi.model.jre ),
+                        @transitive(test)
+                        external : [ ( libs.spock ), ( libs.xapi.model.jre ) ],
+                    }
+                /quest>
             ]
         /jre>,
         <sample replace=jre
