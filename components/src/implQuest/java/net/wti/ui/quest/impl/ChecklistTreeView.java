@@ -1,9 +1,14 @@
 package net.wti.ui.quest.impl;
 
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import net.wti.quest.api.ChecklistSnapshot;
+import net.wti.ui.controls.focus.KeyboardFocusScope;
 import net.wti.quest.api.QuestStatus;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -59,7 +64,8 @@ public final class ChecklistTreeView extends Table {
         final Table body = new Table(getSkin());
         final Label status = new Label("", getSkin());
         Goal() { super(ChecklistTreeView.this.getSkin()); top().left(); }
-        void render() {
+        void render() { KeyboardFocusScope.preserveFocus(this, this::renderContents); }
+        void renderContents() {
             clearChildren(); body.clearChildren();
             final ChecklistSnapshot.Entry root = snapshot.getRoot();
             final boolean leaf = snapshot.getChildren().isEmpty();

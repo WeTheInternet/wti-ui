@@ -118,17 +118,60 @@ class ChecklistTreeViewSpec extends Specification {
         box.width <= 288
         box.label.height > 18
     }
+    def 'actual keyboard task activation preserves programmatic suppression and waits for acknowledgment'() {
+        given:
+        def previousGraphics = com.badlogic.gdx.Gdx.graphics
+        def previousInput = com.badlogic.gdx.Gdx.input
+        com.badlogic.gdx.Gdx.graphics = Stub(com.badlogic.gdx.Graphics) { getWidth() >> 320; getHeight() >> 600 }
+        com.badlogic.gdx.Gdx.input = null
+        def viewport = new com.badlogic.gdx.utils.viewport.ScreenViewport() {
+            @Override void update(int width, int height, boolean center) { setWorldSize(width,height); setScreenBounds(0,0,width,height) }
+        }
+        def stage = new com.badlogic.gdx.scenes.scene2d.Stage(viewport, Stub(com.badlogic.gdx.graphics.g2d.Batch))
+        def scope = new net.wti.ui.controls.focus.KeyboardFocusScope(stage)
+        view.setGoal('a', snapshot('a')); view.setGoal('b', snapshot('b')); stage.addActor(view)
+        when:
+        stage.keyDown(com.badlogic.gdx.Input.Keys.TAB); stage.keyUp(com.badlogic.gdx.Input.Keys.TAB)
+        stage.keyDown(com.badlogic.gdx.Input.Keys.TAB); stage.keyUp(com.badlogic.gdx.Input.Keys.TAB)
+        then:
+        stage.keyboardFocus.is(checkbox('a'))
+        when:
+        3.times { stage.keyDown(keycode) }
+        stage.keyUp(keycode)
+        then:
+        intents == ['a-task']
+        !checkbox('a').checked
+        checkbox('a').disabled
+        stage.keyboardFocus.is(checkbox('a'))
+        view.isExpanded('a')
+        when:
+        view.setGoal('a', snapshot('a',true)); view.setPending('a',false)
+        stage.keyDown(keycode); stage.keyUp(keycode)
+        then:
+        checkbox('a').checked
+        intents == ['a-task']
+        stage.keyboardFocus.is(checkbox('a'))
+        when:
+        stage.keyDown(com.badlogic.gdx.Input.Keys.TAB); stage.keyUp(com.badlogic.gdx.Input.Keys.TAB)
+        then:
+        stage.keyboardFocus.name == 'goal:b'
+        cleanup:
+        scope.dispose(); stage.dispose()
+        com.badlogic.gdx.Gdx.graphics = previousGraphics; com.badlogic.gdx.Gdx.input = previousInput
+        where:
+        keycode << [com.badlogic.gdx.Input.Keys.ENTER, com.badlogic.gdx.Input.Keys.SPACE]
+    }
     def 'pending and acknowledgment preserve scroll offset and expansion through layout'() {
         given:
         (0..15).each { i -> view.setGoal('g' + i, snapshot('g' + i)) }
         def scroll = new ScrollPane(view, skin); scroll.setScrollingDisabled(true, false)
         scroll.setSize(320, 300); scroll.validate(); scroll.scrollY = 200
-        def before = scroll.scrollY
+        def before = scroll.getScrollY()
         when:
         view.setPending('g8', true); scroll.validate()
         view.setGoal('g8', snapshot('g8', true)); view.setPending('g8', false); scroll.validate()
         then:
-        scroll.scrollY == before
+        scroll.getScrollY() == before
         view.isExpanded('g8')
     }
 }
