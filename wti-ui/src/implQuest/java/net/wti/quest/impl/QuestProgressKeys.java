@@ -16,10 +16,16 @@ import java.util.IdentityHashMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CancellationException;
+import java.util.function.BooleanSupplier;
 
 /// Full-key checks and callback boundaries shared by the explicit checklist services.
 final class QuestProgressKeys {
     private QuestProgressKeys() {}
+
+    static void current(final BooleanSupplier current) {
+        if (!current.getAsBoolean()) throw new CancellationException("Checklist run is no longer current");
+    }
 
     static String encoded(final ModelService models, final ModelKey key) {
         if (key == null) throw new IllegalArgumentException("A complete model key is required");

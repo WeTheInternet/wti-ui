@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 
 /// Explicit read/start operations for direct, parallel ALL_OF checklists.
 /// Loading never writes. Starting fills confirmed missing progress and preserves existing
@@ -51,12 +52,18 @@ public final class ChecklistProjectionService {
     /// Start only after an explicit user action. Partial acknowledged starts can be retried.
     public void start(final ModelDay day, final ModelKey definition,
                       final SuccessHandler<ChecklistSnapshot> callback) {
+        start(day, definition, () -> true, callback);
+    }
+
+    /** A disposed run may finish its submitted write, but cannot submit the next write. */
+    public void start(final ModelDay day, final ModelKey definition, final BooleanSupplier current,
+                      final SuccessHandler<ChecklistSnapshot> callback) {
         final SuccessHandler<ChecklistSnapshot> done = QuestProgressKeys.once(callback);
         if (day == null) { QuestProgressKeys.fail(done, new IllegalArgumentException("Explicit owner/day required")); return; }
         inspect(day, definition, QuestProgressKeys.then(done, plan -> {
             final String failure = plan.startFailure();
             if (failure != null) throw new IllegalStateException(failure);
-            fill(plan, 0, done);
+            fill(plan, 0, current, done);
         }));
     }
 
@@ -134,10 +141,12 @@ public final class ChecklistProjectionService {
         }));
     }
 
-    private void fill(final ChecklistPlan plan, final int index, final SuccessHandler<ChecklistSnapshot> done) {
+    private void fill(final ChecklistPlan plan, final int index, final BooleanSupplier current,
+                      final SuccessHandler<ChecklistSnapshot> done) {
+        QuestProgressKeys.current(current);
         if (index == plan.items.size()) { done.onSuccess(plan.snapshot()); return; }
         final Item item = plan.items.get(index);
-        if (item.live != null) { fill(plan, index + 1, done); return; }
+        if (item.live != null) { fill(plan, index + 1, current, done); return; }
         final LiveQuest live = models.create(LiveQuest.class);
         live.setKey(QuestProgressKeys.copy(models, item.key));
         live.setParentDayKey(QuestProgressKeys.copy(models, plan.day));
@@ -157,7 +166,7 @@ public final class ChecklistProjectionService {
         QuestProgressKeys.save(models, live, QuestProgressKeys.then(done, saved -> {
             QuestProgressKeys.live(models, saved, item.key, plan.day, plan.dayNum, item.definition.getKey());
             item.live = saved;
-            fill(plan, index + 1, done);
+            fill(plan, index + 1, current, done);
         }));
     }
 

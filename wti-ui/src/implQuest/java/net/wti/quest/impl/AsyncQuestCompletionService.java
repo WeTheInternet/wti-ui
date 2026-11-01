@@ -14,6 +14,7 @@ import xapi.util.api.SuccessHandler;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 
 /// Acknowledged checklist completion with stable-key retry reconciliation.
 /// History is stored beside the live record (same parent/id/key type, leaf kind dn).
@@ -33,6 +34,11 @@ public final class AsyncQuestCompletionService {
     /// Reload current records, enforce ALL_OF, then complete without mutating caller models.
     /// Success returns an acknowledged rendering snapshot; callbacks require caller UI dispatch.
     public void complete(final ModelDay day, final ModelKey liveKey,
+                         final SuccessHandler<ChecklistSnapshot> callback) {
+        complete(day, liveKey, () -> true, callback);
+    }
+
+    public void complete(final ModelDay day, final ModelKey liveKey, final BooleanSupplier current,
                          final SuccessHandler<ChecklistSnapshot> callback) {
         final SuccessHandler<ChecklistSnapshot> outer = QuestProgressKeys.once(callback);
         final String identity;
@@ -71,14 +77,15 @@ public final class AsyncQuestCompletionService {
                     if (target == plan.items.get(0) && !plan.childrenFinished()) {
                         throw new IllegalStateException("Complete every checklist member before completing the list");
                     }
-                    finish(plan, target, done);
+                    QuestProgressKeys.current(current);
+                    finish(plan, target, current, done);
                 }));
             }));
         } catch (final Throwable error) { QuestProgressKeys.fail(done, error); }
     }
 
     private void finish(final ChecklistPlan plan, final ChecklistPlan.Item item,
-                        final SuccessHandler<ChecklistSnapshot> done) {
+                        final BooleanSupplier currentRun, final SuccessHandler<ChecklistSnapshot> done) {
         final LiveQuest current = item.live;
         final QuestStatus status = current.getStatus();
         if (status != null && status != QuestStatus.ACTIVE && status != QuestStatus.FINISHED) {
@@ -89,7 +96,7 @@ public final class AsyncQuestCompletionService {
         QuestProgressKeys.optional(models, QuestCompleted.class, historyKey, QuestProgressKeys.then(done, history -> {
             if (history != null) {
                 validateHistory(plan, item, historyKey, history);
-                finishLive(plan, item, history, done);
+                finishLive(plan, item, history, currentRun, done);
                 return;
             }
             final Long finished = current.getFinishedAtMillis();
@@ -111,9 +118,10 @@ public final class AsyncQuestCompletionService {
             snapshot.setTags(current.getTags() == null ? null : current.getTags().clone());
             snapshot.setPriority(current.getEffectivePriority());
             created.setSnapshot(snapshot);
+            QuestProgressKeys.current(currentRun);
             QuestProgressKeys.save(models, created, QuestProgressKeys.then(done, saved -> {
                 validateHistory(plan, item, historyKey, saved);
-                finishLive(plan, item, saved, done);
+                finishLive(plan, item, saved, currentRun, done);
             }));
         }));
     }
@@ -136,7 +144,9 @@ public final class AsyncQuestCompletionService {
     }
 
     private void finishLive(final ChecklistPlan plan, final ChecklistPlan.Item item,
-                            final QuestCompleted history, final SuccessHandler<ChecklistSnapshot> done) {
+                            final QuestCompleted history, final BooleanSupplier currentRun,
+                            final SuccessHandler<ChecklistSnapshot> done) {
+        QuestProgressKeys.current(currentRun);
         if (item.live.getStatus() == QuestStatus.FINISHED) { done.onSuccess(plan.snapshot()); return; }
         // The copy shares untouched nested values only; every changed field/key is detached.
         final LiveQuest staged = models.create(LiveQuest.class);
