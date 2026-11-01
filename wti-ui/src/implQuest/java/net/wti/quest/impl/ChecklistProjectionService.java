@@ -13,6 +13,7 @@ import net.wti.quest.api.QuestStatus;
 import net.wti.time.api.ModelDay;
 import xapi.model.api.ModelKey;
 import xapi.model.service.ModelService;
+import xapi.model.service.ModelServiceWithCreateIfAbsent;
 import xapi.time.X_Time;
 import xapi.util.api.SuccessHandler;
 
@@ -27,7 +28,8 @@ import java.util.function.BooleanSupplier;
 /// Explicit read/start operations for direct, parallel ALL_OF checklists.
 /// Loading never writes. Starting fills confirmed missing progress and preserves existing
 /// terminal records. Callbacks stay on the model service thread; the application dispatches UI work.
-/// No cross-device create-if-absent or transaction guarantee is provided by ModelService.
+/// Available conditional creation preserves racing progress; legacy providers remain non-atomic.
+/// This is not an atomic multi-record start or completion transaction.
 public final class ChecklistProjectionService {
     private final ModelService models;
 
@@ -60,10 +62,13 @@ public final class ChecklistProjectionService {
                       final SuccessHandler<ChecklistSnapshot> callback) {
         final SuccessHandler<ChecklistSnapshot> done = QuestProgressKeys.once(callback);
         if (day == null) { QuestProgressKeys.fail(done, new IllegalArgumentException("Explicit owner/day required")); return; }
+        final ModelServiceWithCreateIfAbsent creator;
+        try { creator = QuestProgressKeys.creator(models); }
+        catch (final Throwable failure) { QuestProgressKeys.fail(done, failure); return; }
         inspect(day, definition, QuestProgressKeys.then(done, plan -> {
             final String failure = plan.startFailure();
             if (failure != null) throw new IllegalStateException(failure);
-            fill(plan, 0, current, done);
+            fill(plan, 0, current, creator, done);
         }));
     }
 
@@ -96,7 +101,8 @@ public final class ChecklistProjectionService {
                     if ((child.getRole() != null && child.getRole() != ChildRole.PARALLEL)
                             || (child.getStartPolicy() != null && child.getStartPolicy() != ChildStartPolicy.AFTER_PARENT_START)
                             || (child.getQuantity() != null && child.getQuantity() <= 0)) {
-                        throw new UnsupportedOperationException("Only positive-quantity parallel members starting with the parent are supported");
+                        throw new UnsupportedOperationException(
+                                "Only positive-quantity parallel members starting with the parent are supported");
                     }
                     children.add(child);
                 }
@@ -142,17 +148,18 @@ public final class ChecklistProjectionService {
     }
 
     private void fill(final ChecklistPlan plan, final int index, final BooleanSupplier current,
-                      final SuccessHandler<ChecklistSnapshot> done) {
+                      final ModelServiceWithCreateIfAbsent creator, final SuccessHandler<ChecklistSnapshot> done) {
         QuestProgressKeys.current(current);
         if (index == plan.items.size()) { done.onSuccess(plan.snapshot()); return; }
         final Item item = plan.items.get(index);
-        if (item.live != null) { fill(plan, index + 1, current, done); return; }
+        if (item.live != null) { fill(plan, index + 1, current, creator, done); return; }
+        final ModelKey sourceDefinition = QuestProgressKeys.copy(models, item.definition.getKey());
         final LiveQuest live = models.create(LiveQuest.class);
         live.setKey(QuestProgressKeys.copy(models, item.key));
         live.setParentDayKey(QuestProgressKeys.copy(models, plan.day));
         live.setDayIndex(plan.dayNum);
         live.setLiveKey(item.key.getId());
-        live.setSourceDefinitionKey(QuestProgressKeys.copy(models, item.definition.getKey()));
+        live.setSourceDefinitionKey(QuestProgressKeys.copy(models, sourceDefinition));
         live.setTitle(item.definition.getTitle());
         live.setDescription(item.definition.getDescription());
         live.setTags(item.tags == null ? null : item.tags.clone());
@@ -163,10 +170,13 @@ public final class ChecklistProjectionService {
         final long now = X_Time.nowMillisLong();
         live.setCreatedAtMillis(now);
         live.setUpdatedAtMillis(now);
-        QuestProgressKeys.save(models, live, QuestProgressKeys.then(done, saved -> {
-            QuestProgressKeys.live(models, saved, item.key, plan.day, plan.dayNum, item.definition.getKey());
+        QuestProgressKeys.createMissing(models, creator, live, QuestProgressKeys.then(done, saved -> {
+            QuestProgressKeys.live(models, saved, item.key, plan.day, plan.dayNum, sourceDefinition);
+            supported(saved);
             item.live = saved;
-            fill(plan, index + 1, current, done);
+            final String failure = plan.startFailure();
+            if (failure != null) throw new IllegalStateException(failure);
+            fill(plan, index + 1, current, creator, done);
         }));
     }
 
