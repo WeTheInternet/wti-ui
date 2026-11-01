@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.scenes.scene2d.*
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.scenes.scene2d.utils.BaseDrawable
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener
 import com.badlogic.gdx.utils.viewport.ScreenViewport
 import spock.lang.Specification
@@ -192,4 +193,119 @@ class KeyboardFocusScopeSpec extends Specification {
         !stage.keyDown(Keys.TAB)
         actions.empty
     }
+    def 'image text focus preserves subtype and image resources and restores shared style'() {
+        given:
+        def original = new ImageTextButton.ImageTextButtonStyle(skin.get(TextButton.TextButtonStyle))
+        original.imageUp = new BaseDrawable(); original.imageDown = new BaseDrawable()
+        original.imageOver = new BaseDrawable(); original.imageChecked = new BaseDrawable()
+        def target = new ImageTextButton('image', original)
+        stage.addActor(target)
+        when:
+        key(Keys.TAB)
+        then:
+        stage.keyboardFocus.is(target)
+        target.style instanceof ImageTextButton.ImageTextButtonStyle
+        !target.style.is(original)
+        target.style.imageUp.is(original.imageUp)
+        target.style.imageDown.is(original.imageDown)
+        target.style.imageOver.is(original.imageOver)
+        target.style.imageChecked.is(original.imageChecked)
+        when:
+        stage.keyboardFocus = null
+        then:
+        target.style.is(original)
+        when:
+        stage.keyboardFocus = target; scope.dispose()
+        then:
+        target.style.is(original)
+        actions.empty
+    }
+    def 'keyboard release reaches registered click and change listeners exactly once with actor context'() {
+        given:
+        def target = button('target'); target.setSize(100,48)
+        def clicks = []; def right = []
+        def listener = new ClickListener() {
+            @Override void clicked(InputEvent e, float x, float y) { clicks << [e.target, e.listenerActor, e.stage, e.type, x, y] }
+        }
+        target.addListener(listener)
+        target.addListener(new ClickListener(com.badlogic.gdx.Input.Buttons.RIGHT) {
+            @Override void clicked(InputEvent e, float x, float y) { right << true }
+        })
+        stage.addActor(target); stage.keyboardFocus = target
+        when:
+        4.times { stage.keyDown(code) }; stage.keyUp(code)
+        then:
+        actions == ['target']
+        clicks.size() == 1
+        clicks[0] == [target,target,stage,InputEvent.Type.touchUp,50f,24f]
+        right.empty
+        !listener.pressed
+        listener.pressedPointer == -1
+        !target.clickListener.pressed
+        target.clickListener.pressedPointer == -1
+        where:
+        code << [Keys.ENTER, Keys.SPACE, Keys.NUMPAD_ENTER]
+    }
+    def 'held activation cannot rearm after focus interruption until physical release'() {
+        given:
+        def first = button('first'); def second = button('second')
+        stage.addActor(first); stage.addActor(second); stage.keyboardFocus = first
+        when:
+        stage.keyDown(Keys.SPACE); stage.keyboardFocus = second
+        if (back) stage.keyboardFocus = first
+        repeats.times { stage.keyDown(Keys.SPACE) }; stage.keyUp(Keys.SPACE)
+        then:
+        actions.empty
+        when:
+        key(Keys.SPACE)
+        then:
+        actions == [back ? 'first' : 'second']
+        where:
+        back  | repeats
+        true  | 0
+        true  | 4
+        false | 4
+    }
+    def 'capture click cancellation prevents activation without leaving a press'() {
+        given:
+        def target = button('target'); stage.addActor(target); stage.keyboardFocus = target
+        def cancellation = new ClickListener() {
+            @Override boolean touchDown(InputEvent e,float x,float y,int pointer,int button) {
+                super.touchDown(e,x,y,pointer,button); e.cancel(); true
+            }
+        }
+        target.addCaptureListener(cancellation)
+        when:
+        key(Keys.SPACE)
+        then:
+        actions.empty
+        !target.checked
+        !cancellation.pressed
+        cancellation.pressedPointer == -1
+    }
+
+    def 'packaged verification uses the requested complete owning JAR'() {
+        expect:
+        !System.getProperty('focus.owner.jar') ||
+                new File(KeyboardFocusScope.protectionDomain.codeSource.location.toURI()).canonicalFile ==
+                new File(System.getProperty('focus.owner.jar')).canonicalFile
+    }
+
+    def 'capture release cancellation suppresses regular click action and clears the pending button press'() {
+        given:
+        def target = button('target'); stage.addActor(target); stage.keyboardFocus = target
+        def clicks = []
+        target.addCaptureListener(new ClickListener() {
+            @Override void clicked(InputEvent e,float x,float y) { clicks << true; e.cancel() }
+        })
+        when:
+        key(Keys.ENTER)
+        then:
+        clicks == [true]
+        actions.empty
+        !target.checked
+        target.clickListener.pressedPointer == -1
+        !target.clickListener.pressed
+    }
+
 }

@@ -16,6 +16,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.ui.Window;
 import com.badlogic.gdx.scenes.scene2d.utils.FocusListener;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.IntSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +26,7 @@ import java.util.List;
 public final class KeyboardFocusScope implements Disposable {
     private final Stage stage;
     private final FocusStyles styles = new FocusStyles();
+    private final IntSet heldKeys = new IntSet(3);
     private Actor armed;
     private int armedKey;
     private boolean shiftLeft, shiftRight, disposed;
@@ -39,12 +41,13 @@ public final class KeyboardFocusScope implements Disposable {
                 if (traverse(backwards)) { event.stop(); return true; }
             }
             if (key == Keys.ENTER || key == Keys.NUMPAD_ENTER || key == Keys.SPACE) {
+                final boolean fresh = heldKeys.add(key);
                 final Actor focus = stage.getKeyboardFocus();
                 if (focus instanceof SelectBox && ((SelectBox<?>) focus).getScrollPane().getStage() == stage
                         && ((SelectBox<?>) focus).getList().isTouchable()) return false; // Native popup commits with Enter/Escape.
                 if ((focus instanceof Button || focus instanceof SelectBox)
                         && enabled(focus) && inside(focus, activeRoot())) {
-                    if (armed == null) { armed = focus; armedKey = key; }
+                    if (fresh && armed == null) { armed = focus; armedKey = key; }
                     event.stop(); return true;
                 }
             }
@@ -53,14 +56,13 @@ public final class KeyboardFocusScope implements Disposable {
         @Override public boolean keyUp(final InputEvent event, final int key) {
             if (key == Keys.SHIFT_LEFT) shiftLeft = false;
             if (key == Keys.SHIFT_RIGHT) shiftRight = false;
+            final boolean held = heldKeys.remove(key);
             if (armed == null || key != armedKey) return false;
             final Actor target = armed; armed = null;
-            if (!disposed && stage.getKeyboardFocus() == target && enabled(target) && inside(target, activeRoot())) {
+            if (held && valid(target)) {
                 if (target instanceof Button) {
                     final Button button = (Button) target;
-                    // Button's user-click path calls setChecked(value, true), preserving each
-                    // widget's programmatic-event policy during its ChangeListener callbacks.
-                    button.getClickListener().clicked(event, button.getWidth() / 2, button.getHeight() / 2);
+                    ButtonActivation.activate(button, () -> valid(target));
                 } else ((SelectBox<?>) target).showList();
             }
             event.stop(); return true;
@@ -77,7 +79,7 @@ public final class KeyboardFocusScope implements Disposable {
     private final FocusListener focus = new FocusListener() {
         @Override public void keyboardFocusChanged(final FocusEvent event, final Actor actor, final boolean focused) {
             if (focused) { styles.show(actor); reveal(actor); }
-            else styles.clear();
+            else { armed = null; styles.clear(); }
         }
     };
 
@@ -85,6 +87,10 @@ public final class KeyboardFocusScope implements Disposable {
         this.stage = stage;
         stage.getRoot().addCaptureListener(input);
         stage.getRoot().addCaptureListener(focus);
+    }
+
+    private boolean valid(final Actor target) {
+        return !disposed && stage.getKeyboardFocus() == target && enabled(target) && inside(target, activeRoot());
     }
 
     private Group activeRoot() {
@@ -173,7 +179,7 @@ public final class KeyboardFocusScope implements Disposable {
 
     @Override public void dispose() {
         if (disposed) return;
-        disposed = true; armed = null; styles.clear();
+        disposed = true; armed = null; heldKeys.clear(); styles.clear();
         stage.getRoot().removeCaptureListener(input);
         stage.getRoot().removeCaptureListener(focus);
     }

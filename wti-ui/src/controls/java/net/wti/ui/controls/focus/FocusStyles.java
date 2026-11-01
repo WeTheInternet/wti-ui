@@ -29,11 +29,11 @@ final class FocusStyles {
             if (style instanceof CheckBox.CheckBoxStyle) {
                 focused = new CheckBox.CheckBoxStyle((CheckBox.CheckBoxStyle) style);
             }
-            else if (style instanceof TextButton.TextButtonStyle) {
-                focused = new TextButton.TextButtonStyle((TextButton.TextButtonStyle) style);
-            }
             else if (style instanceof ImageTextButton.ImageTextButtonStyle) {
                 focused = new ImageTextButton.ImageTextButtonStyle((ImageTextButton.ImageTextButtonStyle) style);
+            }
+            else if (style instanceof TextButton.TextButtonStyle) {
+                focused = new TextButton.TextButtonStyle((TextButton.TextButtonStyle) style);
             }
             else if (style instanceof ImageButton.ImageButtonStyle) {
                 focused = new ImageButton.ImageButtonStyle((ImageButton.ImageButtonStyle) style);

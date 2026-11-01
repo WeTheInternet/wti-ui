@@ -13,11 +13,13 @@ import java.util.jar.JarFile
 class QuestSeedDistributionSpec extends Specification {
     @TempDir File directory
 
-    private String run(File launcher, List<String> arguments, String logName) {
+    private String run(File launcher, List<String> arguments, String logName, String javaHome) {
         def log = new File(directory, logName)
         def builder = new ProcessBuilder([launcher.absolutePath] + arguments)
         builder.redirectErrorStream(true).redirectOutput(log)
-        builder.environment().put('JAVA_OPTS', '-verbose:class')
+        ['JAVA_TOOL_OPTIONS','JDK_JAVA_OPTIONS','_JAVA_OPTIONS','DISPLAY','WAYLAND_DISPLAY','DBUS_SESSION_BUS_ADDRESS','BROWSER'].each { builder.environment().remove(it) }
+        builder.environment().put('JAVA_HOME', javaHome)
+        builder.environment().put('JAVA_OPTS', '-verbose:class -Djava.awt.headless=true -XX:ActiveProcessorCount=1 -Xmx192m')
         def process = builder.start()
         process.outputStream.close()
         try {
@@ -32,7 +34,7 @@ class QuestSeedDistributionSpec extends Specification {
         }
     }
 
-    def "installed launcher uses the packaged metadata reader and preserves a real two-run seed with literal argv"() {
+    def "installed launcher runs on selected Java#runtime and preserves real two-run seed with literal argv"() {
         given:
         def installation = new File(System.getProperty('quest.seed.distribution'))
         def launcher = new File(installation, 'bin/lifequest-quest-seed')
@@ -47,10 +49,10 @@ class QuestSeedDistributionSpec extends Specification {
                          '--namespace=' + namespace, '--manifest-out=' + artifact.absolutePath]
 
         when:
-        def first = run(launcher, arguments, 'first.log')
+        def first = run(launcher, arguments, 'first.log', System.getProperty('quest.seed.java'+runtime))
         def records = new File(store, namespace + '/qdef').listFiles().toList()
         def before = (records + artifact).collectEntries { [(it.absolutePath): it.bytes] }
-        def second = run(launcher, arguments, 'second.log')
+        def second = run(launcher, arguments, 'second.log', System.getProperty('quest.seed.java'+runtime))
         def imported = ModelSerializerDefault.deserializeModule(artifact.getText('UTF-8'))
         def loaded = first.readLines().find {
             it.contains('xapi.model.api.ModelManifest source:') || it.contains('Loaded xapi.model.api.ModelManifest from ')
@@ -64,6 +66,7 @@ class QuestSeedDistributionSpec extends Specification {
         def expectedClass = ModelManifest.getResourceAsStream('/xapi/model/api/ModelManifest.class').withCloseable { it.bytes }
 
         then:
+        Integer.parseInt(System.getProperty('quest.seed.build-java')) >= 8
         first.contains('Acknowledged 5 new quest definitions')
         second.contains('Acknowledged 0 new quest definitions')
         records.size() == 5
@@ -71,5 +74,8 @@ class QuestSeedDistributionSpec extends Specification {
         imported.getManifest('qdef').getMethodData('children').typeParams as List == [ChildRef]
         runtimeJar.parentFile == new File(installation, 'lib').canonicalFile
         Arrays.equals(actualClass, expectedClass) // Actual launcher bytecode, not just this Test classpath.
+
+        where:
+        runtime << [8, 17]
     }
 }

@@ -3,9 +3,11 @@ tasks.register('seedQuestDefinitions', JavaExec) {
     description = 'Seeds only missing XApi quest definitions and exports the shared ModelModule.'
     mainClass.set('net.wti.quest.model.jre.QuestDefinitionSeedMain')
     classpath = sourceSets.main.runtimeClasspath
-    if (JavaVersion.current().isJava9Compatible()) {
-        jvmArgs '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED'
-    }
+    final def runtime = javaLauncher
+    jvmArgumentProviders.add({
+        runtime.get().metadata.languageVersion.asInt() >= 9
+                ? ['--add-opens=java.base/java.lang.invoke=ALL-UNNAMED'] : []
+    } as org.gradle.process.CommandLineArgumentProvider)
 }
 
 tasks.withType(Test).configureEach {
@@ -15,13 +17,35 @@ tasks.withType(Test).configureEach {
     systemProperty 'quest.seed.fixture', packingFixture.absolutePath
     doFirst {
         systemProperty 'quest.seed.distribution', tasks.named('installDist').get().destinationDir.absolutePath
+        [8, 17].each { version ->
+            systemProperty "quest.seed.java${version}", javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(version)
+            }.get().metadata.installationPath.asFile.absolutePath
+        }
+        systemProperty 'quest.seed.build-java', JavaVersion.current().majorVersion
     }
 }
 application {
     mainClass = 'net.wti.quest.model.jre.QuestDefinitionSeedMain'
     applicationName = 'lifequest-quest-seed'
-    if (JavaVersion.current().isJava9Compatible()) {
-        applicationDefaultJvmArgs = ['--add-opens=java.base/java.lang.invoke=ALL-UNNAMED']
-    }
+    applicationDefaultJvmArgs = [] // Installed scripts inspect the JVM selected at invocation time.
 }
 
+
+// Supported Gradle template seam: retain upstream quoting/JAVA_HOME/PATH behavior.
+tasks.named('startScripts').configure {
+    final File unixFragment = file('gradle/seed-unix-runtime-options.txt')
+    final File windowsFragment = file('gradle/seed-windows-runtime-options.txt')
+    inputs.files(unixFragment, windowsFragment)
+    final String unixMarker = 'DEFAULT_JVM_OPTS=${defaultJvmOpts}'
+    final String windowsMarker = ':execute'
+    final String unixTemplate = unixStartScriptGenerator.template.asString()
+    final String windowsTemplate = windowsStartScriptGenerator.template.asString()
+    if (unixTemplate.count(unixMarker) != 1 || windowsTemplate.count(windowsMarker) != 1) {
+        throw new GradleException('Seed launcher template changed; review runtime option insertion')
+    }
+    unixStartScriptGenerator.template = resources.text.fromString(
+            unixTemplate.replace(unixMarker, unixMarker + '\n' + unixFragment.getText('UTF-8')))
+    windowsStartScriptGenerator.template = resources.text.fromString(
+            windowsTemplate.replace(windowsMarker, windowsMarker + '\r\n' + windowsFragment.getText('UTF-8')))
+}
