@@ -62,6 +62,7 @@ class KeyboardFocusScopeSpec extends Specification {
         value
     }
     void key(int code) { stage.keyDown(code); stage.keyUp(code) }
+    void typedKey(int code, char character) { stage.keyDown(code); stage.keyTyped(character); stage.keyUp(code) }
 
     def 'Tab and Shift Tab wrap in reading order and skip disabled hidden controls without activation'() {
         given:
@@ -88,6 +89,62 @@ class KeyboardFocusScopeSpec extends Specification {
         stage.keyboardFocus.is(first)
         actions.empty
     }
+    def 'typed Tab moves between adjacent text fields only once in either direction'() {
+        given:
+        Gdx.input = Stub(com.badlogic.gdx.Input) { isKeyPressed(Keys.SHIFT_LEFT) >> backwards }
+        def fields = ['first', 'second', 'third'].collect { new TextField(it, skin) }
+        fields.eachWithIndex { field, index -> field.setPosition(index * 200, 100); stage.addActor(field) }
+        stage.keyboardFocus = fields[1]
+        when:
+        typedKey(Keys.TAB, '\t' as char)
+        then:
+        stage.keyboardFocus.is(fields[backwards ? 0 : 2])
+        fields*.text == ['first', 'second', 'third']
+        where:
+        backwards << [false, true]
+    }
+
+    def 'typed Tab wraps inside a modal without native traversal to an outside field'() {
+        given:
+        Gdx.input = Stub(com.badlogic.gdx.Input) { isKeyPressed(Keys.SHIFT_LEFT) >> backwards }
+        def outside = new TextField('outside', skin); outside.setPosition(200, 100); stage.addActor(outside)
+        def dialog = new Window('Modal', skin); dialog.modal = true; dialog.setBounds(0, 0, 600, 200)
+        def first = new TextField('first', skin); first.setPosition(100, 100)
+        def last = new TextField('last', skin); last.setPosition(300, 100)
+        [first, last].each { dialog.addActor(it) }
+        stage.addActor(dialog)
+        stage.keyboardFocus = backwards ? first : last
+        when:
+        typedKey(Keys.TAB, '\t' as char)
+        then:
+        stage.keyboardFocus.is(backwards ? last : first)
+        [first.text, last.text, outside.text] == ['first', 'last', 'outside']
+        where:
+        backwards << [false, true]
+    }
+
+    def 'Tab capture preserves ordinary typing and TextArea newline handling'() {
+        given:
+        Gdx.input = Stub(com.badlogic.gdx.Input)
+        def field = new TextField('', skin)
+        def area = new TextArea('', skin); area.setSize(240, 100)
+        [field, area, button('submit')].each { stage.addActor(it) }
+        stage.keyboardFocus = field
+        when:
+        typedKey(Keys.X, 'x' as char)
+        typedKey(Keys.SPACE, ' ' as char)
+        typedKey(Keys.Y, 'y' as char)
+        typedKey(Keys.TAB, '\t' as char)
+        typedKey(Keys.A, 'a' as char)
+        typedKey(Keys.ENTER, '\n' as char)
+        typedKey(Keys.B, 'b' as char)
+        then:
+        field.text == 'x y'
+        area.text == 'a\nb'
+        stage.keyboardFocus.is(area)
+        actions.empty
+    }
+
     def 'Enter and Space activate once on release and key repeat does not duplicate actions'() {
         given:
         def target = button('target'); stage.addActor(target); stage.keyboardFocus = target

@@ -76,8 +76,10 @@ public final class ChecklistIntentService {
                                         finishAncestor(captured, current, snapshot, done);
                                     }));
                         });
-                        if (plan.hasMissingProgress()) projection.start(captured, root, current, started);
-                        else started.onSuccess(plan.snapshot());
+                        // Existing progress can finish even when an unrelated missing member cannot start.
+                        if (plan.items.get(0).live == null || selected.live == null) {
+                            projection.start(captured, root, current, started);
+                        } else started.onSuccess(plan.snapshot());
                     }));
                 } catch (final Throwable failure) { QuestProgressKeys.fail(done, failure); }
             });
