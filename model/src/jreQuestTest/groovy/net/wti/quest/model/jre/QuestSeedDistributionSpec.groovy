@@ -38,7 +38,7 @@ class QuestSeedDistributionSpec extends Specification {
         given:
         def installation = new File(System.getProperty('quest.seed.distribution'))
         def launcher = new File(installation, 'bin/lifequest-quest-seed')
-        def source = new File(directory, 'authored source $literal; — 水')
+        def source = new File(directory, 'authored source + %23 # $literal; — 水')
         def input = new File(source, 'META-INF/models/qdef/packing-checklists.xapi')
         input.parentFile.mkdirs()
         Files.copy(new File(System.getProperty('quest.seed.fixture')).toPath(), input.toPath())

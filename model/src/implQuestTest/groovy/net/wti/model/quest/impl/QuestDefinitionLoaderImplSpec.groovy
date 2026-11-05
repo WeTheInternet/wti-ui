@@ -134,6 +134,31 @@ class QuestDefinitionLoaderImplSpec extends AbstractModelLoaderSpec {
     }
 
     @Unroll
+    def "tag arrays preserve each authored string and scalar tags retain legacy separators: #tagSource"() {
+        given:
+        QuestDefinition loaded
+        def loader = new InlineLoader(source: '<QuestDefinition id = "tags" tags = ' + tagSource +
+                ' children = [<ChildRef definitionKey = "water" additionalTags = ' + tagSource + ' />] />')
+
+        when:
+        loader.loadFromClasspath { resource, definition -> loaded = definition }
+        def reopened = X_Model.deserialize(QuestDefinition, X_Model.serialize(QuestDefinition, loaded))
+
+        then:
+        loaded.tags as List == expected
+        loaded.children().iterator().next().additionalTags as List == expected
+        reopened.tags as List == expected
+        reopened.children().iterator().next().additionalTags as List == expected
+
+        where:
+        tagSource                           | expected
+        '["food, bag", "water", "水, 茶"]' | ['food, bag', 'water', '水, 茶']
+        '[]'                                | []
+        '[""]'                              | ['']
+        '"food, bag"'                       | ['food', 'bag']
+    }
+
+    @Unroll
     def "explicit #policy policy and reference metadata load without creating progress"() {
         given:
         QuestDefinition loaded
