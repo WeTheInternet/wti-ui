@@ -53,6 +53,11 @@ public final class KeyboardFocusScope implements Disposable {
             }
             return false;
         }
+        @Override public boolean keyTyped(final InputEvent event, final char character) {
+            // Tab traversal belongs to keyDown; TextField would otherwise traverse again on keyTyped.
+            if (disposed || character != '\t') return false;
+            event.stop(); return true;
+        }
         @Override public boolean keyUp(final InputEvent event, final int key) {
             if (key == Keys.SHIFT_LEFT) shiftLeft = false;
             if (key == Keys.SHIFT_RIGHT) shiftRight = false;
