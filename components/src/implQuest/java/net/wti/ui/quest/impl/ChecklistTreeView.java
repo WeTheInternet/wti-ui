@@ -131,6 +131,7 @@ public final class ChecklistTreeView extends Table {
             if (!leaf && root.canComplete() && !root.isComplete()) {
                 // Recovery for a reopened/partially acknowledged ALL_OF root, not an extra normal-path step.
                 final TextButton retry = new TextButton("Finish goal", getSkin());
+                retry.setName("finish:" + root.getDefinitionKey());
                 retry.setDisabled(loading || pending || complete == null);
                 retry.addListener(new ChangeListener() {
                     @Override public void changed(final ChangeEvent event, final Actor actor) {
