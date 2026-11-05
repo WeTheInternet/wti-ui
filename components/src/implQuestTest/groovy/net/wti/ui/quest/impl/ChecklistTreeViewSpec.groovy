@@ -201,6 +201,67 @@ class ChecklistTreeViewSpec extends Specification {
         where:
         keycode << [com.badlogic.gdx.Input.Keys.ENTER, com.badlogic.gdx.Input.Keys.SPACE]
     }
+    def 'keyboard goal recovery retains disabled focus through failure and retries without collapsing'() {
+        given:
+        def previousGraphics = com.badlogic.gdx.Gdx.graphics
+        def previousInput = com.badlogic.gdx.Gdx.input
+        com.badlogic.gdx.Gdx.graphics = Stub(com.badlogic.gdx.Graphics) { getWidth() >> 320; getHeight() >> 600 }
+        com.badlogic.gdx.Gdx.input = null
+        def viewport = new com.badlogic.gdx.utils.viewport.ScreenViewport() {
+            @Override void update(int width, int height, boolean center) { setWorldSize(width,height); setScreenBounds(0,0,width,height) }
+        }
+        def stage = new com.badlogic.gdx.scenes.scene2d.Stage(viewport, Stub(com.badlogic.gdx.graphics.g2d.Batch))
+        def scope = new net.wti.ui.controls.focus.KeyboardFocusScope(stage)
+        def previous = snapshot('a', true)
+        def root = new ChecklistSnapshot.Entry('a', 'a-live', 'Goal a', null, 1, QuestStatus.ACTIVE, true, true)
+        view.setGoal('a', new ChecklistSnapshot(root, previous.children, false)); stage.addActor(view)
+        def retry = { actors(view).find { it instanceof TextButton && it.text.toString() == 'Finish goal' } }
+        when:
+        2.times {
+            stage.keyDown(com.badlogic.gdx.Input.Keys.TAB)
+            stage.keyTyped('\t' as char)
+            stage.keyUp(com.badlogic.gdx.Input.Keys.TAB)
+        }
+        then:
+        stage.keyboardFocus.is(retry())
+        !retry().disabled
+        when:
+        3.times { stage.keyDown(keycode) }
+        stage.keyUp(keycode)
+        then:
+        intents == ['a-live']
+        retry().disabled
+        stage.keyboardFocus.is(retry())
+        view.isExpanded('a')
+        when:
+        stage.keyDown(keycode); stage.keyUp(keycode)
+        then:
+        intents == ['a-live']
+        stage.keyboardFocus.is(retry())
+        view.isExpanded('a')
+        when:
+        view.setError('a', 'Save failed. Retry.')
+        view.setPending('a', false)
+        then:
+        !retry().disabled
+        stage.keyboardFocus.is(retry())
+        view.isExpanded('a')
+        when:
+        3.times { stage.keyDown(keycode) }
+        stage.keyUp(keycode); stage.keyUp(keycode)
+        then:
+        intents == ['a-live', 'a-live']
+        retry().disabled
+        stage.keyboardFocus.is(retry())
+        checkbox('a').checked
+        view.isExpanded('a')
+        cleanup:
+        scope.dispose(); stage.dispose()
+        com.badlogic.gdx.Gdx.graphics = previousGraphics; com.badlogic.gdx.Gdx.input = previousInput
+        where:
+        keycode << [com.badlogic.gdx.Input.Keys.ENTER, com.badlogic.gdx.Input.Keys.SPACE]
+    }
+
     def 'pending and acknowledgment preserve scroll offset and expansion through layout'() {
         given:
         (0..15).each { i -> view.setGoal('g' + i, snapshot('g' + i)) }
