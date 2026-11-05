@@ -145,6 +145,74 @@ class ChecklistIntentServiceSpec extends Specification {
         models.writes.findAll { it instanceof LiveQuest }.every { it.dayIndex == 42 }
     }
 
+    def 'an active child completes without restarting an inactive missing sibling'() {
+        given:
+        def started = result { projection.start(day, root.key, it) }.value
+        models.records.remove(started.children[1].liveKey)
+        def inactive = models.records.values().find { it instanceof QuestDefinition && it.key.id == 'dress' }
+        inactive.active = false
+        models.put(inactive)
+        models.writes.clear()
+
+        when:
+        def loaded = result { projection.load(day, root.key, it) }
+        def restart = result { projection.start(day, root.key, it) }
+
+        then:
+        !loaded.error
+        loaded.value.children[0].canComplete()
+        !loaded.value.canStart()
+        restart.error instanceof IllegalStateException
+        models.writes.empty
+
+        when:
+        def answer = result { intents.complete(day, root.key, target('brush'), { current }, it) }
+
+        then:
+        !answer.error
+        answer.value.children[0].complete
+        !answer.value.children[1].started
+        !answer.value.root.complete
+        models.writes*.key*.kind == ['dn', 'lv']
+        models.writes*.key*.id == ['brush', 'brush']
+        models.records[started.root.liveKey].status == QuestStatus.ACTIVE
+        !models.records.containsKey(started.children[1].liveKey)
+
+        when:
+        models.writes.clear()
+        def retry = result { intents.complete(day, root.key, target('brush'), { current }, it) }
+
+        then:
+        !retry.error
+        retry.value.children[0].complete
+        !retry.value.children[1].started
+        models.writes.empty
+    }
+
+    def 'a missing #missing still starts before completing an existing checklist intent'() {
+        given:
+        def started = result { projection.start(day, root.key, it) }.value
+        def missingKey = missing == 'root' ? started.root.liveKey : started.children[0].liveKey
+        models.records.remove(missingKey)
+        models.writes.clear()
+
+        when:
+        def answer = result { intents.complete(day, root.key, target('brush'), { current }, it) }
+
+        then:
+        !answer.error
+        answer.value.root.started
+        answer.value.children[0].complete
+        answer.value.children[1].started
+        !answer.value.root.complete
+        models.writes*.key*.kind == ['lv', 'dn', 'lv']
+        models.keyToString(models.writes[0].key) == missingKey
+        models.writes.drop(1)*.key*.id == ['brush', 'brush']
+
+        where:
+        missing << ['root', 'target']
+    }
+
     def 'ineligible target with missing sibling is rejected before any start writes'() {
         given:
         def started = result { projection.start(day, root.key, it) }.value
