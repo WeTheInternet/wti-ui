@@ -18,7 +18,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -78,8 +77,8 @@ public abstract class AbstractClasspathXapiLoader <M extends Model> implements X
     ) throws Exception {
         final String protocol = root.getProtocol();
         if ("file".equals(protocol)) {
-            final String decodedPath = URLDecoder.decode(root.getPath(), "UTF-8");
-            final File dir = new File(decodedPath);
+            // A file URL is not form data: a literal '+' must remain part of the path.
+            final File dir = new File(root.toURI());
             final File[] children = dir.listFiles();
             if (children == null) {
                 return;
