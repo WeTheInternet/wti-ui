@@ -1,0 +1,2 @@
+// Owning focus mechanism specs use Spock/JUnit Platform.
+tasks.named('test').configure { useJUnitPlatform() }

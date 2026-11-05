@@ -47,6 +47,8 @@
                     requires = {
                         @transitive
                         external : ( libs.gdx.core ),
+                        @transitive("test")
+                        external : ( libs.spock ),
                     }
                 /controls>,
                 <quest
