@@ -4,6 +4,7 @@ import net.wti.quest.api.LiveQuest;
 import net.wti.quest.api.QuestDefinition;
 import net.wti.time.api.ModelDay;
 import xapi.model.api.Model;
+import xapi.model.service.ModelServiceWithCreateIfAbsent;
 import xapi.model.api.ModelKey;
 import xapi.model.api.ModelNotFoundException;
 import xapi.model.service.ModelService;
@@ -93,6 +94,34 @@ final class QuestProgressKeys {
                     } else fail(once, error);
                 } catch (final Throwable failure) { fail(once, failure); }
             }));
+        } catch (final Throwable failure) { fail(once, failure); }
+    }
+
+    /** Availability is configuration, not health/negotiation. Pin this choice for one start. */
+    static ModelServiceWithCreateIfAbsent creator(final ModelService models) {
+        if (!(models instanceof ModelServiceWithCreateIfAbsent)) return null;
+        final ModelServiceWithCreateIfAbsent capable = (ModelServiceWithCreateIfAbsent) models;
+        return capable.supportsCreateIfAbsent() ? capable : null;
+    }
+
+    /** A selected conditional provider never downgrades after an uncertain or failed request. */
+    static <M extends Model> void createMissing(final ModelService models, final ModelServiceWithCreateIfAbsent creator,
+                                               final M model, final SuccessHandler<M> callback) {
+        if (creator == null) { save(models, model, callback); return; }
+        final SuccessHandler<M> once = once(callback);
+        try {
+            final String expected = encoded(models, model.getKey());
+            final String type = model.getType();
+            creator.createIfAbsent(model, SuccessHandler.handler(result -> {
+                try {
+                    final M acknowledged = result == null ? null : result.getModel();
+                    if (acknowledged == null || !expected.equals(encoded(models, acknowledged.getKey()))
+                            || !type.equals(acknowledged.getType())) {
+                        throw new IllegalStateException("Conditional create acknowledged a different model identity");
+                    }
+                    once.onSuccess(acknowledged);
+                } catch (final Throwable failure) { fail(once, failure); }
+            }, error -> fail(once, error)));
         } catch (final Throwable failure) { fail(once, failure); }
     }
 
