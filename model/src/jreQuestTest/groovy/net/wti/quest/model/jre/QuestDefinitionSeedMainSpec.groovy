@@ -103,6 +103,77 @@ class QuestDefinitionSeedMainSpec extends Specification {
         }
     }
 
+    def "literal plus and escaped punctuation in the explicit seed root survive file URL loading"() {
+        given:
+        def args = arguments()
+        def source = new File(directory, 'source').toPath()
+        def renamed = new File(directory, 'source + bag %23 # 水').toPath()
+        Files.move(source, renamed)
+        args = args.collect { it.startsWith('--seed-root=') ? '--seed-root=' + renamed : it } as String[]
+
+        expect:
+        QuestDefinitionSeedMain.run(args, new ModelServiceJre()) == 5
+        QuestDefinitionSeedMain.run(args, new ModelServiceJre()) == 0
+        new File(directory, 'models/definition-owner/qdef/packing-list').isFile()
+    }
+
+    def "a failed manifest publication can retry without replacing already seeded definitions"() {
+        given:
+        def args = arguments()
+        def blockedParent = new File(directory, 'wire')
+        blockedParent.setText('blocks the output directory', 'UTF-8')
+
+        when:
+        QuestDefinitionSeedMain.run(args, new ModelServiceJre())
+
+        then:
+        thrown(IOException)
+        new File(directory, 'models/definition-owner/qdef/packing-list').isFile()
+        !new File(directory, 'wire/lifequest-quests.rpc').exists()
+
+        when:
+        def before = new File(directory, 'models/definition-owner/qdef').listFiles().collectEntries {
+            [(it.name): it.bytes.toList()]
+        }
+        Files.delete(blockedParent.toPath())
+        def created = QuestDefinitionSeedMain.run(args, new ModelServiceJre())
+        def after = new File(directory, 'models/definition-owner/qdef').listFiles().collectEntries {
+            [(it.name): it.bytes.toList()]
+        }
+
+        then:
+        created == 0
+        after == before
+        new File(directory, 'wire/lifequest-quests.rpc').isFile()
+    }
+
+    def "manifest publication ignores abandoned staging and accepts only identical existing output"() {
+        given:
+        def artifact = new File(directory, 'wire/policy.rpc').toPath()
+        Files.createDirectories(artifact.parent)
+        def abandoned = artifact.parent.resolve('.lifequest-manifest-abandoned.tmp')
+        Files.write(abandoned, 'incomplete'.getBytes(StandardCharsets.UTF_8))
+        def expected = 'complete policy — 水'.getBytes(StandardCharsets.UTF_8)
+
+        when:
+        QuestDefinitionSeedMain.publishManifest(artifact, expected)
+        QuestDefinitionSeedMain.publishManifest(artifact, expected)
+
+        then:
+        Files.readAllBytes(artifact) == expected
+        Files.list(artifact.parent).withCloseable { paths ->
+            paths.map { it.fileName.toString() }.sorted().toArray().toList()
+        } == ['.lifequest-manifest-abandoned.tmp', 'policy.rpc']
+
+        when:
+        QuestDefinitionSeedMain.publishManifest(artifact, 'different policy'.getBytes(StandardCharsets.UTF_8))
+
+        then:
+        thrown(IOException)
+        Files.readAllBytes(artifact) == expected
+        Files.list(artifact.parent).withCloseable { it.count() } == 2
+    }
+
     def "omitted child quantities survive source loading and the real exported policy store roundtrip"() {
         given:
         def args = arguments()

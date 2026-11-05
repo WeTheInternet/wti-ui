@@ -14,6 +14,8 @@ import xapi.util.api.SuccessHandler;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -92,13 +94,7 @@ public final class QuestDefinitionSeedMain {
                 }
             }
             created = acknowledged;
-            final Path parent = manifestFile.getParent();
-            if (parent != null) Files.createDirectories(parent);
-            try {
-                Files.write(manifestFile, manifest, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
-            } catch (java.nio.file.FileAlreadyExistsException existing) {
-                requireIdenticalManifest(manifestFile, manifest);
-            }
+            publishManifest(manifestFile, manifest);
             return created;
         } finally {
             scope.remove();
@@ -119,6 +115,29 @@ public final class QuestDefinitionSeedMain {
             }.loadFromClasspath((resource, definition) -> definitions.add(definition));
         }
         return definitions;
+    }
+
+    /// Publish only complete bytes, without replacing an artifact created by another invocation.
+    /// A hard link supplies atomic create-if-absent; ATOMIC_MOVE may replace an existing target.
+    /// Filesystems without hard-link support fail visibly instead of weakening this guarantee.
+    static void publishManifest(final Path file, final byte[] manifest) throws IOException {
+        final Path parent = file.toAbsolutePath().getParent();
+        Files.createDirectories(parent);
+        final Path staged = Files.createTempFile(parent, ".lifequest-manifest-", ".tmp");
+        try {
+            try (FileChannel output = FileChannel.open(staged, StandardOpenOption.WRITE)) {
+                final ByteBuffer bytes = ByteBuffer.wrap(manifest);
+                while (bytes.hasRemaining()) output.write(bytes);
+                output.force(true);
+            }
+            try {
+                Files.createLink(file, staged);
+            } catch (java.nio.file.FileAlreadyExistsException existing) {
+                requireIdenticalManifest(file, manifest);
+            }
+        } finally {
+            Files.deleteIfExists(staged);
+        }
     }
 
     static void requireIdenticalManifest(final Path file, final byte[] expected) throws IOException {

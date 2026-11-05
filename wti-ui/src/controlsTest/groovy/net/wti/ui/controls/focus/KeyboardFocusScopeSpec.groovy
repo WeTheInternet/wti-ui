@@ -220,6 +220,80 @@ class KeyboardFocusScopeSpec extends Specification {
         target.style.is(original)
         actions.empty
     }
+    def 'custom button style survives traversal and pointer focus without slicing its subtype'() {
+        given:
+        def first = button('first'); def last = button('last')
+        def firstStyle = first.style; def lastStyle = last.style
+        def original = new MenuStyle(skin.get(TextButton.TextButtonStyle))
+        def target = new TextButton('menu', original) {
+            @Override void setStyle(Button.ButtonStyle value) {
+                if (!(value instanceof MenuStyle)) throw new IllegalArgumentException('MenuStyle required')
+                super.setStyle(value)
+            }
+        }
+        def menuResource = original.menuResource
+        [first, target, last].each { stage.addActor(it) }
+        when:
+        key(Keys.TAB); key(Keys.TAB)
+        then:
+        stage.keyboardFocus.is(target)
+        target.style.is(original)
+        target.style.menuResource.is(menuResource)
+        first.style.is(firstStyle)
+        when:
+        key(Keys.TAB)
+        def event = new InputEvent(); event.type = InputEvent.Type.touchDown; event.stage = stage; event.button = 0
+        target.label.fire(event)
+        then:
+        stage.keyboardFocus.is(target)
+        target.style.is(original)
+        last.style.is(lastStyle)
+        actions.empty
+        when:
+        scope.dispose()
+        then:
+        target.style.is(original)
+    }
+
+    def 'checked button focus draws checked hover state when available and restores its shared style'() {
+        given:
+        def original = new Button.ButtonStyle()
+        original.up = new BaseDrawable(); original.over = new BaseDrawable()
+        original.checked = new BaseDrawable()
+        original.checkedOver = hoverAvailable ? new BaseDrawable() : null
+        def checkedBackground = original.checked
+        def target = new Button(original); target.checked = true
+        target.addListener(new ChangeListener() {
+            @Override void changed(ChangeEvent event, Actor actor) { actions << 'switch' }
+        })
+        stage.addActor(target)
+        when:
+        key(Keys.TAB)
+        target.draw(stage.batch, 1f)
+        then:
+        stage.keyboardFocus.is(target)
+        !target.style.is(original)
+        target.background.is(hoverAvailable ? original.checkedOver : checkedBackground)
+        original.checked.is(checkedBackground)
+        target.checked
+        actions.empty
+        when:
+        stage.keyboardFocus = null
+        target.draw(stage.batch, 1f)
+        then:
+        target.style.is(original)
+        target.background.is(checkedBackground)
+        target.checked
+        actions.empty
+        where:
+        hoverAvailable << [true, false]
+    }
+
+    private static class MenuStyle extends TextButton.TextButtonStyle {
+        final Object menuResource = new Object()
+        MenuStyle(TextButton.TextButtonStyle original) { super(original) }
+    }
+
     def 'keyboard release reaches registered click and change listeners exactly once with actor context'() {
         given:
         def target = button('target'); target.setSize(100,48)

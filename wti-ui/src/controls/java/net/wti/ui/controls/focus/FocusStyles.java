@@ -26,20 +26,23 @@ final class FocusStyles {
             final Button button = (Button) target;
             final Button.ButtonStyle style = button.getStyle();
             final Button.ButtonStyle focused;
-            if (style instanceof CheckBox.CheckBoxStyle) {
+            if (style.getClass() == CheckBox.CheckBoxStyle.class) {
                 focused = new CheckBox.CheckBoxStyle((CheckBox.CheckBoxStyle) style);
             }
-            else if (style instanceof ImageTextButton.ImageTextButtonStyle) {
+            else if (style.getClass() == ImageTextButton.ImageTextButtonStyle.class) {
                 focused = new ImageTextButton.ImageTextButtonStyle((ImageTextButton.ImageTextButtonStyle) style);
             }
-            else if (style instanceof TextButton.TextButtonStyle) {
+            else if (style.getClass() == TextButton.TextButtonStyle.class) {
                 focused = new TextButton.TextButtonStyle((TextButton.TextButtonStyle) style);
             }
-            else if (style instanceof ImageButton.ImageButtonStyle) {
+            else if (style.getClass() == ImageButton.ImageButtonStyle.class) {
                 focused = new ImageButton.ImageButtonStyle((ImageButton.ImageButtonStyle) style);
             }
-            else focused = new Button.ButtonStyle(style);
+            else if (style.getClass() == Button.ButtonStyle.class) focused = new Button.ButtonStyle(style);
+            // Custom widgets can require extra style fields and reject a sliced base style.
+            else return;
             if (style.over != null) focused.up = style.over;
+            if (style.checkedOver != null) focused.checked = style.checkedOver;
             if (focused instanceof TextButton.TextButtonStyle) {
                 final TextButton.TextButtonStyle text = (TextButton.TextButtonStyle) focused;
                 text.fontColor = text.overFontColor == null ? Color.WHITE : text.overFontColor;

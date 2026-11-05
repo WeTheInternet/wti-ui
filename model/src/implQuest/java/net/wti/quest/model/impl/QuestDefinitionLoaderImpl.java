@@ -15,6 +15,9 @@ import xapi.fu.In2;
 import xapi.model.X_Model;
 import xapi.model.api.ModelManifest;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /// QuestDefinitionLoaderImpl
 ///
 /// Classpath .xapi loader for QuestDefinition resources under META-INF/models/qdef.
@@ -92,7 +95,7 @@ public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<Quest
                                     def.setAuto(parseBoolean(raw));
                                     break;
                                 case "tags":
-                                    def.setTags(parseTags(raw));
+                                    def.setTags(parseTags(attr.getExpression()));
                                     break;
                                 case "completionPolicy":
                                     def.setCompletionPolicy(parseEnum(CompletionPolicy.class, raw, resourceName));
@@ -167,7 +170,7 @@ public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<Quest
                         reference.setInheritTags(inherit);
                         break;
                     case "additionalTags":
-                        reference.setAdditionalTags(parseTags(raw));
+                        reference.setAdditionalTags(parseTags(attr.getExpression()));
                         break;
                     default:
                         throw new IllegalArgumentException(resourceName + ": unknown ChildRef attribute " + name);
@@ -194,6 +197,19 @@ public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<Quest
             throw new IllegalArgumentException(resourceName + ": " + name + " must be a non-negative integer");
         }
         return value;
+    }
+
+    private String[] parseTags(final Expression expression) {
+        if (expression instanceof JsonContainerExpr && ((JsonContainerExpr) expression).isArray()) {
+            final List<String> tags = new ArrayList<>();
+            // Element boundaries belong to the AST; a comma inside one string is not a separator.
+            for (final Expression value : ((JsonContainerExpr) expression).getValues()) {
+                tags.add(stripQuotes(value.toSource()));
+            }
+            return tags.toArray(new String[0]);
+        }
+        // Retain the legacy comma-separated scalar spelling used by existing definitions.
+        return parseTags(expression.toSource());
     }
 
     private String[] parseTags(final String raw) {
