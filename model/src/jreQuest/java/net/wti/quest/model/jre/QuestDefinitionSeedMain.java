@@ -45,6 +45,8 @@ public final class QuestDefinitionSeedMain {
     /// this startup step must run it before accepting writers; ModelService has no cross-process CAS.
     public static int run(final String[] args, final ModelServiceJre models) throws Exception {
         final Map<String, String> options = options(args);
+        // These paths locate input, storage and policy output only. Model identity comes
+        // from authored definition IDs and the explicit namespace, not directory/file names.
         final Path seedRoot = Paths.get(options.get("seed-root")).toAbsolutePath().normalize();
         final Path modelDirectory = Paths.get(options.get("model-dir")).toFile().getCanonicalFile().toPath();
         final Path manifestFile = Paths.get(options.get("manifest-out")).toAbsolutePath().normalize();

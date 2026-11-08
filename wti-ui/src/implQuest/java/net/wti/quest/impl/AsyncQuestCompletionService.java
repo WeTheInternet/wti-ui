@@ -47,33 +47,54 @@ public final class AsyncQuestCompletionService {
             dayKey = QuestProgressKeys.day(models, day);
             key = QuestProgressKeys.copy(models, liveKey);
             identity = QuestProgressKeys.encoded(models, key);
-            if (!LiveQuest.MODEL_LIVE_QUEST.equals(key.getKind())) throw new IllegalArgumentException("Expected live quest key");
-            synchronized (pending) {
-                if (!pending.add(identity)) throw new IllegalStateException("Completion is already pending");
+            if (!LiveQuest.MODEL_LIVE_QUEST.equals(key.getKind())) {
+                throw new IllegalArgumentException("Expected live quest key");
             }
-        } catch (final Throwable error) { QuestProgressKeys.fail(outer, error); return; }
+            synchronized (pending) {
+                if (!pending.add(identity)) {
+                    throw new IllegalStateException("Completion is already pending");
+                }
+            }
+        } catch (final Throwable error) {
+            QuestProgressKeys.fail(outer, error);
+            return;
+        }
         final SuccessHandler<ChecklistSnapshot> done = QuestProgressKeys.once(SuccessHandler.handler(value -> {
-            synchronized (pending) { pending.remove(identity); }
+            synchronized (pending) {
+                pending.remove(identity);
+            }
             outer.onSuccess(value);
         }, error -> {
-            synchronized (pending) { pending.remove(identity); }
+            synchronized (pending) {
+                pending.remove(identity);
+            }
             QuestProgressKeys.fail(outer, error);
         }));
         try {
             final ModelKey parent = key.getParent();
             final ModelKey rootKey;
-            if (QuestProgressKeys.same(models, parent, dayKey)) rootKey = key;
-            else if (parent != null && LiveQuest.MODEL_LIVE_QUEST.equals(parent.getKind())
-                    && QuestProgressKeys.same(models, parent.getParent(), dayKey)) rootKey = parent;
-            else throw new IllegalArgumentException("Live quest must belong to the supplied day and direct checklist");
+            if (QuestProgressKeys.same(models, parent, dayKey)) {
+                rootKey = key;
+            } else if (parent != null && LiveQuest.MODEL_LIVE_QUEST.equals(parent.getKind())
+                    && QuestProgressKeys.same(models, parent.getParent(), dayKey)) {
+                rootKey = parent;
+            } else {
+                throw new IllegalArgumentException("Live quest must belong to the supplied day and direct checklist");
+            }
             QuestProgressKeys.optional(models, LiveQuest.class, rootKey, QuestProgressKeys.then(done, root -> {
-                if (root == null) throw new IllegalStateException("Checklist has not been started");
+                if (root == null) {
+                    throw new IllegalStateException("Checklist has not been started");
+                }
                 projection.inspect(day, root.getSourceDefinitionKey(), QuestProgressKeys.then(done, plan -> {
-                    ChecklistPlan.Item target = null;
-                    for (final ChecklistPlan.Item item : plan.items) {
-                        if (QuestProgressKeys.same(models, item.key, key)) target = item;
+                    ChecklistPlanItem target = null;
+                    for (final ChecklistPlanItem item : plan.items) {
+                        if (QuestProgressKeys.same(models, item.key, key)) {
+                            target = item;
+                        }
                     }
-                    if (target == null || target.live == null) throw new IllegalStateException("Checklist member has not been started");
+                    if (target == null || target.live == null) {
+                        throw new IllegalStateException("Checklist member has not been started");
+                    }
                     if (target == plan.items.get(0) && !plan.childrenFinished()) {
                         throw new IllegalStateException("Complete every checklist member before completing the list");
                     }
@@ -81,10 +102,12 @@ public final class AsyncQuestCompletionService {
                     finish(plan, target, current, done);
                 }));
             }));
-        } catch (final Throwable error) { QuestProgressKeys.fail(done, error); }
+        } catch (final Throwable error) {
+            QuestProgressKeys.fail(done, error);
+        }
     }
 
-    private void finish(final ChecklistPlan plan, final ChecklistPlan.Item item,
+    private void finish(final ChecklistPlan plan, final ChecklistPlanItem item,
                         final BooleanSupplier currentRun, final SuccessHandler<ChecklistSnapshot> done) {
         final LiveQuest current = item.live;
         final QuestStatus status = current.getStatus();
@@ -126,7 +149,7 @@ public final class AsyncQuestCompletionService {
         }));
     }
 
-    private void validateHistory(final ChecklistPlan plan, final ChecklistPlan.Item item,
+    private void validateHistory(final ChecklistPlan plan, final ChecklistPlanItem item,
                                  final ModelKey expected, final QuestCompleted history) {
         if (!QuestProgressKeys.same(models, expected, history.getKey())
                 || !QuestProgressKeys.same(models, item.key, history.getInstanceKey())
@@ -143,11 +166,14 @@ public final class AsyncQuestCompletionService {
         }
     }
 
-    private void finishLive(final ChecklistPlan plan, final ChecklistPlan.Item item,
+    private void finishLive(final ChecklistPlan plan, final ChecklistPlanItem item,
                             final QuestCompleted history, final BooleanSupplier currentRun,
                             final SuccessHandler<ChecklistSnapshot> done) {
         QuestProgressKeys.current(currentRun);
-        if (item.live.getStatus() == QuestStatus.FINISHED) { done.onSuccess(plan.snapshot()); return; }
+        if (item.live.getStatus() == QuestStatus.FINISHED) {
+            done.onSuccess(plan.snapshot());
+            return;
+        }
         // The copy shares untouched nested values only; every changed field/key is detached.
         final LiveQuest staged = models.create(LiveQuest.class);
         staged.absorb(item.live);
