@@ -34,9 +34,11 @@ import java.util.function.Consumer;
 ///
 /// This is an in-memory coordinator, not a durable offline queue or a cross-device
 /// transaction. Storage guarantees come from the delegated model/completion service;
-/// child and ancestor completion remain separate operations. Callbacks run on the
-/// model service's callback thread. The controller must dispatch snapshot/pending/error
-/// changes to its owning UI thread and ignore results for a board that is no longer current.
+/// child and ancestor completion remain separate operations. Callbacks may run
+/// synchronously on the caller's thread or on the model service's callback thread;
+/// this coordinator performs no UI dispatch. The controller must dispatch
+/// snapshot/pending/error changes to its owning UI thread and ignore results for
+/// a board that is no longer current.
 public final class ChecklistIntentService {
     private final ModelService models;
     private final ChecklistProjectionService projection;
