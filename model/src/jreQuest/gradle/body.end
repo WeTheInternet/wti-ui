@@ -17,7 +17,7 @@ tasks.withType(Test).configureEach {
     systemProperty 'quest.seed.fixture', packingFixture.absolutePath
     doFirst {
         systemProperty 'quest.seed.distribution', tasks.named('installDist').get().destinationDir.absolutePath
-        [8, 17].each { version ->
+        [8, 17, 21].each { version ->
             systemProperty "quest.seed.java${version}", javaToolchains.launcherFor {
                 languageVersion = JavaLanguageVersion.of(version)
             }.get().metadata.installationPath.asFile.absolutePath

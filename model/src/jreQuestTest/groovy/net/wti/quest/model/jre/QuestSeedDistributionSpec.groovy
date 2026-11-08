@@ -76,6 +76,6 @@ class QuestSeedDistributionSpec extends Specification {
         Arrays.equals(actualClass, expectedClass) // Actual launcher bytecode, not just this Test classpath.
 
         where:
-        runtime << [8, 17]
+        runtime << [8, 17, 21]
     }
 }

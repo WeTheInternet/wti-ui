@@ -1,7 +1,6 @@
 package net.wti.quest.impl;
 
 import net.wti.quest.api.ChecklistSnapshot;
-import net.wti.quest.impl.ChecklistPlan.Item;
 import net.wti.quest.api.ChildRef;
 import net.wti.quest.api.ChildRole;
 import net.wti.quest.api.ChildStartPolicy;
@@ -47,7 +46,10 @@ public final class ChecklistProjectionService {
     public void load(final ModelDay day, final ModelKey definition,
                      final SuccessHandler<ChecklistSnapshot> callback) {
         final SuccessHandler<ChecklistSnapshot> done = QuestProgressKeys.once(callback);
-        if (day == null) { QuestProgressKeys.fail(done, new IllegalArgumentException("Explicit owner/day required")); return; }
+        if (day == null) {
+            QuestProgressKeys.fail(done, new IllegalArgumentException("Explicit owner/day required"));
+            return;
+        }
         inspect(day, definition, QuestProgressKeys.then(done, plan -> done.onSuccess(plan.snapshot())));
     }
 
@@ -61,13 +63,22 @@ public final class ChecklistProjectionService {
     public void start(final ModelDay day, final ModelKey definition, final BooleanSupplier current,
                       final SuccessHandler<ChecklistSnapshot> callback) {
         final SuccessHandler<ChecklistSnapshot> done = QuestProgressKeys.once(callback);
-        if (day == null) { QuestProgressKeys.fail(done, new IllegalArgumentException("Explicit owner/day required")); return; }
+        if (day == null) {
+            QuestProgressKeys.fail(done, new IllegalArgumentException("Explicit owner/day required"));
+            return;
+        }
         final ModelServiceWithCreateIfAbsent creator;
-        try { creator = QuestProgressKeys.creator(models); }
-        catch (final Throwable failure) { QuestProgressKeys.fail(done, failure); return; }
+        try {
+            creator = QuestProgressKeys.creator(models);
+        } catch (final Throwable failure) {
+            QuestProgressKeys.fail(done, failure);
+            return;
+        }
         inspect(day, definition, QuestProgressKeys.then(done, plan -> {
             final String failure = plan.startFailure();
-            if (failure != null) throw new IllegalStateException(failure);
+            if (failure != null) {
+                throw new IllegalStateException(failure);
+            }
             fill(plan, 0, current, creator, done);
         }));
     }
@@ -80,44 +91,57 @@ public final class ChecklistProjectionService {
             final ChecklistPlan plan = new ChecklistPlan(models, day == null ? null : QuestProgressKeys.day(models, day),
                     day == null ? 0 : day.getDayNum());
             QuestProgressKeys.optional(models, QuestDefinition.class, definitionCopy, QuestProgressKeys.then(done, root -> {
-                if (root == null) throw new IllegalStateException("Checklist definition is missing");
+                if (root == null) {
+                    throw new IllegalStateException("Checklist definition is missing");
+                }
                 supported(root);
                 if (root.getCompletionPolicy() != null && root.getCompletionPolicy() != CompletionPolicy.ALL_OF) {
                     throw new UnsupportedOperationException("Only ALL_OF checklists are supported");
                 }
                 final ModelKey rootLive = plan.day == null ? null : plan.day.getChild(LiveQuest.MODEL_LIVE_QUEST, root.getKey().getId());
-                plan.items.add(new Item(root, rootLive, 1, root.getTags()));
+                plan.items.add(new ChecklistPlanItem(root, rootLive, 1, root.getTags()));
                 final List<ChildRef> children = new ArrayList<>();
                 final Set<String> identities = new HashSet<>();
                 final Set<String> ids = new HashSet<>();
-                if (root.getChildren() != null) for (final ChildRef child : root.getChildren()) {
-                    if (child == null) throw new IllegalArgumentException("Null checklist member");
-                    QuestProgressKeys.definition(models, child.getDefinitionKey());
-                    final String identity = QuestProgressKeys.encoded(models, child.getDefinitionKey());
-                    if (QuestProgressKeys.same(models, root.getKey(), child.getDefinitionKey())
-                            || !identities.add(identity) || !ids.add(child.getDefinitionKey().getId())) {
-                        throw new UnsupportedOperationException("Cyclic or duplicate checklist member");
+                if (root.getChildren() != null) {
+                    for (final ChildRef child : root.getChildren()) {
+                        if (child == null) {
+                            throw new IllegalArgumentException("Null checklist member");
+                        }
+                        QuestProgressKeys.definition(models, child.getDefinitionKey());
+                        final String identity = QuestProgressKeys.encoded(models, child.getDefinitionKey());
+                        if (QuestProgressKeys.same(models, root.getKey(), child.getDefinitionKey())
+                                || !identities.add(identity) || !ids.add(child.getDefinitionKey().getId())) {
+                            throw new UnsupportedOperationException("Cyclic or duplicate checklist member");
+                        }
+                        if ((child.getRole() != null && child.getRole() != ChildRole.PARALLEL)
+                                || (child.getStartPolicy() != null && child.getStartPolicy() != ChildStartPolicy.AFTER_PARENT_START)
+                                || (child.getQuantity() != null && child.getQuantity() <= 0)) {
+                            throw new UnsupportedOperationException(
+                                    "Only positive-quantity parallel members starting with the parent are supported");
+                        }
+                        children.add(child);
                     }
-                    if ((child.getRole() != null && child.getRole() != ChildRole.PARALLEL)
-                            || (child.getStartPolicy() != null && child.getStartPolicy() != ChildStartPolicy.AFTER_PARENT_START)
-                            || (child.getQuantity() != null && child.getQuantity() <= 0)) {
-                        throw new UnsupportedOperationException(
-                                "Only positive-quantity parallel members starting with the parent are supported");
-                    }
-                    children.add(child);
                 }
                 loadChildren(plan, children, 0, done);
             }));
-        } catch (final Throwable failure) { QuestProgressKeys.fail(done, failure); }
+        } catch (final Throwable failure) {
+            QuestProgressKeys.fail(done, failure);
+        }
     }
 
     private void loadChildren(final ChecklistPlan plan, final List<ChildRef> children, final int index,
                               final SuccessHandler<ChecklistPlan> done) {
-        if (index == children.size()) { loadProgress(plan, 0, done); return; }
+        if (index == children.size()) {
+            loadProgress(plan, 0, done);
+            return;
+        }
         final ChildRef reference = children.get(index);
         final ModelKey definition = QuestProgressKeys.copy(models, reference.getDefinitionKey());
         QuestProgressKeys.optional(models, QuestDefinition.class, definition, QuestProgressKeys.then(done, child -> {
-            if (child == null) throw new IllegalStateException("Checklist member definition is missing");
+            if (child == null) {
+                throw new IllegalStateException("Checklist member definition is missing");
+            }
             supported(child);
             if (child.getChildren() != null && !child.getChildren().isEmpty()) {
                 throw new UnsupportedOperationException("Nested checklist composition is not supported");
@@ -125,18 +149,23 @@ public final class ChecklistProjectionService {
             final ModelKey rootLive = plan.items.get(0).key;
             final ModelKey live = rootLive == null ? null : rootLive.getChild(LiveQuest.MODEL_LIVE_QUEST, child.getKey().getId());
             final Set<String> tags = new LinkedHashSet<>();
-            if (Boolean.TRUE.equals(reference.getInheritTags())) addTags(tags, plan.items.get(0).definition.getTags());
+            if (Boolean.TRUE.equals(reference.getInheritTags())) {
+                addTags(tags, plan.items.get(0).definition.getTags());
+            }
             addTags(tags, child.getTags());
             addTags(tags, reference.getAdditionalTags());
-            plan.items.add(new Item(child, live, reference.getQuantity() == null ? 1 : reference.getQuantity(),
+            plan.items.add(new ChecklistPlanItem(child, live, reference.getQuantity() == null ? 1 : reference.getQuantity(),
                     tags.toArray(new String[0])));
             loadChildren(plan, children, index + 1, done);
         }));
     }
 
     private void loadProgress(final ChecklistPlan plan, final int index, final SuccessHandler<ChecklistPlan> done) {
-        if (plan.day == null || index == plan.items.size()) { done.onSuccess(plan); return; }
-        final Item item = plan.items.get(index);
+        if (plan.day == null || index == plan.items.size()) {
+            done.onSuccess(plan);
+            return;
+        }
+        final ChecklistPlanItem item = plan.items.get(index);
         QuestProgressKeys.optional(models, LiveQuest.class, item.key, QuestProgressKeys.then(done, live -> {
             if (live != null) {
                 QuestProgressKeys.live(models, live, item.key, plan.day, plan.dayNum, item.definition.getKey());
@@ -150,9 +179,15 @@ public final class ChecklistProjectionService {
     private void fill(final ChecklistPlan plan, final int index, final BooleanSupplier current,
                       final ModelServiceWithCreateIfAbsent creator, final SuccessHandler<ChecklistSnapshot> done) {
         QuestProgressKeys.current(current);
-        if (index == plan.items.size()) { done.onSuccess(plan.snapshot()); return; }
-        final Item item = plan.items.get(index);
-        if (item.live != null) { fill(plan, index + 1, current, creator, done); return; }
+        if (index == plan.items.size()) {
+            done.onSuccess(plan.snapshot());
+            return;
+        }
+        final ChecklistPlanItem item = plan.items.get(index);
+        if (item.live != null) {
+            fill(plan, index + 1, current, creator, done);
+            return;
+        }
         final ModelKey sourceDefinition = QuestProgressKeys.copy(models, item.definition.getKey());
         final LiveQuest live = models.create(LiveQuest.class);
         live.setKey(QuestProgressKeys.copy(models, item.key));
@@ -175,7 +210,9 @@ public final class ChecklistProjectionService {
             supported(saved);
             item.live = saved;
             final String failure = plan.startFailure();
-            if (failure != null) throw new IllegalStateException(failure);
+            if (failure != null) {
+                throw new IllegalStateException(failure);
+            }
             fill(plan, index + 1, current, creator, done);
         }));
     }
@@ -191,7 +228,13 @@ public final class ChecklistProjectionService {
     }
 
     private static void addTags(final Set<String> tags, final String[] values) {
-        if (values != null) for (final String value : values) if (value != null) tags.add(value);
+        if (values != null) {
+            for (final String value : values) {
+                if (value != null) {
+                    tags.add(value);
+                }
+            }
+        }
     }
 
 }

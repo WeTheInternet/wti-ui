@@ -18,6 +18,11 @@
     - No JUnit tests unless explicitly requested
     - Keep test fixtures minimal; prefer readability
 
+## Control flow and helper types
+- Always use braces for `if`, `else`, and `for` bodies, including one-line guards and nested loops. Expand the body onto separate lines so control flow stays readable.
+- Prefer descriptive top-level helper types over short-named nested classes. Keep implementation-only helpers package-private.
+- Use compact stable names for persisted model kinds and identifiers; descriptive Java class names and local path variables need not be shortened.
+
 ## Behavioral expectations
 - When generating code:
     - include both docs (`///` and/or Javadoc) and targeted inline comments
