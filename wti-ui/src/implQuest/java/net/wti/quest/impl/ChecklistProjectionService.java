@@ -218,7 +218,7 @@ public final class ChecklistProjectionService {
     }
 
     /// This MVP has no requirement/ACL evaluator; never silently ignore configured restrictions.
-    private void supported(final HasRequirements model) {
+    void supported(final HasRequirements model) {
         // A declared empty ACL denies everyone under HasAcl; it is not unrestricted.
         if (model.getToSee() != null || model.getToStart() != null
                 || model.getToComplete() != null || model.getToEdit() != null
