@@ -18,6 +18,58 @@ import xapi.model.X_Model
 /// Created by James X. Nelson (James@WeTheInter.net) on 10/04/2026 @ 23:36
 class QuestDefinitionLoaderImplSpec extends AbstractModelLoaderSpec {
 
+    def "template titles preserve quotes and backslashes as literal authored text"() {
+        given:
+        QuestDefinition result
+
+        when:
+        new InlineLoader(source: '<QuestDefinition id = "morning" title = `Morning "ready" \\ list` />')
+                .loadFromClasspath { resource, value -> result = value }
+
+        then:
+        result.title == 'Morning "ready" \\ list'
+    }
+
+    def "authored member identity survives reordering and actual wire roundtrip"() {
+        given:
+        def read = { String children ->
+            QuestDefinition result
+            new InlineLoader(source: '<QuestDefinition children = [' + children +
+                    '] id = "morning" title = "Morning" />').loadFromClasspath { resource, value -> result = value }
+            X_Model.deserialize(QuestDefinition, X_Model.serialize(QuestDefinition, result))
+        }
+        def a = '<ChildRef memberId = "clothes" definitionKey = "ready" />'
+        def b = '<ChildRef memberId = "teeth" definitionKey = "ready" />'
+
+        when:
+        def original = read(a + ',' + b)
+        def reordered = read(b + ',' + a)
+
+        then:
+        original.children().collect { it.key.id } == ['clothes', 'teeth']
+        reordered.children().collect { it.key.id } == ['teeth', 'clothes']
+        original.children().collect { it.definitionKey.id } == ['ready', 'ready']
+        original.children().every { it.key.parent == null && it.key.namespace == '' }
+    }
+
+    @Unroll
+    def "authored member ids reject duplicate and invalid identities: #members"() {
+        when:
+        new InlineLoader(source: '<QuestDefinition id = "morning" children = [' + members + '] />')
+                .loadFromClasspath { resource, value -> }
+
+        then:
+        thrown(IllegalArgumentException)
+
+        where:
+        members << [
+                '<ChildRef memberId = "same" definitionKey = "a" />, <ChildRef memberId = "same" definitionKey = "b" />',
+                '<ChildRef memberId = "../escape" definitionKey = "a" />',
+                '<ChildRef memberId = "" definitionKey = "a" />',
+                '<ChildRef memberId = "0" definitionKey = "a" />, <ChildRef definitionKey = "b" />'
+        ]
+    }
+
     static class ExposedLoader extends QuestDefinitionLoaderImpl {
         Object manifestFor(final Class type) { findManifest(type) }
         String metaInfFor(final String suffix) { metaInfPath(suffix) }
