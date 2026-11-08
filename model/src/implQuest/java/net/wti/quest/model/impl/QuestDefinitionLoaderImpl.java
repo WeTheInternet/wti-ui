@@ -129,12 +129,7 @@ public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<Quest
             if (!(child instanceof UiContainerExpr) || !"ChildRef".equals(((UiContainerExpr) child).getName())) {
                 throw new IllegalArgumentException(resourceName + ": children must contain ChildRef elements");
             }
-            final ChildRef reference = X_Model.create(ChildRef.class);
-            // Boxed numeric null becomes zero on the existing wire. Materialize the authored
-            // count default before parsing overrides; explicit zero remains invalid below.
-            reference.setQuantity(1);
-            reference.setRole(ChildRole.PARALLEL);
-            reference.setStartPolicy(ChildStartPolicy.AFTER_PARENT_START);
+            final ChildRef reference = createChildReference(definition);
             for (final UiAttrExpr attr : ((UiContainerExpr) child).getAttributes()) {
                 final String name = attr.getNameString();
                 final String raw = attr.getExpression().toSource();
@@ -181,6 +176,21 @@ public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<Quest
             }
             definition.children().add(reference);
         }
+    }
+
+    /// Create a fresh embedded relationship for the owning definition.
+    /// The definition may not have its key yet while its attributes are being parsed.
+    /// Leave relationship-key assignment to ModelList.add; definitionKey separately
+    /// identifies the reusable quest definition referenced by this relationship.
+    /// Override this seam if the loader later needs an explicit ownership/key policy.
+    protected ChildRef createChildReference(final QuestDefinition definition) {
+        final ChildRef reference = X_Model.create(ChildRef.class);
+        // Boxed numeric null becomes zero on the existing wire. Materialize the authored
+        // count default before parsing overrides; explicit zero remains invalid below.
+        reference.setQuantity(1);
+        reference.setRole(ChildRole.PARALLEL);
+        reference.setStartPolicy(ChildStartPolicy.AFTER_PARENT_START);
+        return reference;
     }
 
     private <E extends Enum<E>> E parseEnum(final Class<E> type, final String raw, final String resourceName) {
@@ -248,8 +258,12 @@ public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<Quest
 
     private Boolean parseBoolean(final String in) {
         final String v = stripQuotes(in);
-        if ("true".equalsIgnoreCase(v)) return Boolean.TRUE;
-        if ("false".equalsIgnoreCase(v)) return Boolean.FALSE;
+        if ("true".equalsIgnoreCase(v)) {
+            return Boolean.TRUE;
+        }
+        if ("false".equalsIgnoreCase(v)) {
+            return Boolean.FALSE;
+        }
         return null;
     }
 
