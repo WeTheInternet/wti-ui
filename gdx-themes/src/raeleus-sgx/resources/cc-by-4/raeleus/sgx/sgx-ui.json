@@ -444,22 +444,22 @@ com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
 	"recurrence-cell": {
 		"font": "font",
 		"fontColor": "font-disabled",
-		"background": "cell-inactive"
+		"background": "calendar-inactive"
 	},
 	"recurrence-cell-active": {
 		"font": "font",
 		"fontColor": "font",
-		"background": "cell-active"
+		"background": "calendar-active"
 	},
 	"recurrence-cell-over": {
 		"font": "font",
 		"fontColor": "font-over",
-		"background": "cell-hover"
+		"background": "calendar-hover"
 	},
 	"recurrence-cell-selected": {
 		"font": "font",
 		"fontColor": "font-text-field",
-		"background": "cell-selected"
+		"background": "calendar-selected"
 	}
 }
 com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle: {

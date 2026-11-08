@@ -1,0 +1,11 @@
+@rem Select module flags from the actual JAVA_HOME/PATH runtime, never the build JVM.
+set "LIFEQUEST_JAVA_VERSION="
+for /f "tokens=2,3" %%a in ('""%JAVA_EXE%" -version 2^>^&1"') do if "%%a"=="version" set "LIFEQUEST_JAVA_VERSION=%%~b"
+if not defined LIFEQUEST_JAVA_VERSION (
+    echo ERROR: Unable to determine the selected seed Java runtime version >&2
+    goto fail
+)
+for /f "tokens=1,2 delims=." %%a in ("%LIFEQUEST_JAVA_VERSION%") do (
+    if "%%a"=="1" (set "LIFEQUEST_JAVA_FEATURE=%%b") else (set "LIFEQUEST_JAVA_FEATURE=%%a")
+)
+if %LIFEQUEST_JAVA_FEATURE% GEQ 9 set DEFAULT_JVM_OPTS="--add-opens=java.base/java.lang.invoke=ALL-UNNAMED" %DEFAULT_JVM_OPTS%

@@ -1,0 +1,8 @@
+# Select module flags from the actual JAVA_HOME/PATH runtime, never the build JVM.
+LIFEQUEST_JAVA_FEATURE=\$( "\$JAVACMD" -version 2>&1 | awk -F'"' '/version "/ { split(\$2, v, "[.]"); if (v[1] == "1") print v[2]; else print v[1]; exit }' )
+case "\$LIFEQUEST_JAVA_FEATURE" in
+    ''|*[!0-9]*) die "Unable to determine the selected seed Java runtime version" ;;
+esac
+if [ "\$LIFEQUEST_JAVA_FEATURE" -ge 9 ]; then
+    DEFAULT_JVM_OPTS='"--add-opens=java.base/java.lang.invoke=ALL-UNNAMED" '"\$DEFAULT_JVM_OPTS"
+fi

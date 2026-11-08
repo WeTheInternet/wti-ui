@@ -1,11 +1,14 @@
 plugins {
+    // GenInclude plugin from file://$rootDir/model/src/jreQuest/gradle/plugins
+    id	"application"
     id	"java-library"
+    id	"groovy"
     id	"maven-publish"
 }
+
 // GenStart net.wti.gradle.settings.plugin.XapiSettingsPlugin
 ext.xapiModern = 'true'
 version = '0.51'
-
 java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 repositories.mavenCentral()
 // setup sourcesets
@@ -17,8 +20,13 @@ main.java.setSrcDirs([]);
 main.resources.setSrcDirs([]);
 test.java.setSrcDirs([]);
 test.resources.setSrcDirs([]);
+main.java.srcDir("$rootDir/model/src/jreQuest/java")
+test.groovy.srcDir("$rootDir/model/src/jreQuestTest/groovy")
 
 dependencies {
+    implementation libs.xapi.model.jre
+    testImplementation libs.spock
+    testImplementation libs.xapi.model.jre
     api project(path: ":model-implQuest")
     api project(path: ":model-jreApi")
     api project(path: ":model-jreSpi")
@@ -63,4 +71,56 @@ ext.publications.create("xapi", MavenPublication, {
         pub.groupId = "net.wti"
 })
 // GenEnd net.wti.gradle.settings.plugin.XapiSettingsPlugin
+// GenInclude body.end from file://$rootDir/model/src/jreQuest/gradle/body.end
+tasks.register('seedQuestDefinitions', JavaExec) {
+    group = 'application'
+    description = 'Seeds only missing XApi quest definitions and exports the shared ModelModule.'
+    mainClass.set('net.wti.quest.model.jre.QuestDefinitionSeedMain')
+    classpath = sourceSets.main.runtimeClasspath
+    final def runtime = javaLauncher
+    jvmArgumentProviders.add({
+        runtime.get().metadata.languageVersion.asInt() >= 9
+                ? ['--add-opens=java.base/java.lang.invoke=ALL-UNNAMED'] : []
+    } as org.gradle.process.CommandLineArgumentProvider)
+}
+
+tasks.withType(Test).configureEach {
+    dependsOn tasks.named('installDist')
+    final File packingFixture = rootProject.file('model/src/implQuestTest/resources/META-INF/models/qdef/packing-checklists.xapi')
+    inputs.file(packingFixture)
+    systemProperty 'quest.seed.fixture', packingFixture.absolutePath
+    doFirst {
+        systemProperty 'quest.seed.distribution', tasks.named('installDist').get().destinationDir.absolutePath
+        [8, 17].each { version ->
+            systemProperty "quest.seed.java${version}", javaToolchains.launcherFor {
+                languageVersion = JavaLanguageVersion.of(version)
+            }.get().metadata.installationPath.asFile.absolutePath
+        }
+        systemProperty 'quest.seed.build-java', JavaVersion.current().majorVersion
+    }
+}
+application {
+    mainClass = 'net.wti.quest.model.jre.QuestDefinitionSeedMain'
+    applicationName = 'lifequest-quest-seed'
+    applicationDefaultJvmArgs = [] // Installed scripts inspect the JVM selected at invocation time.
+}
+
+
+// Supported Gradle template seam: retain upstream quoting/JAVA_HOME/PATH behavior.
+tasks.named('startScripts').configure {
+    final File unixFragment = file('gradle/seed-unix-runtime-options.txt')
+    final File windowsFragment = file('gradle/seed-windows-runtime-options.txt')
+    inputs.files(unixFragment, windowsFragment)
+    final String unixMarker = 'DEFAULT_JVM_OPTS=${defaultJvmOpts}'
+    final String windowsMarker = ':execute'
+    final String unixTemplate = unixStartScriptGenerator.template.asString()
+    final String windowsTemplate = windowsStartScriptGenerator.template.asString()
+    if (unixTemplate.count(unixMarker) != 1 || windowsTemplate.count(windowsMarker) != 1) {
+        throw new GradleException('Seed launcher template changed; review runtime option insertion')
+    }
+    unixStartScriptGenerator.template = resources.text.fromString(
+            unixTemplate.replace(unixMarker, unixMarker + '\n' + unixFragment.getText('UTF-8')))
+    windowsStartScriptGenerator.template = resources.text.fromString(
+            windowsTemplate.replace(windowsMarker, windowsMarker + '\r\n' + windowsFragment.getText('UTF-8')))
+}
 // Done generating buildfile for :model at file://$rootDir/model/src/jreQuest/modelJreQuest.gradle

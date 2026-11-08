@@ -1,0 +1,27 @@
+// Provisional engineering examples, not a household assignment or reward policy.
+<QuestDefinition id = "pack-water" title = "Water bottle" active = true auto = false /QuestDefinition>
+<QuestDefinition id = "pack-snack" title = "Snack" active = true auto = false /QuestDefinition>
+<QuestDefinition id = "pack-hat" title = "Sun hat" active = true auto = false /QuestDefinition>
+
+<QuestDefinition
+    id = "packing-list"
+    title = "Pack a bag"
+    active = true
+    completionPolicy = "ALL_OF"
+    children = [
+        <ChildRef definitionKey = "pack-water" quantity = 1 />,
+        <ChildRef definitionKey = "pack-snack" quantity = 2 additionalTags = ["food", "bag"] />,
+        <ChildRef definitionKey = "pack-hat" inheritTags = true />,
+    ]
+/QuestDefinition>
+
+<QuestDefinition
+    id = "short-outing"
+    title = "Get ready for a short outing"
+    active = true
+    completionPolicy = "ALL_OF"
+    children = [
+        <ChildRef definitionKey = "pack-water" />,
+        <ChildRef definitionKey = "pack-hat" />,
+    ]
+/QuestDefinition>

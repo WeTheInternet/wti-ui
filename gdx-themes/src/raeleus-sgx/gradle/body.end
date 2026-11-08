@@ -1,0 +1,2 @@
+// Asset-reference regressions need metadata only, never a GL/window backend.
+tasks.withType(Test).configureEach { useJUnitPlatform() }

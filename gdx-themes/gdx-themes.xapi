@@ -36,6 +36,14 @@
             ]
         /raeleus>,
         <raeleus-sgx replaces = raeleus
+            modules = [
+                <main
+                    requires = {
+                        @transitive(test)
+                        external : ( libs.spock ),
+                    }
+                /main>,
+            ]
         /raeleus-sgx>,
         <raeleus-glassy replaces = raeleus
         /raeleus-glassy>,
