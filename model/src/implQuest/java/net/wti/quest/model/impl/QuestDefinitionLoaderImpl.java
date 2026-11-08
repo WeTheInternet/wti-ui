@@ -186,7 +186,7 @@ public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<Quest
     protected ChildRef createChildReference(final QuestDefinition definition) {
         final ChildRef reference = X_Model.create(ChildRef.class);
         // Boxed numeric null becomes zero on the existing wire. Materialize the authored
-        // count default before parsing overrides; explicit zero remains invalid below.
+        // count default before parsing overrides; an explicit zero quantity remains invalid.
         reference.setQuantity(1);
         reference.setRole(ChildRole.PARALLEL);
         reference.setStartPolicy(ChildStartPolicy.AFTER_PARENT_START);
