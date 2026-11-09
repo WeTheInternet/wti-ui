@@ -158,7 +158,11 @@ public final class KeyboardFocusScope implements Disposable {
             if (parent instanceof ScrollPane) {
                 final ScrollPane pane = (ScrollPane) parent;
                 pane.validate();
-                final Vector2 position = actor.localToAscendantCoordinates(pane.getActor(), new Vector2());
+                final Actor content = pane.getActor();
+                // Native popup Lists focus the content itself and manage their selected-row scroll.
+                // Layout may also detach/reparent a previous focus target before this callback settles.
+                if (content == null || actor == content || !actor.isDescendantOf(content)) continue;
+                final Vector2 position = actor.localToAscendantCoordinates(content, new Vector2());
                 pane.scrollTo(position.x, position.y, actor.getWidth(), actor.getHeight());
                 pane.updateVisualScroll();
             }

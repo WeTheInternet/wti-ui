@@ -228,6 +228,22 @@ class KeyboardFocusScopeSpec extends Specification {
         stage.keyboardFocus.is(next)
         actions.empty
     }
+    def 'native popup list can gain focus without treating itself as an ancestor'() {
+        given:
+        Gdx.input = Stub(com.badlogic.gdx.Input)
+        def box = new SelectBox<String>(skin); box.setItems('Example A', 'Example B'); box.setSize(120, 48)
+        stage.addActor(box)
+        box.showScrollPane()
+        assert box.scrollPane.actor.is(box.list)
+
+        when: 'the native List pointer handler gives its whole content widget keyboard focus'
+        stage.keyboardFocus = box.list
+
+        then:
+        stage.keyboardFocus.is(box.list)
+        box.scrollPane.stage.is(stage)
+        actions.empty
+    }
     def 'focus traversal scrolls the focused button into view'() {
         given:
         def content = new Table(); (0..11).each { content.add(button('b'+it)).height(48).width(220).row() }

@@ -4,6 +4,7 @@ import net.wti.lang.parser.ast.expr.UiAttrExpr;
 import net.wti.lang.parser.ast.expr.UiContainerExpr;
 import net.wti.lang.parser.ast.expr.Expression;
 import net.wti.lang.parser.ast.expr.JsonContainerExpr;
+import net.wti.lang.parser.ast.expr.TemplateLiteralExpr;
 import net.wti.lang.parser.ast.visitor.ComposableXapiVisitor;
 import net.wti.model.core.AbstractClasspathXapiLoader;
 import net.wti.quest.api.QuestDefinition;
@@ -16,13 +17,17 @@ import xapi.model.X_Model;
 import xapi.model.api.ModelManifest;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /// QuestDefinitionLoaderImpl
 ///
 /// Classpath .xapi loader for QuestDefinition resources under META-INF/models/qdef.
 /// Composition is an ordered `children = [<ChildRef definitionKey = "definition-id" />]`
 /// attribute. References name reusable definitions; they are not live instances or checkmarks.
+/// Optional ChildRef memberId authors an embedded relationship ID, scoped by its containing
+/// definition. It is independent of definitionKey and remains unchanged across reordering.
 ///
 /// Created by James X. Nelson (James@WeTheInter.net) on 10/04/2026 @ 09:08
 public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<QuestDefinition> {
@@ -71,7 +76,8 @@ public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<Quest
                             switch (name) {
                                 case "name":
                                 case "title":
-                                    def.setTitle(stripQuotes(raw));
+                                    def.setTitle(attr.getExpression() instanceof TemplateLiteralExpr
+                                            ? ((TemplateLiteralExpr) attr.getExpression()).getValue() : stripQuotes(raw));
                                     break;
                                 case "description":
                                     def.setDescription(stripQuotes(raw));
@@ -125,15 +131,29 @@ public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<Quest
         if (!(expression instanceof JsonContainerExpr) || !((JsonContainerExpr) expression).isArray()) {
             throw new IllegalArgumentException(resourceName + ": children must be an array of ChildRef elements");
         }
+        final Set<String> memberIds = new HashSet<>();
+        for (final ChildRef existing : definition.children()) memberIds.add(existing.getKey().getId());
+        Boolean authoredChildren = null;
         for (final Expression child : ((JsonContainerExpr) expression).getValues()) {
             if (!(child instanceof UiContainerExpr) || !"ChildRef".equals(((UiContainerExpr) child).getName())) {
                 throw new IllegalArgumentException(resourceName + ": children must contain ChildRef elements");
             }
             final ChildRef reference = createChildReference(definition);
+            boolean authored = false;
             for (final UiAttrExpr attr : ((UiContainerExpr) child).getAttributes()) {
                 final String name = attr.getNameString();
                 final String raw = attr.getExpression().toSource();
                 switch (name) {
+                    case "memberId":
+                        final String memberId = stripQuotes(raw);
+                        if (authored || !memberId.matches("[A-Za-z0-9_-]{1,128}") || !memberIds.add(memberId)) {
+                            throw new IllegalArgumentException(resourceName + ": invalid or duplicate ChildRef memberId");
+                        }
+                        // Embedded ModelList identity is deliberately unscoped, just like legacy ensureKey.
+                        // The containing definition supplies ownership; this key grants no independent access.
+                        reference.setKey(X_Model.getService().newKey("", ChildRef.MODEL_CHILD_REF, memberId));
+                        authored = true;
+                        break;
                     case "definitionKey":
                         final String id = stripQuotes(raw).trim();
                         if (id.isEmpty()) {
@@ -174,15 +194,18 @@ public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<Quest
             if (reference.getDefinitionKey() == null) {
                 throw new IllegalArgumentException(resourceName + ": ChildRef requires definitionKey");
             }
+            if (authoredChildren != null && authoredChildren != authored) {
+                throw new IllegalArgumentException(resourceName + ": use memberId on every child or none");
+            }
+            authoredChildren = authored;
             definition.children().add(reference);
         }
     }
 
     /// Create a fresh embedded relationship for the owning definition.
     /// The definition may not have its key yet while its attributes are being parsed.
-    /// Leave relationship-key assignment to ModelList.add; definitionKey separately
-    /// identifies the reusable quest definition referenced by this relationship.
-    /// Override this seam if the loader later needs an explicit ownership/key policy.
+    /// Legacy inputs leave relationship-key assignment to ModelList.add. An authored memberId
+    /// replaces that default before insertion; definitionKey separately identifies the reusable definition.
     protected ChildRef createChildReference(final QuestDefinition definition) {
         final ChildRef reference = X_Model.create(ChildRef.class);
         // Boxed numeric null becomes zero on the existing wire. Materialize the authored
