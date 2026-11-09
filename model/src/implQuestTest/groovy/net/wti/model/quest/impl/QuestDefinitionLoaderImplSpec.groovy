@@ -65,6 +65,9 @@ class QuestDefinitionLoaderImplSpec extends AbstractModelLoaderSpec {
         members << [
                 '<ChildRef memberId = "same" definitionKey = "a" />, <ChildRef memberId = "same" definitionKey = "b" />',
                 '<ChildRef memberId = "../escape" definitionKey = "a" />',
+                '<ChildRef memberId = " clothes " definitionKey = "a" />',
+                '<ChildRef memberId = "clothes " definitionKey = "a" />',
+                '<ChildRef memberId = " clothes" definitionKey = "a" />',
                 '<ChildRef memberId = "" definitionKey = "a" />',
                 '<ChildRef memberId = "0" definitionKey = "a" />, <ChildRef definitionKey = "b" />'
         ]

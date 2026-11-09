@@ -145,7 +145,7 @@ public class QuestDefinitionLoaderImpl extends AbstractClasspathXapiLoader<Quest
                 final String raw = attr.getExpression().toSource();
                 switch (name) {
                     case "memberId":
-                        final String memberId = stripQuotes(raw).trim();
+                        final String memberId = stripQuotes(raw);
                         if (authored || !memberId.matches("[A-Za-z0-9_-]{1,128}") || !memberIds.add(memberId)) {
                             throw new IllegalArgumentException(resourceName + ": invalid or duplicate ChildRef memberId");
                         }
