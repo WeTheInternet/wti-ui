@@ -43,6 +43,76 @@ class ChecklistTreeViewSpec extends Specification {
     static java.util.List actors(Group group) { group.children.toList().collectMany { [it] + (it instanceof Group ? actors(it) : []) } }
     CheckBox checkbox(String key) { actors(view).find { it instanceof CheckBox && it.name == 'task:' + key + '-child' } }
 
+    def 'saving failure and acknowledgment update the same visible task actors'() {
+        given:
+        skin.get(CheckBox.CheckBoxStyle).fontColor = com.badlogic.gdx.graphics.Color.WHITE
+        skin.get(CheckBox.CheckBoxStyle).disabledFontColor = com.badlogic.gdx.graphics.Color.DARK_GRAY
+        view.setGoal('a', snapshot('a')); view.setGoal('b', snapshot('b'))
+        def task = checkbox('a'); def other = checkbox('b')
+        def parent = task.parent
+        def toggle = actors(view).find { it.name == 'goal:a' }
+        when:
+        task.fire(new ChangeListener.ChangeEvent())
+        view.setPending('a', true); view.setError('a', null)
+        then:
+        checkbox('a').is(task) && task.parent.is(parent)
+        checkbox('b').is(other)
+        !task.checked && task.disabled
+        task.style.disabledFontColor == com.badlogic.gdx.graphics.Color.WHITE
+        skin.get(CheckBox.CheckBoxStyle).disabledFontColor == com.badlogic.gdx.graphics.Color.DARK_GRAY
+        actors(view).find { it instanceof Label && it.text.toString() == 'Saving...' }
+        intents == ['a-task']
+        when:
+        view.setError('a', 'Could not save. Retry.'); view.setPending('a', false)
+        then:
+        checkbox('a').is(task) && !task.checked && !task.disabled
+        actors(view).find { it.name == 'goal:a' }.is(toggle)
+        when:
+        view.setGoal('a', snapshot('a', true)); view.setError('a', null); view.setPending('a', false)
+        then:
+        checkbox('a').is(task) && task.parent.is(parent)
+        task.checked && task.disabled
+        checkbox('b').is(other)
+        intents == ['a-task']
+    }
+
+    def 'adjacent repeated prefixes form nested display branches without changing task identity or order'() {
+        given:
+        def labels = ['Prepare: First', 'Prepare: Second', 'Finish: First', 'Finish: Second', 'Other: Single']
+        def entries = labels.withIndex().collect { title, i ->
+            new ChecklistSnapshot.Entry('item-' + i, 'live-' + i, title, null, 1, null, false, false)
+        }
+        def value = new ChecklistSnapshot(snapshot('a').root, entries, true)
+        when:
+        view.setGoal('a', value)
+        def tasks = actors(view).findAll { it instanceof CheckBox }
+        def branches = actors(view).findAll { it.name?.startsWith('branch:') }
+        then:
+        branches*.text*.toString() == ['-  Prepare', '-  Finish']
+        tasks*.text*.toString() == ['First', 'Second', 'First', 'Second', 'Other: Single']
+        tasks*.name == (0..4).collect { 'task:item-' + it }
+        tasks[0].parent.is(tasks[1].parent)
+        !tasks[0].parent.is(tasks[2].parent)
+        value.children*.title == labels
+        when:
+        tasks[1].fire(new ChangeListener.ChangeEvent())
+        then:
+        intents == ['live-1']
+        !tasks[1].checked
+        actors(view).find { it.name == 'task:item-1' }.is(tasks[1])
+        when:
+        branches[0].fire(new ChangeListener.ChangeEvent())
+        view.setPending('a', false); view.setGoal('a', value)
+        then:
+        actors(view).findAll { it instanceof CheckBox }*.name == ['task:item-2', 'task:item-3', 'task:item-4']
+        intents == ['live-1']
+        when:
+        actors(view).find { it.name == 'branch:item-0' }.fire(new ChangeListener.ChangeEvent())
+        then:
+        actors(view).findAll { it instanceof CheckBox }*.name == (0..4).collect { 'task:item-' + it }
+        value.children*.title == labels
+    }
+
     def 'configured slots retain failed first root ahead of later arrivals and a successful retry'() {
         when:
         view.setGoalOrder(['morning', 'outing'])
